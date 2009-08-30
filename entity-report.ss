@@ -129,15 +129,15 @@
     
     ; seed (listof column) -> xml
     (define/override (render-head seed cols)
-      ; column
-      (define current-col (get-sort-col))
-      ; (U 'asc 'desc)
-      (define current-dir (get-sort-dir))
-      ; xml
-      (xml (thead (tr (@ [class 'ui-widget-header])
-                      ,(render-controllers-th seed)
-                      ,@(for/list ([col (in-list (get-visible-columns))])
-                          (send col render-head seed (and (equal? col current-col) current-dir)))))))
+      (let ([current-col (get-sort-col)]
+            [current-dir (get-sort-dir)]
+            [link-count  (+ (if (and (show-review-column?) (review-controller-set? (get-entity))) 1 0)
+                            (if (and (show-update-column?) (update-controller-set? (get-entity))) 1 0)
+                            (if (and (show-delete-column?) (delete-controller-set? (get-entity))) 1 0))])
+        (xml (thead (tr (@ [class 'ui-widget-header])
+                        (th (@ [class "controller-cell"]))
+                        ,@(for/list ([col (in-list (get-visible-columns))])
+                            (send col render-head seed (and (equal? col current-col) current-dir))))))))
     
     ; seed (listof column) snooze-struct -> xml
     (define/override (render-item seed cols struct)
@@ -152,19 +152,13 @@
             (render-value-td seed attr (snooze-struct-ref struct attr)))
           (error "entity-report.render-column: could not render column" col)))
     
-    ; seed -> xml
-    (define/public (render-controllers-th seed)
-      (opt-xml (or (and (show-review-column?) (review-controller-set? (get-entity)))
-                   (and (show-update-column?) (update-controller-set? (get-entity)))
-                   (and (show-delete-column?) (delete-controller-set? (get-entity))))
-        (th)))
-    
     ; seed string -> xml
     (define/public (render-controllers-td seed struct)
       (opt-xml (or (and (show-review-column?) (review-controller-set? struct))
                    (and (show-update-column?) (update-controller-set? (get-entity)))
                    (and (show-delete-column?) (delete-controller-set? (get-entity))))
-        (td ,(controller-link (review-controller-ref struct) struct
+        (td (@ [class "controller-cell"])
+            ,(controller-link (review-controller-ref struct) struct
                               #:body (xml (div (@ [class "controller-icon ui-state-default ui-corner-all"]
                                                   [title "View this item"])
                                                (!icon (@ [type "search"]))))
