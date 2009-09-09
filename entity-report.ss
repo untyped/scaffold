@@ -64,43 +64,50 @@
     
     ; (listof editor<%>)
     (init-field columns
-      (or (and attributes (map default-attribute-column attributes))
-          (error "entity-report constructor: insufficient arguments"))
-      #:accessor)
+                (or (and attributes (map default-attribute-column attributes))
+                    (error "entity-report constructor: insufficient arguments"))
+                #:accessor)
     
     ; (cell (listof view)
     (init-field views 
-      (list (make-view 'default "Default" columns))
-      #:override-accessor)
+                (list (make-view 'default "Default" columns))
+                #:override-accessor)
     
-    (init-field filters null #:override-accessor)
+    (init [show-pattern-field? #f])
+    (init [sort-col            (car columns)])
+    (init [classes             null])
     
-    (init [sort-col (car columns)])
-    (init [classes  null])
+    ; Constructor --------------------------------
     
-    (super-new [sort-col sort-col]
-               [classes  (list* 'smoke-entity-report 'ui-widget classes)])
+    (super-new [show-pattern-field? show-pattern-field?]
+               [sort-col            sort-col]
+               [classes             (list* 'smoke-entity-report 'ui-widget classes)])
     
     ; Methods ------------------------------------
     
-    ; filter string -> natural
-    (define/override (query-num-items filter pattern)
-      (let-sql ([entity (get-entity)])
-        (find-one (sql (select #:what  (count entity.guid)
-                               #:from  entity
-                               #:where ,(make-where filter pattern))))))
+    ; -> sql
+    (define/public (query-from)
+      (let-sql ([entity (get-entity)]) (sql entity)))
     
-    ; filter string column (U 'asc 'desc) natural natural -> (gen-> result)
-    (define/override (query-items filter pattern col dir start count)
+    ; string -> natural
+    (define/override (query-num-items pattern)
       (let-sql ([entity (get-entity)])
-        (g:find (sql (select #:from   entity
-                             #:where  ,(make-where filter pattern) 
-                             #:order  ,(get-sort-order col dir)
-                             #:offset ,start
-                             #:limit  ,count)))))
+               (find-one (sql (select #:what  (count entity.guid)
+                                      #:from  ,(query-from)
+                                      #:where ,(make-where pattern))))))
     
-    ; filter pattern
-    (define/public (make-where filter pattern)
+    ; string column (U 'asc 'desc) natural natural -> (gen-> result)
+    (define/override (query-items pattern col dir start count)
+      (let-sql ([entity (get-entity)])
+               (g:find (sql (select #:what   entity
+                                    #:from   ,(query-from)
+                                    #:where  ,(make-where pattern) 
+                                    #:order  ,(get-sort-order col dir)
+                                    #:offset ,start
+                                    #:limit  ,count)))))
+    
+    ; pattern
+    (define/public (make-where pattern)
       (let ([entity (get-entity)])
         (if pattern 
             (apply sql:or
@@ -111,9 +118,10 @@
                         (let* ([attr (send col get-attribute)]
                                [type (attribute-type attr)]
                                [ATTR (sql:alias (entity-default-alias entity) attr)])
-                          (cond [(boolean-type? type)   (cons (sql:= ATTR pattern) accum)]
-                                [(numeric-type? type)   (cons (sql:= ATTR pattern) accum)]
-                                [(character-type? type) (cons (sql:regexp-match-ci ATTR (pattern->regexp pattern)) accum)]
+                          (cond [(and (string->number pattern) (numeric-type? type))
+                                 (cons (sql:= ATTR pattern) accum)]
+                                [(character-type? type)
+                                 (cons (sql:regexp-match-ci ATTR (pattern->regexp pattern)) accum)]
                                 [else                   accum]))
                         accum)))
             (sql #t))))
@@ -127,15 +135,19 @@
                              [class "empty-row"])
                           "There are no items to display in this list.")))))
     
+    ; -> boolean
+    (define/private (show-crud-columns?)
+      (let ([entity (get-entity)])
+        (or (and (show-review-column?) (review-controller-set? entity))
+            (and (show-update-column?) (update-controller-set? entity))
+            (and (show-delete-column?) (delete-controller-set? entity)))))
+    
     ; seed (listof column) -> xml
     (define/override (render-head seed cols)
       (let ([current-col (get-sort-col)]
-            [current-dir (get-sort-dir)]
-            [link-count  (+ (if (and (show-review-column?) (review-controller-set? (get-entity))) 1 0)
-                            (if (and (show-update-column?) (update-controller-set? (get-entity))) 1 0)
-                            (if (and (show-delete-column?) (delete-controller-set? (get-entity))) 1 0))])
+            [current-dir (get-sort-dir)])
         (xml (thead (tr (@ [class 'ui-widget-header])
-                        (th (@ [class "controller-cell"]))
+                        ,(opt-xml (show-crud-columns?) (th (@ [class "controller-cell"])))
                         ,@(for/list ([col (in-list (get-visible-columns))])
                             (send col render-head seed (and (equal? col current-col) current-dir))))))))
     
@@ -154,9 +166,7 @@
     
     ; seed string -> xml
     (define/public (render-controllers-td seed struct)
-      (opt-xml (or (and (show-review-column?) (review-controller-set? struct))
-                   (and (show-update-column?) (update-controller-set? (get-entity)))
-                   (and (show-delete-column?) (delete-controller-set? (get-entity))))
+      (opt-xml (show-crud-columns?)
         (td (@ [class "controller-cell"])
             ,(controller-link (review-controller-ref struct) struct
                               #:body (xml (div (@ [class "controller-icon ui-state-default ui-corner-all"]

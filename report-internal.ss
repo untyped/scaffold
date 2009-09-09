@@ -2,12 +2,11 @@
 
 (require "base.ss")
 
-(require (prefix-in list: (only-in srfi/1 filter))
+(require (only-in srfi/1 filter)
          srfi/13
          srfi/19
          (unlib-in list symbol)
          "report-column.ss"
-         "report-filter.ss"
          "report-view.ss"
          "util.ss")
 
@@ -22,11 +21,6 @@
     ; view-combo-box%
     (field view-field
       (new view-combo-box% [report this] [on-change (callback on-view-change)])
-      #:child #:accessor)
-    
-    ; filter-combo-box%
-    (field filter-field
-      (new filter-combo-box% [report this] [on-change (callback on-filter-change)])
       #:child #:accessor)
     
     ; text-field%
@@ -50,14 +44,12 @@
     (init-cell pager-cell-count 4 #:accessor #:mutator)
     
     ; boolean 
-    (init-cell show-controls? #t #:accessor #:mutator)
-    (init-cell show-position-top? #t #:accessor #:mutator)
+    (init-cell show-controls?        #t #:accessor #:mutator)
+    (init-cell show-pattern-field?   #t #:accessor #:mutator)
+    (init-cell show-position-top?    #t #:accessor #:mutator)
     (init-cell show-position-bottom? #f #:accessor #:mutator)
-    (init-cell show-pager-top? #t #:accessor #:mutator)
-    (init-cell show-pager-bottom? #t #:accessor #:mutator)
-    
-    ; Classes ----------------------------------
-    
+    (init-cell show-pager-top?       #t #:accessor #:mutator)
+    (init-cell show-pager-bottom?    #t #:accessor #:mutator)
     
     ; Constructor ------------------------------
     
@@ -67,20 +59,15 @@
     (super-new [classes (list* 'smoke-snooze-report 'ui-widget classes)])
     
     ; (U view #f)
-    ; (U filter #f)
-    (init [view   (car (get-views))])
-    (init [filter (if (null? (get-filters)) #f (car (get-filters)))])
-    
-    (when view   (send view-field set-value! view))
-    (when filter (send filter-field set-value! filter))
+    (init [view (car (get-views))])
+    (when view (send view-field set-value! view))
     
     ; Miscellaneous ------------------------------
     
     ; -> boolean 
     (define/override (dirty?) 
       (or (super dirty?) 
-          (send view-field dirty?) 
-          (send filter-field dirty?) 
+          (send view-field dirty?)
           (send pattern-field dirty?))) 
     
     ; -> (listof (U xml (seed -> xml)))
@@ -93,7 +80,6 @@
     (define/override (set-id! id)
       (super set-id! id)
       (send view-field set-id! (symbol-append id '-view-field))
-      (send filter-field set-id! (symbol-append id '-filter-field))
       (send pattern-field set-id! (symbol-append id '-pattern-field)))
     
     ; -> symbol
@@ -111,15 +97,14 @@
     ;  (gen-> row-data)
     (define/public (do-queries #:start [start* (get-start)] #:count [count* (get-count)])
       ; Calculate the size of the viewport and number of items:
-      (define filter  (send filter-field get-value))
       (define pattern (send pattern-field get-value))
-      (define total   (query-num-items filter pattern))
+      (define total   (query-num-items pattern))
       (define start   (if start* (max 0 (min total start*)) #f))
       (define count   (if count* (max 0 count*) #f))
       ; Retrieve the items that are in the viewport:
       (define col     (get-sort-col))
       (define dir     (get-sort-dir))
-      (define g:item  (query-items filter pattern col dir start count))
+      (define g:item  (query-items pattern col dir start count))
       ; Return the results:
       (values start count total g:item))
     
@@ -127,11 +112,11 @@
     (define/public (query-num-items)
       (error "query-num-items must be overridden."))
     
-    ; symbol string symbol (U 'asc 'desc) integer integer -> generator
+    ; string symbol (U 'asc 'desc) integer integer -> generator
     ;
     ; start and count arepassed in pre-adjusted for the size of the
     ; viewport and the number of available items.
-    (define/public (query-items filter pattern col dir start count)
+    (define/public (query-items pattern col dir start count)
       (error "query-items must be overridden."))
     
     ; [(U snooze-report-column% #f)] [(U 'asc 'desc #f)] -> (listof order)
@@ -191,10 +176,10 @@
     
     ; -> (listof column)
     (define/public (get-visible-columns)
-      (list:filter (cut send <> get-display-in-html?)
-                   (cond [(send view-field get-value) => (cut view-columns <>)]
-                         [(car (get-views))           => (cut view-columns <>)]
-                         [else                           (get-all-columns)])))
+      (filter (cut send <> get-display-in-html?)
+              (cond [(send view-field get-value) => (cut view-columns <>)]
+                    [(car (get-views))           => (cut view-columns <>)]
+                    [else                           (get-all-columns)])))
     
     ; -> (listof column)
     (define/public (get-all-columns)
@@ -213,21 +198,7 @@
       ; Everything is taken care of by the combo box changing state.
       (void))
     
-    ; Filters ----------------------------------
-    
-    ; -> (listof filter)
-    (define/public (get-filters)
-      (list (make-filter 'normal "Normal")))
-    
-    ; -> filter
-    (define/public (get-current-filter)
-      (if (null? (get-filters))
-          #f
-          (send filter-field get-value)))
-    
-    ; -> void
-    (define/public #:callback (on-filter-change)
-      (set-start! 0))
+    ; Filtering ----------------------------------
     
     ; -> void
     (define/public #:callback (on-pattern-change)
@@ -245,9 +216,9 @@
         (get-visible-columns))
       ; xml
       (xml (div (@ ,@(core-html-attributes seed))
-                ,(opt-xml (get-show-controls?) ,(render-controls seed start count total))
+                ,(opt-xml (get-show-controls?)     ,(render-controls seed start count total))
                 ,(opt-xml (get-show-position-top?) ,(render-position seed start count total))
-                ,(opt-xml (get-show-pager-top?) ,(render-pager seed start count total))
+                ,(opt-xml (get-show-pager-top?)    ,(render-pager seed start count total))
                 ; Table:
                 (table (@ [id ,(get-table-id)] [class "snooze-report-table ui-widget"])
                        ,(render-head seed cols)
@@ -261,23 +232,19 @@
     
     ; seed integer integer integer -> xml
     (define/public (render-controls seed start count total)
-      (let ([show-view-field?    (> (length (get-views)) 1)]
-            [show-pattern-field? (> (length (get-filters)) 0)]
-            [show-filter-field?  (> (length (get-filters)) 1)])
+      (let ([show-view-field? (list-ref? (get-views) 2)]) ; multiple views
         (send view-field    set-visible?! show-view-field?)
-        (send pattern-field set-visible?! show-pattern-field?)
-        (send filter-field  set-visible?! show-filter-field?))
-      (xml (div (@ [id    ,(format "~a-controls" (get-id))]
-                   [class "controls ui-helper-clearfix"])
-                (div (@ [class "view"])
-                     ,(send view-field render seed))
-                ; extra link controls:
-                (div (@ [class "links"])
-                     ,(render-control-links seed start count total))
-                ; Filter is always visible:
-                (div (@ [class "filter"])
-                     ,(send filter-field render seed) " "
-                     ,(send pattern-field render seed)))))
+        (send pattern-field set-visible?! (get-show-pattern-field?))
+        (xml (div (@ [id    ,(format "~a-controls" (get-id))]
+                     [class "controls ui-helper-clearfix"])
+                  (div (@ [class "view"])
+                       ,(send view-field render seed))
+                  ; extra link controls:
+                  (div (@ [class "links"])
+                       ,(render-control-links seed start count total))
+                  ; Filter pattern field is always visible:
+                  (div (@ [class "filter"])
+                       ,(send pattern-field render seed))))))
     
     ; seed integer integer integer -> xml
     (define/public (render-control-links seed start count total)
@@ -425,8 +392,8 @@
     
     ; -> (listof column)
     (define/public (get-csv-columns)
-      (list:filter (cut send <> get-display-in-csv?)
-                   (get-all-columns)))
+      (filter (cut send <> get-display-in-csv?)
+              (get-all-columns)))
     
     ; string -> void
     (define/public #:callback (csv-download)
@@ -516,8 +483,6 @@
 ; Provide statements --------------------------- 
 
 (provide (except-out (all-from-out "report-column.ss"
-                                   "report-filter.ss"
                                    "report-view.ss")
-                     filter
                      view)
          snooze-report%)
