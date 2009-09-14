@@ -6,7 +6,8 @@
          "attribute-editor-internal.ss"
          "check-label.ss"
          "editor-internal.ss"
-         "foreign-key-editor.ss")
+         "foreign-key-editor.ss"
+         "relationship-editor.ss")
 
 
 ; Helper mixins ----------------------------------
@@ -65,7 +66,7 @@
 (define password-editor%                  (complete-attribute-editor-mixin password-field%))
 (define radio-combo-editor%               (enum-editor-mixin (complete-attribute-editor-mixin radio-combo%)))
 (define regexp-editor%                    (complete-attribute-editor-mixin regexp-field%))
-(define set-selector-editor%              (complete-attribute-editor-mixin set-selector%))
+(define set-selector-combo-box-editor%    (complete-attribute-editor-mixin set-selector-combo-box%))
 (define set-selector-autocomplete-editor% (complete-attribute-editor-mixin set-selector-autocomplete%))
 (define text-field-editor%                (complete-attribute-editor-mixin text-field%))
 (define text-area-editor%                 (complete-attribute-editor-mixin text-area%))
@@ -123,7 +124,8 @@
 ; Provide statements -----------------------------
 
 (provide (all-from-out "attribute-editor-internal.ss"
-                       "foreign-key-editor.ss")
+                       "foreign-key-editor.ss"
+                       "relationship-editor.ss")
          time-utc-editor-mixin
          time-tai-editor-mixin
          symbol-editor-mixin
@@ -138,7 +140,7 @@
          password-editor%
          radio-combo-editor%
          regexp-editor%
-         set-selector-editor%
+         set-selector-combo-box-editor%
          set-selector-autocomplete-editor%
          text-field-editor%
          text-area-editor%
