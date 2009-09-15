@@ -89,8 +89,8 @@
                                             (new radio-combo-editor% [attributes (list attr)] [vertical? #f])
                                             (new combo-box-editor%   [attributes (list attr)]))]
          [(? real-type?)                (new number-editor%      [attributes (list attr)])]
-         [(? time-utc-type?)            (new (time-utc-editor-mixin date-editor%) [attributes (list attr)] [size 10])]
-         [(? time-tai-type?)            (new (time-tai-editor-mixin date-editor%) [attributes (list attr)] [size 10])]
+         [(? time-utc-type?)            (new (time-utc-editor-mixin date-editor%) [attributes (list attr)])]
+         [(? time-tai-type?)            (new (time-tai-editor-mixin date-editor%) [attributes (list attr)])]
          [(struct string-type (_ max-length))
           (if max-length
               (new text-field-editor% [attributes (list attr)] [size 50] [max-length max-length])
