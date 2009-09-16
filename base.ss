@@ -23,7 +23,7 @@
          (mirrors-in)
          (smoke-in)
          (snooze-in)
-         (unlib-in debug exn for log))
+         (unlib-in debug enumeration exn for log))
 
 ; Provides ---------------------------------------
 
@@ -31,7 +31,7 @@
          (mirrors-out)
          (smoke-out)
          (snooze-out)
-         (unlib-out debug exn for log)
+         (unlib-out debug enumeration exn for log)
          (all-from-out scheme/contract
                        scheme/list
                        scheme/match

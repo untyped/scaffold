@@ -2,7 +2,7 @@
 
 (require "base.ss")
 
-(require (unlib-in enumeration symbol)
+(require (unlib-in symbol)
          "attribute-editor-internal.ss"
          "check-label.ss"
          "editor-internal.ss")

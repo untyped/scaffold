@@ -27,7 +27,17 @@
     
     (super-new [id          id]
                [string-name string-name]
-               [order       order])))
+               [order       order])
+    
+    ; seed any -> xml
+    ; val is the raw attribute value - the report has to do all the destructuring.
+    (define/public (render-body seed val)
+      (xml (td ,(if (snooze-struct? val)
+                    (if (review-controller-set? val)
+                        (xml (a (@ [href ,(review-controller-url val)])
+                                ,(format-snooze-struct val)))
+                        (xml-quote (format-snooze-struct val)))
+                    (xml-quote val)))))))
 
 ; attribute -> column
 (define (default-attribute-column attr)
@@ -161,7 +171,7 @@
     (define/public (render-column seed col struct)
       (if (is-a? col attribute-report-column%)
           (let ([attr (send col get-attribute)])
-            (render-value-td seed attr (snooze-struct-ref struct attr)))
+            (send col render-body seed (snooze-struct-ref struct attr)))
           (error "entity-report.render-column: could not render column" col)))
     
     ; seed string -> xml
@@ -189,15 +199,6 @@
                               #:else (xml (div (@ [class "controller-icon ui-state-disabled ui-corner-all"]
                                                   [title "Cannot delete this item"])
                                                (!icon (@ [type "trash"]))))))))
-    
-    ; seed attribute any -> xml
-    (define/public (render-value-td seed attr val)
-      (xml (td ,(if (snooze-struct? val)
-                    (if (review-controller-set? val)
-                        (xml (a (@ [href ,(review-controller-url val)])
-                                ,(format-snooze-struct val)))
-                        (xml-quote (format-snooze-struct val)))
-                    (xml-quote val)))))
     
     ; string [boolean] -> string
     (define/public (pattern->regexp pattern [anywhere? #f])

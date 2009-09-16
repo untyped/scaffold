@@ -2,8 +2,7 @@
 
 (require "../base.ss")
 
-(require (unlib-in enumeration)
-         "db.ss")
+(require "db.ss")
 
 ; Enumerations -----------------------------------
 

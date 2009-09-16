@@ -14,46 +14,154 @@
 (define update-controllers (make-hasheq))
 (define delete-controllers (make-hasheq))
 
-; Procedures -------------------------------------
+; controller-ref ---------------------------------
+
+(define-syntax-rule (define/provide-controller-ref id type cache)
+  (begin (define (id struct+entity [default (cut error (format "~a controller not found" type) struct+entity)])
+           (hash-ref cache (struct+entity->entity struct+entity) default))
+         (provide/contract [id (->* ((or/c snooze-struct? entity?)) (any/c) any)])))
 
 ; (U snooze-struct entity) -> controller
-(define (report-controller-ref struct+entity) (hash-ref report-controllers (struct+entity->entity struct+entity)))
-(define (create-controller-ref struct+entity) (hash-ref create-controllers (struct+entity->entity struct+entity)))
-(define (review-controller-ref struct+entity) (hash-ref review-controllers (struct+entity->entity struct+entity)))
-(define (update-controller-ref struct+entity) (hash-ref update-controllers (struct+entity->entity struct+entity)))
-(define (delete-controller-ref struct+entity) (hash-ref delete-controllers (struct+entity->entity struct+entity)))
+(define/provide-controller-ref report-controller-ref "report" report-controllers)
+(define/provide-controller-ref create-controller-ref "create" create-controllers)
+(define/provide-controller-ref review-controller-ref "review" review-controllers)
+(define/provide-controller-ref update-controller-ref "update" update-controllers)
+(define/provide-controller-ref delete-controller-ref "delete" delete-controllers)
 
-; (U snooze-struct entity) -> boolean
-(define (report-controller-set? struct+entity) (and (hash-ref report-controllers (struct+entity->entity struct+entity) #f) #t))
-(define (create-controller-set? struct+entity) (and (hash-ref create-controllers (struct+entity->entity struct+entity) #f) #t))
-(define (review-controller-set? struct+entity) (and (hash-ref review-controllers (struct+entity->entity struct+entity) #f) #t))
-(define (update-controller-set? struct+entity) (and (hash-ref update-controllers (struct+entity->entity struct+entity) #f) #t))
-(define (delete-controller-set? struct+entity) (and (hash-ref delete-controllers (struct+entity->entity struct+entity) #f) #t))
+; controller-set? --------------------------------
+
+(define-syntax-rule (define/provide-controller-set? id cache)
+  (begin (define (id struct+entity)
+           (and (hash-ref cache (struct+entity->entity struct+entity) #f) #t))
+         (provide/contract [id (-> (or/c snooze-struct? entity?) boolean?)])))
+
+; (U snooze-struct entity) -> controller
+(define/provide-controller-set? report-controller-set? report-controllers)
+(define/provide-controller-set? create-controller-set? create-controllers)
+(define/provide-controller-set? review-controller-set? review-controllers)
+(define/provide-controller-set? update-controller-set? update-controllers)
+(define/provide-controller-set? delete-controller-set? delete-controllers)
+
+; controller-set! --------------------------------
+
+(define-syntax-rule (define/provide-controller-set! id cache)
+  (begin (define (id entity controller)
+           (hash-set! cache entity controller))
+         (provide/contract [id (-> entity? procedure? void?)])))
 
 ; entity controller -> void
-(define (report-controller-set! entity controller) (hash-set! report-controllers entity controller))
-(define (create-controller-set! entity controller) (hash-set! create-controllers entity controller))
-(define (review-controller-set! entity controller) (hash-set! review-controllers entity controller))
-(define (update-controller-set! entity controller) (hash-set! update-controllers entity controller))
-(define (delete-controller-set! entity controller) (hash-set! delete-controllers entity controller))
+(define/provide-controller-set! report-controller-set! report-controllers)
+(define/provide-controller-set! create-controller-set! create-controllers)
+(define/provide-controller-set! review-controller-set! review-controllers)
+(define/provide-controller-set! update-controller-set! update-controllers)
+(define/provide-controller-set! delete-controller-set! delete-controllers)
+
+; controller-url ---------------------------------
+
+(define-syntax-rule (define/provide-controller-url/entity id controller-ref)
+  (begin (define (id entity)
+           (controller-url (controller-ref entity)))
+         (provide/contract [id (-> entity? string?)])))
+
+(define-syntax-rule (define/provide-controller-url/struct id controller-ref)
+  (begin (define (id struct)
+           (controller-url (controller-ref (snooze-struct-entity struct)) struct))
+         (provide/contract [id (-> snooze-struct? string?)])))
 
 ; entity -> string
-(define (report-controller-url entity) (controller-url (report-controller-ref entity)))
-(define (create-controller-url entity) (controller-url (create-controller-ref entity)))
+(define/provide-controller-url/entity report-controller-url report-controller-ref)
+(define/provide-controller-url/entity create-controller-url create-controller-ref)
 
 ; snooze-struct -> string
-(define (review-controller-url struct) (controller-url (review-controller-ref (snooze-struct-entity struct)) struct))
-(define (update-controller-url struct) (controller-url (update-controller-ref (snooze-struct-entity struct)) struct))
-(define (delete-controller-url struct) (controller-url (delete-controller-ref (snooze-struct-entity struct)) struct))
+(define/provide-controller-url/struct review-controller-url review-controller-ref)
+(define/provide-controller-url/struct update-controller-url update-controller-ref)
+(define/provide-controller-url/struct delete-controller-url delete-controller-ref)
+
+; call-controller --------------------------------
+
+(define-syntax-rule (define/provide-call-controller/entity id controller-ref)
+  (begin (define (id entity)
+           ((controller-ref entity)))
+         (provide/contract [id (-> entity? any)])))
+
+(define-syntax-rule (define/provide-call-controller/struct id controller-ref)
+  (begin (define (id struct)
+           ((controller-ref (snooze-struct-entity struct)) struct))
+         (provide/contract [id (-> snooze-struct? any)])))
 
 ; entity -> any
-(define (call-report-controller entity) ((report-controller-ref entity)))
-(define (call-create-controller entity) ((create-controller-ref entity)))
+(define/provide-call-controller/entity call-report-controller report-controller-ref)
+(define/provide-call-controller/entity call-create-controller create-controller-ref)
 
 ; snooze-struct -> any
-(define (call-review-controller struct) ((review-controller-ref (snooze-struct-entity struct)) struct))
-(define (call-update-controller struct) ((update-controller-ref (snooze-struct-entity struct)) struct))
-(define (call-delete-controller struct) ((delete-controller-ref (snooze-struct-entity struct)) struct))
+(define/provide-call-controller/struct call-review-controller review-controller-ref)
+(define/provide-call-controller/struct call-update-controller update-controller-ref)
+(define/provide-call-controller/struct call-delete-controller delete-controller-ref)
+
+; controller-link --------------------------------
+
+(define-syntax-rule (define/provide-controller-link/entity id type pretty-name-ref controller-ref)
+  (begin (define (id entity
+                     #:body    [body        #f]
+                     #:id      [id          #f]
+                     #:class   [class       #f]
+                     #:classes [classes     (if class (list class) null)]
+                     #:title   [title       #f]
+                     #:format  [link-format (default-link-format)]
+                     #:else    [substitute  (default-link-substitute)])
+           (controller-link (controller-ref entity)
+                            #:body    [body        (format "~a ~a" type (pretty-name-ref entity))]
+                            #:id      [id          #f]
+                            #:class   [class       #f]
+                            #:classes [classes     (if class (list class) null)]
+                            #:title   [title       #f]
+                            #:format  [link-format (default-link-format)]
+                            #:else    [substitute  (default-link-substitute)]))
+         (provide/contract [id (->* (entity?)
+                                    (#:body (or/c xml+quotable? pair? null? #f)
+                                            #:id      (or/c symbol? string? #f)
+                                            #:class   (or/c symbol? string? #f)
+                                            #:classes (listof (or/c symbol? string?))
+                                            #:title   (or/c string? #f)
+                                            #:format  (enum-value/c link-formats)
+                                            #:else    any/c)
+                                    any)])))
+
+(define-syntax-rule (define/provide-controller-link/struct id type controller-ref)
+  (begin (define (id struct
+                     #:body    [body        #f]
+                     #:id      [id          #f]
+                     #:class   [class       #f]
+                     #:classes [classes     (if class (list class) null)]
+                     #:title   [title       #f]
+                     #:format  [link-format (default-link-format)]
+                     #:else    [substitute  (default-link-substitute)])
+           (controller-link (controller-ref struct) struct
+                            #:body    [body        (format "~a ~a" type (format-snooze-struct struct))]
+                            #:id      [id          #f]
+                            #:class   [class       #f]
+                            #:classes [classes     (if class (list class) null)]
+                            #:title   [title       #f]
+                            #:format  [link-format (default-link-format)]
+                            #:else    [substitute  (default-link-substitute)]))
+         (provide/contract [id (->* (snooze-struct?)
+                                    (#:body (or/c xml+quotable? pair? null? #f)
+                                            #:id      (or/c symbol? string? #f)
+                                            #:class   (or/c symbol? string? #f)
+                                            #:classes (listof (or/c symbol? string?))
+                                            #:title   (or/c string? #f)
+                                            #:format  (enum-value/c link-formats)
+                                            #:else    any/c)
+                                    any)])))
+
+; entity -> any
+(define/provide-controller-link/entity report-controller-link "list"   entity-pretty-name-plural report-controller-ref)
+(define/provide-controller-link/entity create-controller-link "new"    entity-pretty-name        create-controller-ref)
+
+; snooze-struct -> any
+(define/provide-controller-link/struct review-controller-link "view"   review-controller-ref)
+(define/provide-controller-link/struct update-controller-link "edit"   update-controller-ref)
+(define/provide-controller-link/struct delete-controller-link "delete" delete-controller-ref)
 
 ; Helpers ----------------------------------------
 
@@ -62,32 +170,3 @@
   (if (entity? struct+entity)
       struct+entity
       (snooze-struct-entity struct+entity)))
-
-; Provide statements -----------------------------
-
-(provide/contract
- [report-controller-ref  (-> (or/c snooze-struct? entity?) (or/c procedure? #f))]
- [create-controller-ref  (-> (or/c snooze-struct? entity?) (or/c procedure? #f))]
- [review-controller-ref  (-> (or/c snooze-struct? entity?) (or/c procedure? #f))]
- [update-controller-ref  (-> (or/c snooze-struct? entity?) (or/c procedure? #f))]
- [delete-controller-ref  (-> (or/c snooze-struct? entity?) (or/c procedure? #f))]
- [report-controller-set? (-> (or/c snooze-struct? entity?) boolean?)]
- [create-controller-set? (-> (or/c snooze-struct? entity?) boolean?)]
- [review-controller-set? (-> (or/c snooze-struct? entity?) boolean?)]
- [update-controller-set? (-> (or/c snooze-struct? entity?) boolean?)]
- [delete-controller-set? (-> (or/c snooze-struct? entity?) boolean?)]
- [report-controller-set! (-> entity? procedure? void?)]
- [create-controller-set! (-> entity? procedure? void?)]
- [review-controller-set! (-> entity? procedure? void?)]
- [update-controller-set! (-> entity? procedure? void?)]
- [delete-controller-set! (-> entity? procedure? void?)]
- [report-controller-url  (-> entity? any)]
- [create-controller-url  (-> entity? any)]
- [review-controller-url  (-> snooze-struct? any)]
- [update-controller-url  (-> snooze-struct? any)]
- [delete-controller-url  (-> snooze-struct? any)]
- [call-report-controller (-> entity? any)]
- [call-create-controller (-> entity? any)]
- [call-review-controller (-> snooze-struct? any)]
- [call-update-controller (-> snooze-struct? any)]
- [call-delete-controller (-> snooze-struct? any)])
