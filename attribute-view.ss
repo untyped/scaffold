@@ -77,9 +77,15 @@
 
 ; Procedures -------------------------------------
 
+; (parameter (attribute -> attribute-view%))
+(define attribute-view-defaults
+  (make-parameter
+   (lambda (attr)
+     (new attribute-view% [attributes (list attr)]))))
+
 ; attribute -> attribute-view<%>
 (define (default-attribute-view attr)
-  (new attribute-view% [attributes (list attr)]))
+  ((attribute-view-defaults) attr))
 
 ; Provide statements -----------------------------
 
@@ -88,4 +94,5 @@
          attribute-view%)
 
 (provide/contract
- [default-attribute-view (-> attribute? (is-a?/c attribute-view<%>))])
+ [attribute-view-defaults (parameter/c procedure?)]
+ [default-attribute-view  (-> attribute? (is-a?/c attribute-view<%>))])
