@@ -232,7 +232,7 @@
     
     ; seed integer integer integer -> xml
     (define/public (render-controls seed start count total)
-      (let ([show-view-field? (list-ref? (get-views) 2)]) ; multiple views
+      (let ([show-view-field? (list-ref? (get-views) 1)]) ; multiple views
         (send view-field    set-visible?! show-view-field?)
         (send pattern-field set-visible?! (get-show-pattern-field?))
         (xml (div (@ [id    ,(format "~a-controls" (get-id))]
