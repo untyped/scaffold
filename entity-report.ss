@@ -2,7 +2,7 @@
 
 (require "base.ss")
 
-(require (only-in srfi/13 string-fold-right)
+(require (only-in srfi/13 string-fold-right string-trim-both)
          (unlib-in string symbol)
          "controller-internal.ss"
          "report-column.ss"
@@ -32,12 +32,26 @@
     ; seed any -> xml
     ; val is the raw attribute value - the report has to do all the destructuring.
     (define/public (render-body seed val)
-      (xml (td ,(if (snooze-struct? val)
-                    (if (review-controller-set? val)
-                        (xml (a (@ [href ,(review-controller-url val)])
-                                ,(format-snooze-struct val)))
-                        (xml-quote (format-snooze-struct val)))
-                    (xml-quote val)))))))
+      (xml (td ,(cond [(snooze-struct? val)
+                       (if (review-controller-set? val)
+                           (xml (a (@ [href ,(review-controller-url val)])
+                                   ,(format-snooze-struct val)))
+                           (format-snooze-struct val))]
+                      [(and (enum-type? (attribute-type attribute))
+                            (enum-type-enum (attribute-type attribute)))
+                       => (lambda (enum)
+                            (enum-prettify enum val))]
+                      [else val]))))
+    
+    ; any -> csv-cell
+    (define/public (render-body/csv val)
+      (csv:cell (cond [(snooze-struct? val)
+                       (format-snooze-struct val)]
+                      [(and (enum-type? (attribute-type attribute))
+                            (enum-type-enum (attribute-type attribute)))
+                       => (lambda (enum)
+                            (enum-prettify enum val))]
+                      [else val])))))
 
 ; attribute -> column
 (define (default-attribute-column attr)
@@ -174,6 +188,30 @@
             (send col render-body seed (snooze-struct-ref struct attr)))
           (error "entity-report.render-column: could not render column" col)))
     
+    ; entity -> string
+    (define (entity-csv-prefix str)
+      (regexp-replace* #rx"[ \t\r\n]+"
+                       (string-trim-both (entity-pretty-name-plural entity))
+                       "-"))
+    
+    ; [string] -> string
+    (define/override (get-csv-download-filename
+                      [prefix (cond [(get-entity) => entity-csv-prefix]
+                                    [else            "download"])])
+      (super get-csv-download-filename prefix))
+    
+    ; (listof column) snooze-struct -> csv-row
+    (define/override (render-item/csv cols struct)
+      (apply csv:row (for/list ([col (in-list cols)])
+                       (render-column/csv col struct))))
+    
+    ; column snooze-struct -> csv-cell
+    (define/public (render-column/csv col struct)
+      (if (is-a? col attribute-report-column%)
+          (let ([attr (send col get-attribute)])
+            (send col render-body/csv (snooze-struct-ref struct attr)))
+          (error "entity-report.render-column: could not render column" col)))
+
     ; seed string -> xml
     (define/public (render-controllers-td seed struct)
       (opt-xml (show-crud-columns?)

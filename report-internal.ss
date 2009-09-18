@@ -399,9 +399,9 @@
     (define/public #:callback (csv-download)
       (respond/csv))
     
-    ; -> string
-    (define/public (get-csv-download-filename)
-      (format "download-~a.csv" (date->string (current-date) "~Y-~m-~d-~H-~M-~S")))
+    ; [string] -> string
+    (define/public (get-csv-download-filename [prefix "download"])
+      (format "~a-~a.csv" prefix (date->string (current-date) "~Y-~m-~d-~H-~M-~S")))
     
     ; [string] -> string
     (define/public (get-csv-download-headers [download-filename (get-csv-download-filename)])
