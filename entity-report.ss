@@ -171,7 +171,9 @@
       (let ([current-col (get-sort-col)]
             [current-dir (get-sort-dir)])
         (xml (thead (tr (@ [class 'ui-widget-header])
-                        ,(opt-xml (show-crud-columns?) (th (@ [class "controller-cell"])))
+                        ,(opt-xml (show-crud-columns?)
+                           (th (@ [class "controller-cell"])
+                               (& nbsp)))
                         ,@(for/list ([col (in-list (get-visible-columns))])
                             (send col render-head seed (and (equal? col current-col) current-dir))))))))
     
