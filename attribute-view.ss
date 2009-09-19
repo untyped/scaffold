@@ -54,11 +54,15 @@
       (xml (span (@ ,(core-html-attributes seed))
                  ,(let ([type       (attribute-type (car (get-attributes)))]
                         [val        (get-value)])
-                    (if (snooze-struct? val)
-                        (if (review-controller-set? val)
-                            (xml (a (@ [href ,(review-controller-url val)]) ,(format-snooze-struct val)))
-                            (xml-quote (format-snooze-struct val)))
-                        (xml-quote val))))))
+                    (cond [(snooze-struct? val)
+                           (if (review-controller-set? val)
+                               (xml (a (@ [href ,(review-controller-url val)])
+                                       ,(format-snooze-struct val)))
+                               (format-snooze-struct val))]
+                          [(and (enum-type? type) (enum-type-enum type))
+                           => (lambda (enum)
+                                (enum-prettify enum val))]
+                          [else val])))))
     
     ; snooze-struct -> snooze-struct
     (define/public (destructure! struct)
