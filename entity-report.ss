@@ -82,20 +82,20 @@
     (init [attributes (and entity (entity-data-attributes entity))])
     
     ; (cell boolean)
-    (init-cell review-column? #t #:accessor show-review-column? #:mutator set-show-review-column?!)
-    (init-cell update-column? #t #:accessor show-update-column? #:mutator set-show-update-column?!)
-    (init-cell delete-column? #t #:accessor show-delete-column? #:mutator set-show-delete-column?!)
+    (init-cell controller-cell? #t
+      #:accessor show-controller-cell?
+      #:mutator  set-show-controller-cell?!)
     
     ; (listof editor<%>)
     (init-field columns
-                (or (and attributes (map default-attribute-column attributes))
-                    (error "entity-report constructor: insufficient arguments"))
-                #:accessor)
+      (or (and attributes (map default-attribute-column attributes))
+          (error "entity-report constructor: insufficient arguments"))
+      #:accessor)
     
     ; (cell (listof view)
     (init-field views 
-                (list (make-view 'default "Default" columns))
-                #:override-accessor)
+      (list (make-view 'default "Default" columns))
+      #:override-accessor)
     
     (init [show-pattern-field? #f])
     (init [sort-col            (car columns)])
@@ -116,19 +116,19 @@
     ; string -> natural
     (define/override (query-num-items pattern)
       (let-sql ([entity (get-entity)])
-               (find-one (sql (select #:what  (count entity.guid)
-                                      #:from  ,(query-from)
-                                      #:where ,(make-where pattern))))))
+        (find-one (sql (select #:what  (count entity.guid)
+                               #:from  ,(query-from)
+                               #:where ,(make-where pattern))))))
     
     ; string column (U 'asc 'desc) natural natural -> (gen-> result)
     (define/override (query-items pattern col dir start count)
       (let-sql ([entity (get-entity)])
-               (g:find (sql (select #:what   entity
-                                    #:from   ,(query-from)
-                                    #:where  ,(make-where pattern) 
-                                    #:order  ,(get-sort-order col dir)
-                                    #:offset ,start
-                                    #:limit  ,count)))))
+        (g:find (sql (select #:what   entity
+                             #:from   ,(query-from)
+                             #:where  ,(make-where pattern) 
+                             #:order  ,(get-sort-order col dir)
+                             #:offset ,start
+                             #:limit  ,count)))))
     
     ; pattern
     (define/public (make-where pattern)
@@ -152,26 +152,18 @@
     
     ; seed (listof column) -> xml
     (define/override (render-empty-body seed cols)
-      (xml (tbody (tr (td (@ [colspan ,(+ (if (and (show-review-column?) (review-controller-set? (get-entity))) 1 0)
-                                          (if (and (show-update-column?) (update-controller-set? (get-entity))) 1 0)
-                                          (if (and (show-delete-column?) (delete-controller-set? (get-entity))) 1 0)
-                                          (length cols))]
+      (xml (tbody (tr (td (@ [colspan ,(if (show-controller-cell?)
+                                           (add1 (length cols))
+                                           (length cols))]
                              [class "empty-row"])
                           "There are no items to display in this list.")))))
-    
-    ; -> boolean
-    (define/private (show-crud-columns?)
-      (let ([entity (get-entity)])
-        (or (and (show-review-column?) (review-controller-set? entity))
-            (and (show-update-column?) (update-controller-set? entity))
-            (and (show-delete-column?) (delete-controller-set? entity)))))
     
     ; seed (listof column) -> xml
     (define/override (render-head seed cols)
       (let ([current-col (get-sort-col)]
             [current-dir (get-sort-dir)])
         (xml (thead (tr (@ [class 'ui-widget-header])
-                        ,(opt-xml (show-crud-columns?)
+                        ,(opt-xml (show-controller-cell?)
                            (th (@ [class "controller-cell"])
                                (& nbsp)))
                         ,@(for/list ([col (in-list (get-visible-columns))])
@@ -179,7 +171,8 @@
     
     ; seed (listof column) snooze-struct -> xml
     (define/override (render-item seed cols struct)
-      (xml (tr ,(render-controllers-td seed struct)
+      (xml (tr ,(opt-xml (show-controller-cell?)
+                  ,(render-controller-cell seed struct))
                ,@(for/list ([col (in-list cols)])
                    (render-column seed col struct)))))
     
@@ -213,32 +206,31 @@
           (let ([attr (send col get-attribute)])
             (send col render-body/csv (snooze-struct-ref struct attr)))
           (error "entity-report.render-column: could not render column" col)))
-
+    
     ; seed string -> xml
-    (define/public (render-controllers-td seed struct)
-      (opt-xml (show-crud-columns?)
-        (td (@ [class "controller-cell"])
-            ,(controller-link (review-controller-ref struct) struct
-                              #:body (xml (div (@ [class "controller-icon ui-state-default ui-corner-all"]
-                                                  [title "View this item"])
-                                               (!icon (@ [type "search"]))))
-                              #:else (xml (div (@ [class "controller-icon ui-state-disabled ui-corner-all"]
-                                                  [title "Cannot view this item"])
-                                               (!icon (@ [type "search"])))))
-            ,(controller-link (update-controller-ref struct) struct
-                              #:body (xml (div (@ [class "controller-icon ui-state-default ui-corner-all"]
-                                                  [title "Edit this item"])
-                                               (!icon (@ [type "pencil"]))))
-                              #:else (xml (div (@ [class "controller-icon ui-state-disabled ui-corner-all"]
-                                                  [title "Cannot edit this item"])
-                                               (!icon (@ [type "pencil"])))))
-            ,(controller-link (delete-controller-ref struct) struct
-                              #:body (xml (div (@ [class "controller-icon ui-state-default ui-corner-all"]
-                                                  [title "Delete this item"])
-                                               (!icon (@ [type "trash"]))))
-                              #:else (xml (div (@ [class "controller-icon ui-state-disabled ui-corner-all"]
-                                                  [title "Cannot delete this item"])
-                                               (!icon (@ [type "trash"]))))))))
+    (define/public (render-controller-cell seed struct)
+      (xml (td (@ [class "controller-cell"])
+               ,(controller-link (review-controller-ref struct) struct
+                                 #:body (xml (div (@ [class "controller-icon ui-state-default ui-corner-all"]
+                                                     [title "View this item"])
+                                                  (!icon (@ [type "search"]))))
+                                 #:else (xml (div (@ [class "controller-icon ui-state-disabled ui-corner-all"]
+                                                     [title "Cannot view this item"])
+                                                  (!icon (@ [type "search"])))))
+               ,(controller-link (update-controller-ref struct) struct
+                                 #:body (xml (div (@ [class "controller-icon ui-state-default ui-corner-all"]
+                                                     [title "Edit this item"])
+                                                  (!icon (@ [type "pencil"]))))
+                                 #:else (xml (div (@ [class "controller-icon ui-state-disabled ui-corner-all"]
+                                                     [title "Cannot edit this item"])
+                                                  (!icon (@ [type "pencil"])))))
+               ,(controller-link (delete-controller-ref struct) struct
+                                 #:body (xml (div (@ [class "controller-icon ui-state-default ui-corner-all"]
+                                                     [title "Delete this item"])
+                                                  (!icon (@ [type "trash"]))))
+                                 #:else (xml (div (@ [class "controller-icon ui-state-disabled ui-corner-all"]
+                                                     [title "Cannot delete this item"])
+                                                  (!icon (@ [type "trash"]))))))))
     
     ; string [boolean] -> string
     (define/public (pattern->regexp pattern [anywhere? #f])
