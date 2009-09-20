@@ -39,6 +39,8 @@
     
     ; Fields -------------------------------------
     
+    ; Have to call super-new first to make sure the default component-id is initialised:
+
     (super-new)
     
     ; (listof attribute)
@@ -56,10 +58,10 @@
       #:accessor
       #:mutator)
     
-    (init [id    (or (attributes->id attributes) (get-component-id))]
+    (init [id    (or (attributes->id    attributes) (gensym/interned 'smoke))]
           [label (or (attributes->label attributes) (xml-quote id))])
     
-    (set-id! id)
+    (set-id!    id)
     (set-label! label)
     
     ; Methods ------------------------------------

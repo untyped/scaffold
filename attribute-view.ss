@@ -36,6 +36,10 @@
     
     ; Constructor --------------------------------
     
+    ; Have to call super-new first to make sure the default component-id is initialised:
+
+    (super-new)
+    
     (init [id      (if (pair? attributes)
                        (let ([attr (car attributes)])
                          (symbol-append (entity-name (attribute-entity attr)) '- (attribute-name attr)))
@@ -44,8 +48,8 @@
                        (xml-quote (string-sentencecase (attribute-pretty-name (car attributes))))
                        (xml-quote id))])
     
-    (super-new [id      id]
-               [label   label])
+    (set-id! id)
+    (set-label! label)
     
     ; Methods ------------------------------------
     
