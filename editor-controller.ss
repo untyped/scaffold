@@ -26,6 +26,9 @@
     ; (cell editor<%>)
     (init-cell editor #:accessor #:mutator)
     
+    ; (cell boolean)
+    (init-cell submitted-once? #f #:accessor #:mutator)
+    
     ; Methods ------------------------------------
     
     ; (listof check-result) -> xml
@@ -53,6 +56,7 @@
     
     ; -> any
     (define/public #:callback/return (on-update)
+      (set-submitted-once?! #t)
       (process-parse-results (send (get-editor) parse)))
     
     ; (listof check-result) -> any
@@ -75,7 +79,8 @@
                                             (send (current-page) respond)]
             [(ormap check-failure? results) (notifications-add! (get-failure-notification results))
                                             (send (current-page) respond)]
-            [(ormap check-warning? results) (if (send (get-editor) value-changed?)
+            [(ormap check-warning? results) (if (or (send (get-editor) value-changed?)
+                                                    (web-cell-changed? submitted-once?-cell))
                                                 (begin  (notifications-add! (get-warning-notification results))
                                                         (send (current-page) respond))
                                                 (begin0 (send (get-editor) commit-changes)

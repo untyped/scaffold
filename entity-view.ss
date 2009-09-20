@@ -45,7 +45,8 @@
                   ,@(for/list ([view (in-list (get-views))])
                       (xml (tr (th (@ [class "attribute-label"])
                                    ,(send view render-label seed))
-                               (td ,(send view render seed))))))))
+                               (td (@ [class "attribute-value"])
+                                   ,(send view render seed))))))))
     
     ; snooze-struct -> void
     (define/override (set-value! val)

@@ -30,22 +30,22 @@
     
     ; Fields -------------------------------------
     
-    (super-new)
-    
     ; (cell (listof attribute))
-    (init-cell attributes null #:accessor)
-        
-    (init [id    (if (pair? attributes)
-                     (let ([attr (car attributes)])
-                       (symbol-append (entity-name (attribute-entity attr)) '- (attribute-name attr)))
-                     (get-component-id))]
-          [label (if (pair? attributes)
-                     (let ([attr (car attributes)])
-                       (xml-quote (string-sentencecase (attribute-pretty-name attr))))
-                     (xml-quote id))])
+    (init-cell attributes null
+      #:accessor)
     
-    (set-id!   id)
-    (set-label! label)
+    ; Constructor --------------------------------
+    
+    (init [id      (if (pair? attributes)
+                       (let ([attr (car attributes)])
+                         (symbol-append (entity-name (attribute-entity attr)) '- (attribute-name attr)))
+                       (get-component-id))]
+          [label   (if (pair? attributes)
+                       (xml-quote (string-sentencecase (attribute-pretty-name (car attributes))))
+                       (xml-quote id))])
+    
+    (super-new [id      id]
+               [label   label])
     
     ; Methods ------------------------------------
     
