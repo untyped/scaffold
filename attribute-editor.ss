@@ -93,22 +93,42 @@
          [(? time-tai-type?)            (new (time-tai-editor-mixin date-editor%) [attributes (list attr)])]
          [(struct string-type (_ max-length))
           (if max-length
-              (new text-field-editor% [attributes (list attr)] [size 50] [max-length max-length])
-              (new text-area-editor%  [attributes (list attr)] [cols 50] [rows 5]))]
+              (new text-field-editor%
+                   [attributes (list attr)]
+                   [size (debug* (format "~a-~a max-length"
+                                         (entity-name entity)
+                                         (attribute-name attr))
+                                 default-text-field-size
+                                 max-length)]
+                   [max-length max-length])
+              (new text-area-editor%
+                   [attributes (list attr)]
+                   [cols 50]
+                   [rows 5]))]
          [(struct symbol-type (_ max-length))
           (if max-length
-              (new (symbol-editor-mixin text-field-editor%) [attributes (list attr)] [size 50] [max-length max-length])
-              (new (symbol-editor-mixin text-area-editor%)  [attributes (list attr)] [cols 50] [rows 5]))]
+              (new (symbol-editor-mixin text-field-editor%)
+                   [attributes (list attr)]
+                   [size (default-text-field-size max-length)]
+                   [max-length max-length])
+              (new (symbol-editor-mixin text-area-editor%)
+                   [attributes (list attr)]
+                   [cols 50]
+                   [rows 5]))]
          [(? binary-type?)
           (error "cannot scaffold attribute-editor for binary attribute" attr)]
-         [_
-          (error "unrecognized attribute-type for default-attribute-editor" attr type)])))))
+         [_ (error "unrecognized attribute-type for default-attribute-editor" attr type)])))))
 
 ; attribute -> attribute-editor<%>
 (define (default-attribute-editor attr)
   ((attribute-editor-defaults) attr))
 
 ; Helper procedures ------------------------------
+
+; natural -> natural
+(define (default-text-field-size max-length)
+  ; Rounds up to the nearest 10 characters, within the bounds [0,50]:
+  (min 10 (max 50 (* (add1 (floor (/ max-length 10))) 10))))
 
 ; enum-type [string] -> (alistof (U symbol #f) string)
 (define (enum-type-options type [null-label "-- No selection --"])
