@@ -95,11 +95,7 @@
           (if max-length
               (new text-field-editor%
                    [attributes (list attr)]
-                   [size (debug* (format "~a-~a max-length"
-                                         (entity-name entity)
-                                         (attribute-name attr))
-                                 default-text-field-size
-                                 max-length)]
+                   [size (default-text-field-size max-length)]
                    [max-length max-length])
               (new text-area-editor%
                    [attributes (list attr)]
