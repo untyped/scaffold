@@ -32,8 +32,8 @@
     
     ; SQL details --------------------------------
     
-    ; (cell (U sql-expr #f))
-    (init-cell where #f #:accessor #:mutator)
+    ; (U sql-expr #f)
+    (init [where #f])
     
     ; (cell (listof sql-order))
     (init-cell order
@@ -97,8 +97,17 @@
     
     ; -> void
     (define/override (refresh-selectable-items)
+      (debug-location)
       (let-sql ([entity (get-entity)])
                (send (get-editor) set-where! (sql (not (in entity.guid ,(get-value)))))))
+    
+    ; -> sql-where
+    (define/public (get-where)
+      (send (get-editor) get-where))
+    
+    ; sql-where -> void
+    (define/public (set-where! where-clause)
+      (send (get-editor) set-where! where-clause))
     
     ; Methods ------------------------------------
     
@@ -153,7 +162,9 @@
                                                                            saved-relationship-structs)
                                                                     (make-relationship struct chosen-related))
                                                                 relationships)))]
-                   [deleted-relationships      (filter (lambda (rel) (member rel saved+new-relationships))
+                   [deleted-relationships      (filter (lambda (rel) 
+                                                         (not (member (snooze-struct-id rel)
+                                                                      (map snooze-struct-id saved+new-relationships))))
                                                        (find-relationships/struct struct))])
         (set-updated-relationships! saved+new-relationships)
         (for ([rel (in-list saved+new-relationships)])

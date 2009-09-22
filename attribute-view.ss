@@ -68,7 +68,7 @@
                                 (enum-prettify enum val))]
                           [else val])))))
     
-    ; snooze-struct -> snooze-struct
+    ; snooze-struct -> void
     (define/public (destructure! struct)
       (match (get-attributes)
         [(list-rest (? attribute? attr) _)
