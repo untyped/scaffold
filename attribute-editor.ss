@@ -124,7 +124,7 @@
 ; natural -> natural
 (define (default-text-field-size max-length)
   ; Rounds up to the nearest 10 characters, within the bounds [0,50]:
-  (min 10 (max 50 (* (add1 (floor (/ max-length 10))) 10))))
+  (max 10 (min 50 (* (add1 (floor (/ max-length 10))) 10))))
 
 ; enum-type [string] -> (alistof (U symbol #f) string)
 (define (enum-type-options type [null-label "-- No selection --"])
