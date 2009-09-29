@@ -210,27 +210,36 @@
     ; seed string -> xml
     (define/public (render-controller-cell seed struct)
       (xml (td (@ [class "controller-cell"])
-               ,(controller-link (review-controller-ref struct) struct
-                                 #:body (xml (div (@ [class "controller-icon ui-state-default ui-corner-all"]
-                                                     [title "View this item"])
-                                                  (!icon (@ [type "search"]))))
-                                 #:else (xml (div (@ [class "controller-icon ui-state-disabled ui-corner-all"]
-                                                     [title "Cannot view this item"])
-                                                  (!icon (@ [type "search"])))))
-               ,(controller-link (update-controller-ref struct) struct
-                                 #:body (xml (div (@ [class "controller-icon ui-state-default ui-corner-all"]
-                                                     [title "Edit this item"])
-                                                  (!icon (@ [type "pencil"]))))
-                                 #:else (xml (div (@ [class "controller-icon ui-state-disabled ui-corner-all"]
-                                                     [title "Cannot edit this item"])
-                                                  (!icon (@ [type "pencil"])))))
-               ,(controller-link (delete-controller-ref struct) struct
-                                 #:body (xml (div (@ [class "controller-icon ui-state-default ui-corner-all"]
-                                                     [title "Delete this item"])
-                                                  (!icon (@ [type "trash"]))))
-                                 #:else (xml (div (@ [class "controller-icon ui-state-disabled ui-corner-all"]
-                                                     [title "Cannot delete this item"])
-                                                  (!icon (@ [type "trash"]))))))))
+               ,(opt-xml (review-controller-set? struct)
+                  ,(controller-link
+                    (review-controller-ref struct)
+                    struct
+                    #:body (xml (div (@ [class "controller-icon ui-state-default ui-corner-all"]
+                                        [title "View this item"])
+                                     (!icon (@ [type "search"]))))
+                    #:else (xml (div (@ [class "controller-icon ui-state-disabled ui-corner-all"]
+                                        [title "Cannot view this item"])
+                                     (!icon (@ [type "search"]))))))
+               ,(opt-xml (update-controller-set? struct)
+                  ,(controller-link
+                    (update-controller-ref struct)
+                    struct
+                    #:body (xml (div (@ [class "controller-icon ui-state-default ui-corner-all"]
+                                        [title "Edit this item"])
+                                     (!icon (@ [type "pencil"]))))
+                    #:else (xml (div (@ [class "controller-icon ui-state-disabled ui-corner-all"]
+                                        [title "Cannot edit this item"])
+                                     (!icon (@ [type "pencil"]))))))
+               ,(opt-xml (delete-controller-set? struct)
+                  ,(controller-link
+                    (delete-controller-ref struct)
+                    struct
+                    #:body (xml (div (@ [class "controller-icon ui-state-default ui-corner-all"]
+                                        [title "Delete this item"])
+                                     (!icon (@ [type "trash"]))))
+                    #:else (xml (div (@ [class "controller-icon ui-state-disabled ui-corner-all"]
+                                        [title "Cannot delete this item"])
+                                     (!icon (@ [type "trash"])))))))))
     
     ; string [boolean] -> string
     (define/public (pattern->regexp pattern [anywhere? #f])
