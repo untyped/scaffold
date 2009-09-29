@@ -1,6 +1,7 @@
 #lang scheme/base
 
-(require "check-label.ss"
+(require "arg.ss"
+         "check-label.ss"
          "controller.ss"
          "editor.ss"
          "page-internal.ss"
@@ -9,7 +10,8 @@
 
 ; Provide statements -----------------------------
 
-(provide (all-from-out "check-label.ss"
+(provide (all-from-out "arg.ss"
+                       "check-label.ss"
                        "controller.ss"
                        "editor.ss"
                        "page-internal.ss"
