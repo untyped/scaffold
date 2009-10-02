@@ -32,7 +32,6 @@
              set-id!
              get-value
              set-value!
-             render-label
              render-check-label
              set-label!
              value-changed?)
@@ -77,11 +76,18 @@
       (symbol-append (get-id) '-wrapper))
     
     ; seed -> xml
+    (define/override (render-label seed)
+      (if required?
+          (xml (span (@ [class "required"])
+                     ,(super render-label seed)
+                     ,(opt-xml required-label
+                        " " ,required-label)))
+          (super render-label seed)))
+    
+    ; seed -> xml
     (define/override (render seed)
       (xml (span (@ [id ,(get-wrapper-id)])
                  ,(super render seed) " "
-                 ,(opt-xml (and required? required-label)
-                    ,required-label)
                  ,(render-check-label seed))))
     
     ; snooze-struct -> snooze-struct
