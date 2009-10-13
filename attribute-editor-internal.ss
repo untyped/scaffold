@@ -150,6 +150,11 @@
              (not (type-allows-null? (attribute-type attr)))))
       #:accessor)
     
+    (init-field required-label 
+      (default-required-label)
+      #:accessor
+      #:mutator)
+
     (init [id    (or (attributes->id attributes) (get-component-id))]
           [label (if (pair? attributes)
                      (let ([attr (car attributes)])
@@ -160,6 +165,14 @@
     
     ; Methods ------------------------------------
     
+    ; seed -> xml
+    (define/override (render-label seed)
+      (if required?
+          (xml (span (@ [class "required"])
+                     ,(super render-label seed)
+                     ,(opt-xml required-label " " ,required-label)))
+          (super render-label seed)))
+
     ; check-result -> boolean
     (define/override (report-result? result)
       (or (super report-result? result)
@@ -170,7 +183,6 @@
     (define/overment (render seed)
       (xml (span (@ ,(core-html-attributes seed))
                  ,(inner (xml) render seed) " "
-                 ,(opt-xml required? "(required) ")
                  ,(render-check-label seed))))
     
     ; snooze-struct -> snooze-struct
