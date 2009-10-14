@@ -73,7 +73,6 @@
     ; -> (listof (U xml (seed -> xml)))
     (define/augment (get-html-requirements)
       (list* snooze-styles
-             show-hide-script
              (inner null get-html-requirements)))
     
     ; symbol -> void
