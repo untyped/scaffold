@@ -18,7 +18,8 @@
 
 (define attribute-editor<%>
   (interface (editor<%> labelled-element<%> check-label<%>)
-    get-attributes          ; -> (listof attribute)
+    get-attributes  ; -> (listof attribute)
+    set-attributes! ; (listof attribute) -> void
     destructure!
     restructure))
 
@@ -43,13 +44,12 @@
     (super-new)
     
     ; (listof attribute)
-    (init-cell attributes null #:accessor)
+    (init-cell attributes null #:accessor #:mutator)
     
     ; boolean
     (init-field required?
-      (and (pair? attributes)
-           (let ([attr (car attributes)])
-             (not (type-allows-null? (attribute-type attr)))))
+      (for/or ([attr (in-list attributes)])
+        (not (type-allows-null? (attribute-type attr))))
       #:accessor)
     
     (init-field required-label 
@@ -141,7 +141,7 @@
     ; Fields -------------------------------------
     
     ; (listof attribute)
-    (init-cell attributes null #:accessor)
+    (init-cell attributes null #:accessor #:mutator)
     
     ; boolean
     (init-field required?

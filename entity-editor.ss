@@ -50,7 +50,8 @@
                   ,@(for/list ([editor (in-list (get-editors))])
                       (xml (tr (th (@ [class "attribute-label"])
                                    ,(send editor render-label seed))
-                               (td ,(send editor render seed))))))))
+                               (td (@ [class "attribute-value"])
+                                   ,(send editor render seed))))))))
     
     ; (listof check-result) -> void
     (define/public (set-check-results! results)

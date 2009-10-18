@@ -10,6 +10,9 @@
          "report-view.ss"
          "util.ss")
 
+(define default-show-csv-link?
+  (make-parameter #t))
+
 (define snooze-report%
   (class/cells html-element% ()
     
@@ -253,9 +256,11 @@
     
     ; -> (listof xml) where each xml element should be an anchor (link)
     (define/public (get-control-links seed start count total)
-      (list (xml (a (@ [href ,(embed/full seed (callback csv-download))]
-                       [target "_new"])
-                    "CSV version"))))
+      (assemble-list
+       [(default-show-csv-link?)
+        (xml (a (@ [href ,(embed/full seed (callback csv-download))]
+                   [target "_new"])
+                "CSV version"))]))
     
     ; seed integer integer integer -> xml
     (define/public (render-position seed start count total)
@@ -485,3 +490,6 @@
                                    "report-view.ss")
                      view)
          snooze-report%)
+
+(provide/contract
+ [default-show-csv-link? (parameter/c boolean?)])

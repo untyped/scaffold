@@ -22,8 +22,7 @@
     
     ; (cell (listof sql-order))
     (init-cell order
-      (let-sql ([entity (get-entity)])
-        (sql-list (asc entity.guid)))
+      (entity-default-order (get-entity))
       #:accessor #:mutator)
     
     ; Methods ------------------------------------
