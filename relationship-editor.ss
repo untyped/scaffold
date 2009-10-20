@@ -37,7 +37,7 @@
     
     ; (cell (listof sql-order))
     (init-cell order
-               (let-sql ([entity (get-entity)])
+               (let-sql ([entity (get-related-entity)])
                         (sql-list (asc entity.guid)))
                #:accessor #:mutator)
     
@@ -84,8 +84,8 @@
       (and raw
            ; for some reason, select-item passes in an integer, while deselect-item prefers a string.
            ; FIXME, later...
-           (debug* "raw->item" cond [(number? raw) (find-by-id (get-entity) raw)]
-                   [(string? raw) (find-by-id (get-entity) (string->number raw))])))
+           (debug* "raw->item" cond [(number? raw) (find-by-id (get-related-entity) raw)]
+                   [(string? raw) (find-by-id (get-related-entity) (string->number raw))])))
     
     ; any -> string
     (define/override (item->string item)
@@ -98,8 +98,8 @@
     ; -> void
     (define/override (refresh-selectable-items)
       (debug-location)
-      (let-sql ([entity (get-entity)])
-               (send (get-editor) set-where! (sql (not (in entity.guid ,(get-value)))))))
+      (let-sql ([entity (get-related-entity)])
+               (send (get-editor) set-where! (sql (not (in entity.guid ,(debug* "val" get-value)))))))
     
     ; -> sql-where
     (define/public (get-where)
