@@ -97,9 +97,8 @@
     
     ; -> void
     (define/override (refresh-selectable-items)
-      (debug-location)
       (let-sql ([entity (get-related-entity)])
-               (send (get-editor) set-where! (sql (not (in entity.guid ,(debug* "val" get-value)))))))
+               (send (get-editor) set-where! (sql (not (in entity.guid ,(get-value)))))))
     
     ; -> sql-where
     (define/public (get-where)
@@ -154,14 +153,16 @@
                    ; relationship-structs that are currently saved
                    [saved-relationship-structs (find-relationships/relateds struct chosen-related-structs)]
                    ; a list of relationship-structs that are either saved (from above) or newly created
-                   [saved+new-relationships    (reverse 
-                                                (for/fold ([relationships null])
-                                                          ([chosen-related (in-list chosen-related-structs)])
-                                                          (cons (or (findf (lambda (relationship)
-                                                                             (equal? (relationship->related relationship) chosen-related))
-                                                                           saved-relationship-structs)
-                                                                    (make-relationship struct chosen-related))
-                                                                relationships)))]
+                   [saved+new-relationships    
+                    (reverse 
+                     (for/fold ([relationships null])
+                               ([chosen-related (in-list chosen-related-structs)])
+                               (cons (or (findf (lambda (relationship)
+                                                  (= (snooze-struct-id (relationship->related relationship))
+                                                     (snooze-struct-id chosen-related)))
+                                                saved-relationship-structs)
+                                         (make-relationship struct chosen-related))
+                                     relationships)))]
                    [deleted-relationships      (filter (lambda (rel) 
                                                          (not (member (snooze-struct-id rel)
                                                                       (map snooze-struct-id saved+new-relationships))))
