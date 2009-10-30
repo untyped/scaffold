@@ -9,7 +9,6 @@
          "foreign-key-editor.ss"
          "relationship-editor.ss")
 
-
 ; Helper mixins ----------------------------------
 
 (define time-utc-editor-mixin

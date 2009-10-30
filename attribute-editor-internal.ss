@@ -76,13 +76,11 @@
       (symbol-append (get-id) '-wrapper))
     
     ; seed -> xml
-    (define/override (render-label seed)
+    (define/override (render-label-content seed)
       (if required?
-          (xml (span (@ [class "required"])
-                     ,(super render-label seed)
-                     ,(opt-xml required-label
-                        " " ,required-label)))
-          (super render-label seed)))
+          (xml ,(super render-label-content seed)
+               ,(opt-xml required-label " " ,required-label))
+          (super render-label-content seed)))
     
     ; seed -> xml
     (define/override (render seed)
@@ -166,12 +164,11 @@
     ; Methods ------------------------------------
     
     ; seed -> xml
-    (define/override (render-label seed)
+    (define/override (render-label-content seed)
       (if required?
-          (xml (span (@ [class "required"])
-                     ,(super render-label seed)
-                     ,(opt-xml required-label " " ,required-label)))
-          (super render-label seed)))
+          (xml ,(super render-label-content seed)
+               ,(opt-xml required-label " " ,required-label))
+          (super render-label-content seed)))
 
     ; check-result -> boolean
     (define/override (report-result? result)

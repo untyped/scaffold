@@ -37,9 +37,9 @@
     
     ; (cell (listof sql-order))
     (init-cell order
-               (let-sql ([entity (get-related-entity)])
-                        (sql-list (asc entity.guid)))
-               #:accessor #:mutator)
+      (let-sql ([entity (get-related-entity)])
+        (sql-list (asc entity.guid)))
+      #:accessor #:mutator)
     
     ; Cells --------------------------------------
     
@@ -67,7 +67,7 @@
     
     ; -> (U number symbol)
     (define/override (get-editor-value) 
-      (let/debug ([editor-value (send (get-editor) get-value)])
+      (let ([editor-value (send (get-editor) get-value)])
         (and editor-value (snooze-struct-id editor-value))))
     
     ; -> void
@@ -84,8 +84,8 @@
       (and raw
            ; for some reason, select-item passes in an integer, while deselect-item prefers a string.
            ; FIXME, later...
-           (debug* "raw->item" cond [(number? raw) (find-by-id (get-related-entity) raw)]
-                   [(string? raw) (find-by-id (get-related-entity) (string->number raw))])))
+           (cond [(number? raw) (find-by-id (get-related-entity) raw)]
+                 [(string? raw) (find-by-id (get-related-entity) (string->number raw))])))
     
     ; any -> string
     (define/override (item->string item)
@@ -98,7 +98,7 @@
     ; -> void
     (define/override (refresh-selectable-items)
       (let-sql ([entity (get-related-entity)])
-               (send (get-editor) set-where! (sql (not (in entity.guid ,(get-value)))))))
+        (send (get-editor) set-where! (sql (not (in entity.guid ,(get-value)))))))
     
     ; -> sql-where
     (define/public (get-where)
@@ -147,30 +147,30 @@
       (error "relationship->related must be overridden"))
     
     (define/private (update-cells)
-      (let*/debug ([struct                 (get-struct)]
-                   ; related-structs currently selected in the set-selector
-                   [chosen-related-structs (get-value)]
-                   ; relationship-structs that are currently saved
-                   [saved-relationship-structs (find-relationships/relateds struct chosen-related-structs)]
-                   ; a list of relationship-structs that are either saved (from above) or newly created
-                   [saved+new-relationships    
-                    (reverse 
-                     (for/fold ([relationships null])
-                               ([chosen-related (in-list chosen-related-structs)])
-                               (cons (or (findf (lambda (relationship)
-                                                  (= (snooze-struct-id (relationship->related relationship))
-                                                     (snooze-struct-id chosen-related)))
-                                                saved-relationship-structs)
-                                         (make-relationship struct chosen-related))
-                                     relationships)))]
-                   [deleted-relationships      (filter (lambda (rel) 
-                                                         (not (member (snooze-struct-id rel)
-                                                                      (map snooze-struct-id saved+new-relationships))))
-                                                       (find-relationships/struct struct))])
+      (let* ([struct                 (get-struct)]
+             ; related-structs currently selected in the set-selector
+             [chosen-related-structs (get-value)]
+             ; relationship-structs that are currently saved
+             [saved-relationship-structs (find-relationships/relateds struct chosen-related-structs)]
+             ; a list of relationship-structs that are either saved (from above) or newly created
+             [saved+new-relationships    
+              (reverse 
+               (for/fold ([relationships null])
+                         ([chosen-related (in-list chosen-related-structs)])
+                         (cons (or (findf (lambda (relationship)
+                                            (= (snooze-struct-id (relationship->related relationship))
+                                               (snooze-struct-id chosen-related)))
+                                          saved-relationship-structs)
+                                   (make-relationship struct chosen-related))
+                               relationships)))]
+             [deleted-relationships      (filter (lambda (rel) 
+                                                   (not (member (snooze-struct-id rel)
+                                                                (map snooze-struct-id saved+new-relationships))))
+                                                 (find-relationships/struct struct))])
         (set-updated-relationships! saved+new-relationships)
         (for ([rel (in-list saved+new-relationships)])
           (for ([attr (in-list (entity-data-attributes (get-relationship-entity)))])
-            (debug (attribute-pretty-name attr) (snooze-struct-ref rel attr))))
+            (snooze-struct-ref rel attr)))
         (set-deleted-relationships! deleted-relationships)))
     
     ; Nothing to parse - no user entry, only choice of preselected options
@@ -190,7 +190,6 @@
       (call-with-transaction 
        #:metadata (list "Saving relationships for ~a" (get-struct))
        (lambda ()
-         (printf "============ DONE! ==========~n")
          (begin0 (map save!   (get-updated-relationships))
                  (map delete! (get-deleted-relationships))
                  (clear-continuation-table!)))))))
