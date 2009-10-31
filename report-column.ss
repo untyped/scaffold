@@ -105,10 +105,9 @@
                               ; optional sorting arrows
                               ,(opt-xml sortable?
                                  (span (@ [class ,(case sort-dir
-                                                    [(asc)  "ui-icon ui-icon-triangle-1-n"]
-                                                    [(desc) "ui-icon ui-icon-triangle-1-s"]
-                                                    [(#f)   "ui-icon ui-icon-carat-2-n-s"])]
-                                          [style "float: left;"])))
+                                                    [(asc)  "sort-icon ui-icon ui-icon-triangle-1-n"]
+                                                    [(desc) "sort-icon ui-icon ui-icon-triangle-1-s"]
+                                                    [(#f)   "sort-icon ui-icon ui-icon-carat-2-n-s"])])))
                               ,(get-xml-name)))
                       (xml (span (@ [class 'not-sortable])
                                  ,(get-xml-name))))))))
