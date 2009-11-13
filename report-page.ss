@@ -31,7 +31,7 @@
     
     ; snooze-report%
     (init-field report
-      (or (and entity (new (default-scaffolded-report-superclass) [entity entity]))
+      (or (and entity (new (default-scaffolded-report-superclass) [entity entity] [attributes attributes]))
           (string-append "entity-report-page constructor: insufficient arguments"))
       #:child)
     
@@ -52,9 +52,11 @@
 
 ; Procedures -------------------------------------
 
-; entity [(subclassof html-page%)] -> html-page%
-(define (scaffold-report-page entity [page% (default-scaffolded-page-superclass)])
-  (new (entity-report-page-mixin (render-augride-mixin page%)) [entity entity]))
+; entity [(subclassof html-page%)] [#:attributes (listof attribute)] -> html-page%
+(define (scaffold-report-page entity 
+                              [page% (default-scaffolded-page-superclass)]
+                              #:attributes [attributes (entity-data-attributes entity)])
+  (new (entity-report-page-mixin (render-augride-mixin page%)) [entity entity] [attributes attributes]))
 
 ; Provide statements -----------------------------
 
@@ -63,5 +65,6 @@
 (provide/contract
  [default-scaffolded-report-superclass (parameter/c (subclass?/c entity-report%))]
  [scaffold-report-page                 (->* (entity?)
-                                            ((subclass?/c html-page%))
+                                            ((subclass?/c html-page%)
+                                             #:attributes (listof attribute?))
                                             (is-a?/c html-page%))])
