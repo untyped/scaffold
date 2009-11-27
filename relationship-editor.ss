@@ -76,13 +76,13 @@
     
     ; any -> (U boolean integer symbol)
     (define/override (item->raw item)
-      (and option
-           (if (and (snooze-struct?       option)
-                    (snooze-struct-saved? option))
-               (number->string (snooze-struct-id option))
-               (raise-type-error 'foreign-key-editor.option->raw
+      (and item
+           (if (and (snooze-struct?       item)
+                    (snooze-struct-saved? item))
+               (number->string (snooze-struct-id item))
+               (raise-type-error 'foreign-key-editor.item->raw
                                  "(U snooze-struct #f)"
-                                 option))))
+                                 item))))
     
     ; (U string snooze-struct) -> any
     (define/override (raw->item raw)
@@ -103,7 +103,8 @@
     ; -> void
     (define/override (refresh-selectable-items)
       (let-sql ([entity (get-related-entity)])
-        (send (get-editor) set-where! (sql (not (in entity.guid ,(get-value)))))))
+        (send (get-editor) set-where! (sql (and (in entity.guid ,(find-relateables))
+                                                (not (in entity.guid ,(get-value))))))))
     
     ; -> sql-where
     (define/public (get-where)
