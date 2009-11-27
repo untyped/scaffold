@@ -98,7 +98,8 @@
     ; -> void
     (define/override (refresh-selectable-items)
       (let-sql ([entity (get-related-entity)])
-        (send (get-editor) set-where! (sql (not (in entity.guid ,(get-value)))))))
+        (send (get-editor) set-where! (sql (and (in entity.guid ,(find-relateables))
+                                                (not (in entity.guid ,(get-value))))))))
     
     ; -> sql-where
     (define/public (get-where)
