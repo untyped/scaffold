@@ -76,10 +76,15 @@
     
     ; any -> (U boolean integer symbol)
     (define/override (item->raw item)
-      (and (guid? item)
-           (number->string (snooze-struct-id item))))
+      (and option
+           (if (and (snooze-struct?       option)
+                    (snooze-struct-saved? option))
+               (number->string (snooze-struct-id option))
+               (raise-type-error 'foreign-key-editor.option->raw
+                                 "(U snooze-struct #f)"
+                                 option))))
     
-    ; (U string guid) -> any
+    ; (U string snooze-struct) -> any
     (define/override (raw->item raw)
       (and raw
            ; for some reason, select-item passes in an integer, while deselect-item prefers a string.

@@ -34,12 +34,17 @@
                               #:where ,(get-where)
                               #:order ,(get-order)))))
     
-    ; (U guid #f) -> (U string #f)
+    ; (U snooze-struct #f) -> (U string #f)
     (define/override (option->raw option)
-      (and (guid? option)
-           (number->string (snooze-struct-id option))))
+      (and option
+           (if (and (snooze-struct?       option)
+                    (snooze-struct-saved? option))
+               (number->string (snooze-struct-id option))
+               (raise-type-error 'foreign-key-editor.option->raw
+                                 "(U snooze-struct #f)"
+                                 option))))
     
-    ; (U string #f) -> guid
+    ; (U string #f) -> snooze-struct
     (define/override (raw->option raw)
       (and raw (let ([id (string->number raw)])
                  (and id (find-by-id entity id)))))
