@@ -12,7 +12,7 @@
 
 ; (parameter xml+quotable)
 (define default-required-label
-  (make-parameter "(required)"))
+  (make-parameter " (required)"))
 
 ; Interfaces -------------------------------------
 
@@ -79,7 +79,7 @@
     (define/override (render-label-content seed)
       (if required?
           (xml ,(super render-label-content seed)
-               ,(opt-xml required-label " " ,required-label))
+               ,(opt-xml required-label ,required-label))
           (super render-label-content seed)))
     
     ; seed -> xml
