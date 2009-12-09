@@ -50,11 +50,11 @@
                                   [body                        (if (pair? (attribute body-expr))
                                                                    #'(begin body-expr ...)
                                                                    (page->body #'entity #'page-id))])
-                                 
-                                 (syntax/loc complete-stx
-                                   (begin define-page
-                                          (define-controller (id arg ...) kw+val ... (let ([id body]) body))
-                                          (controller-set! entity id))))]
+                     
+                     (syntax/loc complete-stx
+                       (begin define-page
+                              (define-controller (id arg ...) kw+val ... (let ([id body]) body))
+                              (controller-set! entity id))))]
                   
                   ; (_ id entity
                   ;   [#:page page]
@@ -86,7 +86,7 @@
    #'report-controller-set!
    (lambda (entity-stx page-stx)
      (with-syntax ([entity entity-stx] [page page-stx])
-       #'(scaffold-report-controller-body entity page)))))
+       #'(scaffold-report-controller-body entity #:page page)))))
 
 (define-syntax (define-create-controller complete-stx)
   (make-controller-definition
@@ -95,7 +95,7 @@
    #'create-controller-set!
    (lambda (entity-stx page-stx)
      (with-syntax ([entity entity-stx] [page page-stx])
-       #'(scaffold-create-controller-body entity page)))))
+       #'(scaffold-create-controller-body entity #:page page)))))
 
 (define-syntax (define-review-controller complete-stx)
   (make-controller-definition
@@ -104,7 +104,7 @@
    #'review-controller-set!
    (lambda (entity-stx page-stx)
      (with-syntax ([entity entity-stx] [page page-stx])
-       #'(scaffold-review-controller-body entity page)))))
+       #'(scaffold-review-controller-body entity #:page page)))))
 
 (define-syntax (define-update-controller complete-stx)
   (make-controller-definition
@@ -113,7 +113,7 @@
    #'update-controller-set!
    (lambda (entity-stx page-stx)
      (with-syntax ([entity entity-stx] [page page-stx])
-       #'(scaffold-update-controller-body entity page)))))
+       #'(scaffold-update-controller-body entity #:page page)))))
 
 (define-syntax (define-delete-controller complete-stx)
   (make-controller-definition
@@ -122,25 +122,33 @@
    #'delete-controller-set!
    (lambda (entity-stx page-stx)
      (with-syntax ([entity entity-stx] [page page-stx])
-       #'(scaffold-delete-controller-body entity page)))))
+       #'(scaffold-delete-controller-body entity #:page page)))))
 
 ; Controller bodies ------------------------------
 
 ; entity [html-page%] -> (-> void)
-(define (scaffold-report-controller-body entity [page (scaffold-report-page entity)])
+(define (scaffold-report-controller-body
+         entity
+         #:page   [page (scaffold-report-page entity)])
   (lambda ()
     (send* page [respond])))
 
-; entity [html-page%] -> (-> void)
-(define (scaffold-create-controller-body entity [page (scaffold-create-page entity)])
+; entity [html-page%] [(snooze-struct -> any)] -> (-> void)
+(define (scaffold-create-controller-body
+         entity
+         #:page   [page              (scaffold-create-page entity)]
+         #:review [review-controller (review-controller-ref entity)])
   (lambda ()
-    (call-review-controller
+    (review-controller
      (send* page
        [set-value! (make-snooze-struct/defaults entity)]
        [respond]))))
 
-; entity [html-page%] -> (snooze-struct -> void)
-(define (scaffold-review-controller-body entity [page (scaffold-review-page entity)])
+; entity [html-page%] [(-> any)] -> (snooze-struct -> void)
+(define (scaffold-review-controller-body
+         entity
+         #:page   [page              (scaffold-review-page entity)]
+         #:report [report-controller (report-controller-ref entity)])
   (lambda (struct)
     (if struct
         (begin (send* page
@@ -148,31 +156,38 @@
                  [respond]))
         (begin (notifications-add! (xml "The " ,(entity-pretty-name entity)
                                         " you requested could not be found."))
-               (call-report-controller entity)))))
+               (report-controller)))))
 
-; entity [html-page%] -> (snooze-struct -> void)
-(define (scaffold-update-controller-body entity [page (scaffold-update-page entity)])
+; entity [html-page%] [(scnooze-struct -> any)] [(-> any)] -> (snooze-struct -> void)
+(define (scaffold-update-controller-body
+         entity
+         #:page   [page              (scaffold-update-page entity)]
+         #:review [review-controller (review-controller-ref entity)]
+         #:report [report-controller (report-controller-ref entity)])
   (lambda (struct)
     (if struct
-        (begin (call-review-controller 
+        (begin (review-controller 
                 (send* page 
                   [set-value! struct] 
                   [respond])))
         (begin (notifications-add! (xml "The " ,(entity-pretty-name entity)
                                         " you requested could not be found."))
-               (call-report-controller entity)))))
+               (report-controller)))))
 
-; entity [html-page%] -> (snooze-struct -> void)
-(define (scaffold-delete-controller-body entity [page (scaffold-delete-page entity)])
+; entity [html-page%] [(-> any)] -> (snooze-struct -> void)
+(define (scaffold-delete-controller-body
+         entity
+         #:page   [page              (scaffold-delete-page entity)]
+         #:report [report-controller (report-controller-ref entity)])
   (lambda (struct)
     (if struct
         (begin (send* page 
                  [set-value! struct] 
                  [respond])
-               (call-report-controller entity))
+               (report-controller))
         (begin (notifications-add! (xml "The " ,(entity-pretty-name entity)
                                         " you requested could not be found."))
-               (call-report-controller entity)))))
+               (report-controller)))))
 
 ; Provide statements -----------------------------
 
@@ -184,8 +199,23 @@
          define-delete-controller)
 
 (provide/contract
- [scaffold-report-controller-body (->* (entity?) ((is-a?/c html-page%)) procedure?)]
- [scaffold-create-controller-body (->* (entity?) ((is-a?/c html-page%)) procedure?)]
- [scaffold-review-controller-body (->* (entity?) ((is-a?/c html-page%)) procedure?)]
- [scaffold-update-controller-body (->* (entity?) ((is-a?/c html-page%)) procedure?)]
- [scaffold-delete-controller-body (->* (entity?) ((is-a?/c html-page%)) procedure?)])
+ [scaffold-report-controller-body (->* (entity?)
+                                       (#:page (is-a?/c html-page%))
+                                       procedure?)]
+ [scaffold-create-controller-body (->* (entity?)
+                                       (#:page (is-a?/c html-page%)
+                                               #:review procedure?)
+                                       procedure?)]
+ [scaffold-review-controller-body (->* (entity?)
+                                       (#:page (is-a?/c html-page%)
+                                               #:report procedure?)
+                                       procedure?)]
+ [scaffold-update-controller-body (->* (entity?)
+                                       (#:page (is-a?/c html-page%)
+                                               #:review procedure?
+                                               #:report procedure?)
+                                       procedure?)]
+ [scaffold-delete-controller-body (->* (entity?)
+                                       (#:page (is-a?/c html-page%)
+                                               #:report procedure?)
+                                       procedure?)])
