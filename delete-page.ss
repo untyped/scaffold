@@ -38,7 +38,7 @@
     (init entity)
     
     ; (listof attribute)
-    (init [attributes (and entity (entity-attributes entity))])
+    (init [attributes (and entity (entity-data-attributes entity))])
     
     ; (listof attribute-view<%>)
     (init [views (and attributes (map default-attribute-view attributes))])
@@ -82,10 +82,9 @@
     
     ; seed -> xml
     (define/public (render-confirmation-message seed)
-      (xml "You are about to delete the " ,(entity-name (get-entity)) " shown below. "
-           "There is no way of undoing this operation. "
-           "Click " ,(format "~s" (send submit-button get-label))" at the bottom of the page "
-           "if you wish to proceed."))
+      (xml (p "You are about to delete the " ,(entity-name (get-entity)) " shown below. "
+              "Be careful - there is no undo! "
+              "Click \"" ,(send submit-button get-label) "\" if you wish to proceed.")))
     
     ; snooze-struct -> xml
     (define/public (get-delete-notification struct)
