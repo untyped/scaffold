@@ -48,7 +48,7 @@
        (new submit-button%
             [id     (symbol-append (get-id) '-submit)]
             [action (callback on-update)])
-       #:child)
+       #:child #:accessor)
      
      ; Methods ---------------------------
      
@@ -117,7 +117,7 @@
        (new submit-button%
             [id     (symbol-append (get-id) '-submit)]
             [action (callback on-update)])
-       #:child)
+       #:child #:accessor)
      
      ; Methods ---------------------------
      
