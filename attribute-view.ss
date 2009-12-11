@@ -31,7 +31,14 @@
     ; Fields -------------------------------------
     
     ; (cell (listof attribute))
-    (init-cell attributes null
+    (init-field attributes null
+      #:accessor)
+    
+    ; (cell (snooze-struct -> any))
+    (init-field review-controller 
+      (and (pair? attributes)
+           (guid-type? (attribute-type (car attributes)))
+           (review-controller-ref (guid-type-entity (attribute-type (car attributes))) #f))
       #:accessor)
     
     ; Constructor --------------------------------
@@ -66,8 +73,8 @@
     
     ; seed snooze-struct -> xml
     (define/public (render-snooze-struct seed val)
-      (if (review-controller-set? val)
-          (xml (a (@ [href ,(review-controller-url val)])
+      (if review-controller
+          (xml (a (@ [href ,(controller-url review-controller val)])
                   ,(format-snooze-struct val)))
           (format-snooze-struct val)))
     
