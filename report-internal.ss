@@ -48,6 +48,9 @@
     
     ; boolean 
     (init-cell show-controls?        #t #:accessor #:mutator)
+    (init-cell show-csv-link? 
+      (default-show-csv-link?)
+      #:accessor #:mutator)
     (init-cell show-pattern-field?   #t #:accessor #:mutator)
     (init-cell show-position-top?    #t #:accessor #:mutator)
     (init-cell show-position-bottom? #f #:accessor #:mutator)
@@ -256,11 +259,10 @@
     
     ; -> (listof xml) where each xml element should be an anchor (link)
     (define/public (get-control-links seed start count total)
-      (assemble-list
-       [(default-show-csv-link?)
-        (xml (a (@ [href ,(embed/full seed (callback csv-download))]
-                   [target "_new"])
-                "CSV version"))]))
+      (opt-xml (get-show-csv-link?)
+        (a (@ [href ,(embed/full seed (callback csv-download))]
+              [target "_new"])
+           "CSV version")))
     
     ; seed integer integer integer -> xml
     (define/public (render-position seed start count total)
