@@ -9,7 +9,7 @@
 ; -> void
 (define (run-application)
   (serve/smoke (lambda ()
-                 (testapp-dispatch (current-request)))
+                 (site-dispatch test-site (current-request)))
                #:htdocs-paths (list testapp-htdocs-path)))
 
 ; Main program body ------------------------------
