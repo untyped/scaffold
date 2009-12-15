@@ -51,33 +51,40 @@
                    (map delete! (get-deleted-relationships))
                    (clear-continuation-table!))))))))
 
+(define person-name-editor
+  (let ([ed (default-attribute-editor (attr person name))])
+    (send ed set-id! 'person-name-editor)
+    ed))
+
 (define person-editor%
   (class/cells entity-editor% ()
     (field stuff-owned-editor 
-      (new stuff-editor% [label "Stuff"])
+      (new stuff-editor% [id 'person-stuff-editor] [label "Stuff"])
       #:child)
-    (super-new [entity person])
-    (define/override (get-editors)
-      (append (super get-editors) (list stuff-owned-editor)))
+    (super-new [entity person]
+               [editors (list person-name-editor stuff-owned-editor)])
     (define/override (validate)
       (check-problems (super validate)
                       (send stuff-owned-editor validate)))
     (define/override (commit-changes)
       (with-transaction "Saving person and stuff"
-        (begin0 (super commit-changes)
-                (send stuff-owned-editor commit-changes)
-                (clear-continuation-table!))))))
+        (let ([saved-person (super commit-changes)])
+          (send stuff-owned-editor set-struct! saved-person)
+          (send stuff-owned-editor commit-changes)
+          (clear-continuation-table!)
+          saved-person)))))
 
 ; Pages ------------------------------------------
 
 (define stuff-editor-page
-  (singleton/cells (entity-editor-page-mixin (render-augride-mixin html-page%)) ()
+  (singleton/cells (entity-editor-page-mixin html-page%) ()
     (super-new [entity stuff])))
 
 (define person-editor-page
-  (singleton/cells (entity-editor-page-mixin (render-augride-mixin html-page%)) ()
-    (super-new [entity     person]
-               [editor     (new person-editor%)])))
+  (singleton/cells (entity-editor-page-mixin html-page%) ()
+    (super-new [title  "Person and stuff editor"]
+               [entity person]
+               [editor (new person-editor%)])))
 
 ; Controllers ------------------------------------
 
@@ -90,7 +97,7 @@
 
 (define-controller (person-editor)
   (with-connection
-   (let ([entity (send person-editor-page get-entity)])
-     (let loop ([val ((entity-defaults-constructor entity))])
-       (send person-editor-page set-value! val)
-       (loop (send person-editor-page respond))))))
+   (person-review (send* person-editor-page [set-value! (make-person/defaults)] [respond]))))
+
+(define-controller (person-review person)
+  (send* person-editor-page [set-value! person] [respond]))

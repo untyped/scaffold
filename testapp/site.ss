@@ -2,15 +2,19 @@
 
 (require "../base.ss")
 
-(require (dispatch-in))
+(require (dispatch-in)
+         "model/db.ss"
+         "model/entities.ss"
+         "../arg.ss")
 
 ; Site -------------------------------------------
 
 (define-site test-site
-  ([("")               home]
-   [("/editor")        editor]
-   [("/person-editor") person-editor]
-   [("/stuff-editor")  stuff-editor])
+  ([("")                             home]
+   [("/editor")                      editor]
+   [("/person-editor")               person-editor]
+   [("/person/" (entity-arg person)) person-review]
+   [("/stuff-editor")                stuff-editor])
   #:requestless? #t)
 
 ; Controllers ------------------------------------
