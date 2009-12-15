@@ -4,7 +4,7 @@
 
 (require scheme/cmdline
          "content-base.ss"
-         (directory-in "content"))
+         "content/content.ss")
 
 ; -> void
 (define (run-application)

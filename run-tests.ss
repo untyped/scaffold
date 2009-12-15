@@ -14,6 +14,11 @@
 (print-struct #t)
 (dev? #t)
 
+;(call-with-connection
+; (lambda ()
+;   (for-each drop-table   (list owner person stuff))
+;   (for-each create-table (list person stuff owner))))
+
 (serve/smoke/delirium
  (cut site-dispatch test-site (current-request))
  all-testapp-tests

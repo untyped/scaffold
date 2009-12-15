@@ -7,8 +7,10 @@
 ; Site -------------------------------------------
 
 (define-site test-site
-  ([("")        home]
-   [("/editor") editor])
+  ([("")               home]
+   [("/editor")        editor]
+   [("/person-editor") person-editor]
+   [("/stuff-editor")  stuff-editor])
   #:requestless? #t)
 
 ; Controllers ------------------------------------

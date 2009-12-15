@@ -56,6 +56,18 @@
    [a-required-long-enum      enum      #:allow-null? #f #:values long-enum]
    [a-required-post           post      #:allow-null? #f]))
 
+(define-entity person
+  ([name string #:allow-null? #f #:max-length 10])
+  #:pretty-formatter (lambda (pers) (person-name pers)))
+
+(define-entity stuff
+  ([description string #:allow-null? #f #:max-length 10])
+  #:pretty-formatter (lambda (stuff) (stuff-description stuff)))
+
+(define-entity owner
+  ([person person #:allow-null? #f]
+   [stuff  stuff  #:allow-null? #f]))
+
 ; Provides ---------------------------------------
 
 (provide short-enum
@@ -63,4 +75,7 @@
 
 (provide/contract/entities
  [entity post]
- [entity kitchen-sink])
+ [entity kitchen-sink]
+ [entity person]
+ [entity stuff]
+ [entity owner])
