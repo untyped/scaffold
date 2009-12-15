@@ -38,7 +38,7 @@
     (init entity)
     
     ; (listof attribute)
-    (init [attributes (and entity (entity-attributes entity))])
+    (init [attributes (and entity (entity-data-attributes entity))])
     
     ; (listof attribute-view<%>)
     (init [views (and attributes (map default-attribute-view attributes))])

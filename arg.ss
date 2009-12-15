@@ -4,8 +4,7 @@
 
 (require (planet untyped/dispatch:3)
          (planet untyped/dispatch:3/core)
-         (planet untyped/unlib:3/symbol)
-         (planet untyped/snooze:3))
+         (planet untyped/unlib:3/symbol))
 
 (define (entity-arg entity)
   (let ([name    (symbol-append (entity-name entity) '-arg)]

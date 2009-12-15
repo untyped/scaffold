@@ -9,7 +9,7 @@
 ; Pages ------------------------------------------
 
 (define editor-page
-  (singleton/cells (entity-editor-page-mixin (render-augride-mixin html-page%)) ()
+  (singleton/cells (entity-editor-page-mixin html-page%) ()
     (super-new [entity kitchen-sink])))
 
 ; Controllers ------------------------------------

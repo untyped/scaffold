@@ -31,7 +31,13 @@
     ; Fields -------------------------------------
     
     ; (cell (listof attribute))
-    (init-cell attributes null
+    (init-field attributes null
+      #:accessor)
+
+    (init-field review-controller 
+      (and (pair? attributes)
+           (guid-type? (attribute-type (car attributes)))
+           (review-controller-ref (guid-type-entity (attribute-type (car attributes))) #f))
       #:accessor)
     
     ; Constructor --------------------------------
@@ -58,15 +64,18 @@
       (xml (span (@ ,(core-html-attributes seed))
                  ,(let ([type       (attribute-type (car (get-attributes)))]
                         [val        (get-value)])
-                    (cond [(snooze-struct? val)
-                           (if (review-controller-set? val)
-                               (xml (a (@ [href ,(review-controller-url val)])
-                                       ,(format-snooze-struct val)))
-                               (format-snooze-struct val))]
+                    (cond [(snooze-struct? val) (render-snooze-struct seed val)]
                           [(and (enum-type? type) (enum-type-enum type))
                            => (lambda (enum)
                                 (enum-prettify enum val))]
                           [else val])))))
+    
+    ; seed guid -> xml
+    (define/public (render-snooze-struct seed val)
+      (if review-controller
+          (xml (a (@ [href ,(controller-url review-controller val)])
+                  ,(format-snooze-struct val)))
+          (format-snooze-struct val)))
     
     ; snooze-struct -> void
     (define/public (destructure! struct)
@@ -78,7 +87,7 @@
 ; Classes ----------------------------------------
 
 (define complete-attribute-view-mixin
-  (compose attribute-view-mixin check-label-mixin labelled-element-mixin simple-view-mixin))
+  (compose attribute-view-mixin labelled-element-mixin simple-view-mixin))
 
 (define attribute-view%
   (complete-attribute-view-mixin html-element%))

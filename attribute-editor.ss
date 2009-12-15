@@ -11,6 +11,18 @@
 
 ; Helper mixins ----------------------------------
 
+(define text-field-editor-mixin
+  (mixin/cells (text-input<%> editor<%>) ()
+    (init [attributes null]
+          [max-length (or (and (pair? attributes)
+                               (character-type? (attribute-type (car attributes)))
+                               (character-type-max-length (attribute-type (car attributes))))
+                          25)]
+          [size       (default-text-field-size max-length)])
+    (super-new [attributes attributes]
+               [max-length max-length]
+               [size       size])))
+
 (define time-utc-editor-mixin
   (mixin/cells (date-field<%> editor<%>) ()
     (inherit get-time-utc)
@@ -67,7 +79,7 @@
 (define regexp-editor%                    (complete-attribute-editor-mixin regexp-field%))
 (define set-selector-combo-box-editor%    (complete-attribute-editor-mixin set-selector-combo-box%))
 (define set-selector-autocomplete-editor% (complete-attribute-editor-mixin set-selector-autocomplete%))
-(define text-field-editor%                (complete-attribute-editor-mixin text-field%))
+(define text-field-editor%                (text-field-editor-mixin (complete-attribute-editor-mixin text-field%)))
 (define text-area-editor%                 (complete-attribute-editor-mixin text-area%))
 (define time-editor%                      (complete-attribute-editor-mixin time-field%))
 (define tiny-mce-editor%                  (complete-attribute-editor-mixin tiny-mce%))
