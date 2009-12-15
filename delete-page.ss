@@ -75,7 +75,7 @@
               [else   (format "Delete ~a" (entity-pretty-name entity))])))
     
     ; seed -> xml
-    (define/override (render seed)
+    (define/augment (render seed)
       (xml ,(render-confirmation-message seed)
            ,(send view render seed)
            ,(send submit-button render seed)))
