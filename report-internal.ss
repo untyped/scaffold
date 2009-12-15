@@ -257,12 +257,14 @@
                ,@(map (lambda (link) (xml (li ,link))) 
                       (get-control-links seed start count total))))) ; TODO replace NO-OP with ->li
     
-    ; -> (listof xml) where each xml element should be an anchor (link)
+    ; -> (listof xml)
+    ; Each xml element should be an anchor (link).
     (define/public (get-control-links seed start count total)
-      (opt-xml (get-show-csv-link?)
-        (a (@ [href ,(embed/full seed (callback csv-download))]
-              [target "_new"])
-           "CSV version")))
+      (assemble-list
+       [(get-show-csv-link?)
+        (xml (a (@ [href ,(embed/full seed (callback csv-download))]
+                   [target "_new"])
+                "CSV version"))]))
     
     ; seed integer integer integer -> xml
     (define/public (render-position seed start count total)
