@@ -9,8 +9,13 @@
 ; -> void
 (define (run-application)
   (serve/smoke (lambda ()
-                 (testapp-dispatch (current-request)))
+                 (site-dispatch test-site (current-request)))
                #:htdocs-paths (list testapp-htdocs-path)))
+
+; -> void
+(define (recreate-database)
+  (for-each drop-table   (list post kitchen-sink))
+  (for-each create-table (list post kitchen-sink)))
 
 ; Main program body ------------------------------
 
@@ -24,4 +29,5 @@
 
 ; void
 (case mode
-  [(runapp) (run-application)])
+  [(runapp) (run-application)]
+  [(initdb) (with-connection (recreate-database))])
