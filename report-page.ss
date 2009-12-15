@@ -47,7 +47,7 @@
           (string-sentencecase (entity-pretty-name-plural (get-entity)))))
     
     ; seed -> xml
-    (define/override (render seed)
+    (define/augment (render seed)
       (send report render seed))))
 
 ; Procedures -------------------------------------

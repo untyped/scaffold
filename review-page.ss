@@ -71,7 +71,7 @@
               [else   (entity-pretty-name entity)])))
     
     ; seed -> xml
-    (define/override (render seed)
+    (define/augment (render seed)
       (send view render seed))))
 
 ; Procedures -------------------------------------
