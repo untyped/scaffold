@@ -75,7 +75,7 @@
               [else   (format "Delete ~a" (entity-pretty-name entity))])))
     
     ; seed -> xml
-    (define/override (render seed)
+    (define/augment (render seed)
       (xml ,(render-confirmation-message seed)
            ,(send view render seed)
            ,(send submit-button render seed)))
@@ -106,7 +106,7 @@
 
 ; entity [(subclassof html-page%)] -> html-page%
 (define (scaffold-delete-page entity [page% (default-scaffolded-page-superclass)])
-  (new (entity-delete-page-mixin (render-augride-mixin page%)) [entity entity]))
+  (new (entity-delete-page-mixin page%) [entity entity]))
 
 ; Provide statements -----------------------------
 

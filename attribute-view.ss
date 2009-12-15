@@ -88,7 +88,7 @@
 ; Classes ----------------------------------------
 
 (define complete-attribute-view-mixin
-  (compose attribute-view-mixin check-label-mixin labelled-element-mixin simple-view-mixin))
+  (compose attribute-view-mixin labelled-element-mixin simple-view-mixin))
 
 (define attribute-view%
   (complete-attribute-view-mixin html-element%))

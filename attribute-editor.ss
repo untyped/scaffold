@@ -12,7 +12,7 @@
 ; Helper mixins ----------------------------------
 
 (define text-field-editor-mixin
-  (mixin/cells (editor<%>) ()
+  (mixin/cells (text-input<%> editor<%>) ()
     (init [attributes null]
           [max-length (or (and (pair? attributes)
                                (character-type? (attribute-type (car attributes)))

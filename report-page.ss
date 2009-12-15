@@ -47,7 +47,7 @@
           (string-sentencecase (entity-pretty-name-plural (get-entity)))))
     
     ; seed -> xml
-    (define/override (render seed)
+    (define/augment (render seed)
       (send report render seed))))
 
 ; Procedures -------------------------------------
@@ -56,7 +56,7 @@
 (define (scaffold-report-page entity 
                               [page% (default-scaffolded-page-superclass)]
                               #:attributes [attributes (entity-data-attributes entity)])
-  (new (entity-report-page-mixin (render-augride-mixin page%)) [entity entity] [attributes attributes]))
+  (new (entity-report-page-mixin page%) [entity entity] [attributes attributes]))
 
 ; Provide statements -----------------------------
 
