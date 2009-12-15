@@ -107,7 +107,7 @@
 
 ; entity [(subclassof html-page%)] -> html-page%
 (define (scaffold-delete-page entity [page% (default-scaffolded-page-superclass)])
-  (new (entity-delete-page-mixin (render-augride-mixin page%)) [entity entity]))
+  (new (entity-delete-page-mixin page%) [entity entity]))
 
 ; Provide statements -----------------------------
 

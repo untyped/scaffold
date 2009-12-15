@@ -57,11 +57,11 @@
        (cons (get-editor)
              (super get-child-components)))
      
-    ; -> (listof (U xml (seed -> xml)))
-    (define/augment (get-html-requirements)
-      (list* snooze-styles
-             (inner null get-html-requirements)))
-
+     ; -> (listof (U xml (seed -> xml)))
+     (define/augment (get-html-requirements)
+       (list* snooze-styles
+              (inner null get-html-requirements)))
+     
      ; -> entity
      (define/public (get-entity)
        (send (get-editor) get-entity))
@@ -126,10 +126,10 @@
        (cons (get-editor)
              (super get-child-components)))
      
-    ; -> (listof (U xml (seed -> xml)))
-    (define/augment (get-html-requirements)
-      (list* snooze-styles
-             (inner null get-html-requirements)))
+     ; -> (listof (U xml (seed -> xml)))
+     (define/augment (get-html-requirements)
+       (list* snooze-styles
+              (inner null get-html-requirements)))
      
      ; -> (U snooze-struct #f)
      (define/public (get-initial-value)
@@ -153,11 +153,11 @@
 
 ; entity [(subclassof html-page%)] -> html-page%
 (define (scaffold-create-page entity [page% (default-scaffolded-page-superclass)])
-  (new (entity-editor-page-mixin (render-augride-mixin page%)) [entity entity]))
+  (new (entity-editor-page-mixin page%) [entity entity]))
 
 ; entity [(subclassof html-page%)] -> html-page%
 (define (scaffold-update-page entity [page% (default-scaffolded-page-superclass)])
-  (new (entity-editor-page-mixin (render-augride-mixin page%)) [entity entity]))
+  (new (entity-editor-page-mixin page%) [entity entity]))
 
 ; Provide statements -----------------------------
 

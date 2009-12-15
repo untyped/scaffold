@@ -78,7 +78,7 @@
 
 ; entity [(subclassof html-page%)] -> html-page%
 (define (scaffold-review-page entity [page% (default-scaffolded-page-superclass)])
-  (new (entity-review-page-mixin (render-augride-mixin page%)) [entity entity]))
+  (new (entity-review-page-mixin page%) [entity entity]))
 
 ; Provide statements -----------------------------
 

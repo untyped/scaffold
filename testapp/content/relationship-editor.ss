@@ -70,7 +70,6 @@
 
 ; Pages ------------------------------------------
 
-
 (define stuff-editor-page
   (singleton/cells (entity-editor-page-mixin (render-augride-mixin html-page%)) ()
     (super-new [entity stuff])))

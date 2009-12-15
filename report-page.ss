@@ -56,7 +56,7 @@
 (define (scaffold-report-page entity 
                               [page% (default-scaffolded-page-superclass)]
                               #:attributes [attributes (entity-data-attributes entity)])
-  (new (entity-report-page-mixin (render-augride-mixin page%)) [entity entity] [attributes attributes]))
+  (new (entity-report-page-mixin page%) [entity entity] [attributes attributes]))
 
 ; Provide statements -----------------------------
 
