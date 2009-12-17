@@ -40,7 +40,7 @@
     
     ; -> (U sql-expr #f)
     (define/public (get-where)
-      (debug* "where" let ([val (web-cell-ref where-cell)])
+      (let ([val (web-cell-ref where-cell)])
         (if (procedure? val)
             (val)
             val)))
