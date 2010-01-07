@@ -16,6 +16,8 @@
     ; (listof attribute)
     (init-field attribute #:accessor)
     
+    (init-field review-controller #f #:accessor)
+    
     (init [id          (string->symbol
                         (format "~a-~a"
                                 (entity-name (attribute-entity attribute))
@@ -33,10 +35,14 @@
     ; val is the raw attribute value - the report has to do all the destructuring.
     (define/public (render-body seed val)
       (xml (td ,(cond [(snooze-struct? val)
-                       (if (review-controller-set? val)
-                           (xml (a (@ [href ,(review-controller-url val)])
-                                   ,(format-snooze-struct val)))
-                           (format-snooze-struct val))]
+                       (cond [(get-review-controller)
+                              => (lambda (controller)
+                                   (xml (a (@ [href ,(controller-url controller val)])
+                                           ,(format-snooze-struct val))))]
+                             [(review-controller-set? val)
+                              (xml (a (@ [href ,(review-controller-url val)])
+                                      ,(format-snooze-struct val)))]
+                             [else (format-snooze-struct val)])]
                       [(and (enum-type? (attribute-type attribute))
                             (enum-type-enum (attribute-type attribute)))
                        => (lambda (enum)
