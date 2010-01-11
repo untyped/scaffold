@@ -28,6 +28,10 @@
            (guid-type-entity (attribute-type (car attributes))))
       #:accessor)
     
+    (init-field blank-label
+      (format "-- No ~a selected --" (entity-pretty-name entity))
+      #:accessor #:mutator)
+    
     ; (cell (U sql-expr (-> sql-expr) #f))
     (init-cell where #f #:mutator)
     
@@ -78,7 +82,7 @@
     (define/override (option->string option)
       (if option
           (format-snooze-struct option)
-          (format "-- No ~a selected --" (entity-pretty-name entity))))))
+          (get-blank-label)))))
 
 ; Provide statements -----------------------------
 
