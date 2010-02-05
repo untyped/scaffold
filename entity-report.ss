@@ -311,9 +311,10 @@
     (when action-enum
       (send* action-combo 
         [set-visible?! #t]
-        [set-options!  (map (lambda (val)
-                              (cons val (enum-prettify action-enum val)))
-                            (enum-values action-enum))]))
+        [set-options!  (cons (cons #f "-- Select action --")
+                             (map (lambda (val)
+                                    (cons val (enum-prettify action-enum val)))
+                                  (enum-values action-enum)))]))
     
     ; Methods ------------------------------------
     
@@ -390,9 +391,10 @@
     (define/public-final #:callback (on-run-action)
       (let ([action         (send action-combo get-value)]
             [selected-items (get-selected-items)])
-        (if (pair? selected-items)
-            (run-action action selected-items)
-            (notifications-add! (get-empty-selection-message)))))
+        (cond [(not action)           (void)]
+              [(null? selected-items) (notifications-add! (get-empty-selection-message))]
+              [else                   (run-action action selected-items)
+                                      (send action-combo set-value! #f)])))
     
     ; (enum-value/c action-enum) -> void
     (define/public (run-action action selected-items)
