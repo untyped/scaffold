@@ -49,8 +49,8 @@
     ; boolean 
     (init-cell show-controls?        #t #:accessor #:mutator)
     (init-cell show-csv-link? 
-      (default-show-csv-link?)
-      #:accessor #:mutator)
+               (default-show-csv-link?)
+               #:accessor #:mutator)
     (init-cell show-pattern-field?   #t #:accessor #:mutator)
     (init-cell show-position-top?    #t #:accessor #:mutator)
     (init-cell show-position-bottom? #f #:accessor #:mutator)
@@ -224,16 +224,18 @@
                 ,(opt-xml (get-show-controls?)     ,(render-controls seed start count total))
                 ,(opt-xml (get-show-position-top?) ,(render-position seed start count total))
                 ,(opt-xml (get-show-pager-top?)    ,(render-pager seed start count total))
-                ; Table:
-                (table (@ [id ,(get-table-id)] [class "snooze-report-table ui-widget"])
-                       ,(render-head seed cols)
-                       ,(if (zero? total)
-                            (render-empty-body seed cols)
-                            (render-body seed cols g:item))
-                       ,(render-foot seed cols))
+                ,(render-report seed start count total cols g:item)
                 ; Pager:
                 ,(opt-xml (get-show-position-bottom?) ,(render-position seed start count total))
                 ,(opt-xml (get-show-pager-bottom?) ,(render-pager seed start count total)))))
+    
+    (define/public (render-report seed start count total cols g:item)
+      (xml (table (@ [id ,(get-table-id)] [class "snooze-report-table ui-widget"])
+                  ,(render-head seed cols)
+                  ,(if (zero? total)
+                       (render-empty-body seed cols)
+                       (render-body seed cols g:item))
+                  ,(render-foot seed cols))))
     
     ; seed integer integer integer -> xml
     (define/public (render-controls seed start count total)
