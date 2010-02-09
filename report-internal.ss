@@ -213,29 +213,22 @@
     
     ; seed -> xml
     (define/override (render seed)
-      ; integer integer integer (gen-> row-data)
-      (define-values (start count total g:item)
-        (do-queries))
-      ; (listof column)
-      (define cols
-        (get-visible-columns))
-      ; xml
-      (xml (div (@ ,@(core-html-attributes seed))
-                ,(opt-xml (get-show-controls?)     ,(render-controls seed start count total))
-                ,(opt-xml (get-show-position-top?) ,(render-position seed start count total))
-                ,(opt-xml (get-show-pager-top?)    ,(render-pager seed start count total))
-                ,(render-report seed start count total cols g:item)
-                ; Pager:
-                ,(opt-xml (get-show-position-bottom?) ,(render-position seed start count total))
-                ,(opt-xml (get-show-pager-bottom?) ,(render-pager seed start count total)))))
+      (let-values ([(start count total g:item) (do-queries)]) ; integer integer integer (gen-> row-data)
+        (xml (div (@ ,@(core-html-attributes seed))
+                  ,(render-preamble  seed start count total)
+                  ,(render-report    seed start count total (get-visible-columns) g:item)
+                  ,(render-postamble seed start count total)))))
     
-    (define/public (render-report seed start count total cols g:item)
-      (xml (table (@ [id ,(get-table-id)] [class "snooze-report-table ui-widget"])
-                  ,(render-head seed cols)
-                  ,(if (zero? total)
-                       (render-empty-body seed cols)
-                       (render-body seed cols g:item))
-                  ,(render-foot seed cols))))
+    ; seed integer integer integer -> xml
+    (define/public (render-preamble seed start count total)
+      (xml ,(opt-xml (get-show-controls?)     ,(render-controls seed start count total))
+           ,(opt-xml (get-show-position-top?) ,(render-position seed start count total))
+           ,(opt-xml (get-show-pager-top?)    ,(render-pager    seed start count total))))
+    
+    ; seed integer integer integer -> xml
+    (define/public (render-postamble seed start count total)
+      (xml ,(opt-xml (get-show-position-bottom?) ,(render-position seed start count total))
+           ,(opt-xml (get-show-pager-bottom?)    ,(render-pager    seed start count total))))
     
     ; seed integer integer integer -> xml
     (define/public (render-controls seed start count total)
@@ -244,20 +237,21 @@
         (send pattern-field set-visible?! (get-show-pattern-field?))
         (xml (div (@ [id    ,(format "~a-controls" (get-id))]
                      [class "controls ui-helper-clearfix"])
-                  (div (@ [class "view"])
-                       ,(send view-field render seed))
+                  ,(opt-xml (send view-field get-visible?)
+                     (div (@ [class "view"]) ,(send view-field render seed)))
                   ; extra link controls:
                   (div (@ [class "links"])
                        ,(render-control-links seed start count total))
-                  ; Filter pattern field is always visible:
-                  (div (@ [class "filter"])
-                       ,(send pattern-field render seed))))))
+                  ,(opt-xml (send pattern-field get-visible?)
+                     (div (@ [class "filter"])
+                          ,(send pattern-field render seed)))))))
     
     ; seed integer integer integer -> xml
     (define/public (render-control-links seed start count total)
-      (xml (ul (@ [class "links"])
-               ,@(map (lambda (link) (xml (li ,link))) 
-                      (get-control-links seed start count total))))) ; TODO replace NO-OP with ->li
+      (let ([links (get-control-links seed start count total)])
+        (opt-xml (pair? links) 
+          (ul (@ [class "links"])
+              ,@(map (lambda (link) (xml (li ,link))) links)))))
     
     ; -> (listof xml)
     ; Each xml element should be an anchor (link).
@@ -342,10 +336,10 @@
         ;   < Prev 1 2 Next >
         ; for each page that can be viewed.
         (table (@ [class "pager"]) 
-               (tr ,(link 0 (xml (& laquo))                    ; formerly 'fixed
+               (tr ,(link 0 (xml (& laquo))
                           #:title "Jump to page 1"
                           #:disabled? (zero? current-page))
-                   ,(link (max 0 (- start count))              ; formerly 'fixed
+                   ,(link (max 0 (- start count))
                           (xml (& lsaquo)) 
                           #:title "Previous page"
                           #:disabled? (zero? current-page))
@@ -359,13 +353,24 @@
                    ,(if (not (= last-page pager-last-page)) 
                         (xml (td (@ [class 'last]) (span "...")))
                         (xml (td (@ [class 'last]) (span (& nbsp)))))
-                   ,(link (min last-item (+ start count))      ; formerly 'fixed
+                   ,(link (min last-item (+ start count))
                           (xml (& rsaquo))
                           #:title "Next page"
                           #:disabled? (not (< current-page (sub1 last-page))))
-                   ,(link last-item (xml (& raquo))            ; formerly 'fixed
+                   ,(link last-item (xml (& raquo))
                           #:title (string-append "Jump to page " (number->string last-page))
                           #:disabled? (not (< current-page (sub1 last-page))))))))
+    
+    ; Main report rendering ----------------------
+    
+    ; seed integer integer integer (listof report-column%) (g:of any) -> xml
+    (define/public (render-report seed start count total cols g:item)
+      (xml (table (@ [id ,(get-table-id)] [class "snooze-report-table ui-widget"])
+                  ,(render-head seed cols)
+                  ,(if (zero? total)
+                       (render-empty-body seed cols)
+                       (render-body seed cols g:item))
+                  ,(render-foot seed cols))))
     
     ; seed (listof column) -> xml
     (define/public (render-head seed cols)

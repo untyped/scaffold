@@ -155,7 +155,7 @@
     
     ; seed -> xml
     (define/public (render-report-action-selector seed)
-      (send report-action-combo render seed))
+      (xml "With selected: " ,(send report-action-combo render seed)))
     
     ; Overridden rendering -----------------------
     
@@ -164,10 +164,9 @@
       (cons report-action-column (super get-visible-columns)))
     
     ; seed -> xml
-    (define/override (render-report seed start count total cols g:item)
-      (xml (div (@ [class "report-actions"])
-                ,(render-report-action-selector seed))
-           ,(super render-report seed start count total cols g:item)))
+    (define/override (render-preamble seed start count total)
+      (xml ,(super render-preamble seed start count total)
+           (div (@ [class "report-actions"]) ,(render-report-action-selector seed))))
     
     ; seed (listof column) snooze-struct -> xml
     (define/override (render-item-columns seed cols struct)
@@ -236,18 +235,27 @@
     ; seed -> js
     (define/override (get-on-attach seed)
       (js ,(super get-on-attach seed)
+          (var [allCheckboxes ($ ,(format "#~a input.report-action" (get-id)))]
+               [actionCombo   ($ ,(format "#~a" (send report-action-combo get-id)))])
           (!dot ($ "#select-all")
                 (click (function (event ui)
-                         (!dot ($ ,(format "#~a input.report-action" (get-id))) (attr "checked" "checked")))))
+                         (!dot allCheckboxes (attr "checked" "checked")))))
           (!dot ($ "#select-none")
                 (click (function (event ui)
-                         (!dot ($ ,(format "#~a input.report-action:checked" (get-id))) (removeAttr "checked")))))))
+                         (!dot ($ ,(format "#~a input.report-action:checked" (get-id))) (removeAttr "checked")))))
+          (!dot allCheckboxes
+                (click (function (event ui)
+                         (var [noSelection (== (!dot ($ ,(format "#~a input.report-action:checked" (get-id))) (size)) #t)])
+                         (if noSelection
+                             (!block (!dot actionCombo (attr "disabled" "disabled")))
+                             (!block (!dot actionCombo (removeAttr "disabled")))))))))
     
     ; seed -> js
     (define/override (get-on-detach seed)
       (js ,(super get-on-detach seed)
           (!dot ($ "#select-all")  (unbind))
-          (!dot ($ "#select-none") (unbind))))))
+          (!dot ($ "#select-none") (unbind))
+          (!dot ($ ,(format "#~a input.report-action" (get-id))) (unbind))))))
 
 ; Provide statements -----------------------------
 
