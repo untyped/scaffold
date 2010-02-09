@@ -236,19 +236,19 @@
     (define/override (get-on-attach seed)
       (js ,(super get-on-attach seed)
           (var [allCheckboxes ($ ,(format "#~a input.report-action" (get-id)))]
-               [actionCombo   ($ ,(format "#~a" (send report-action-combo get-id)))])
+               [actionCombo   ($ ,(format "#~a" (send report-action-combo get-id)))]
+               [enableCombo   (function ()
+                                (if (== (!dot ($ ,(format "#~a input.report-action:checked" (get-id))) (size)) 0)
+                                    (!block (!dot actionCombo (attr "disabled" "disabled")))
+                                    (!block (!dot actionCombo (removeAttr "disabled")))))])
           (!dot ($ "#select-all")
                 (click (function (event ui)
                          (!dot allCheckboxes (attr "checked" "checked")))))
           (!dot ($ "#select-none")
                 (click (function (event ui)
                          (!dot ($ ,(format "#~a input.report-action:checked" (get-id))) (removeAttr "checked")))))
-          (!dot allCheckboxes
-                (click (function (event ui)
-                         (var [noSelection (== (!dot ($ ,(format "#~a input.report-action:checked" (get-id))) (size)) #t)])
-                         (if noSelection
-                             (!block (!dot actionCombo (attr "disabled" "disabled")))
-                             (!block (!dot actionCombo (removeAttr "disabled")))))))))
+          (!dot allCheckboxes (click enableCombo))
+          (enableCombo)))
     
     ; seed -> js
     (define/override (get-on-detach seed)
