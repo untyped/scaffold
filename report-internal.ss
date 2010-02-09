@@ -239,19 +239,21 @@
                      [class "controls ui-helper-clearfix"])
                   ,(opt-xml (send view-field get-visible?)
                      (div (@ [class "view"]) ,(send view-field render seed)))
-                  ; extra link controls:
-                  (div (@ [class "links"])
-                       ,(render-control-links seed start count total))
+                  ,(render-control-links seed start count total)
                   ,(opt-xml (send pattern-field get-visible?)
-                     (div (@ [class "filter"])
-                          ,(send pattern-field render seed)))))))
+                     ,(render-controls-filter seed))))))
+    
+    ; seed -> xml
+    (define/public (render-controls-filter seed)
+      (xml (div (@ [class "filter"]) ,(send pattern-field render seed))))
     
     ; seed integer integer integer -> xml
     (define/public (render-control-links seed start count total)
       (let ([links (get-control-links seed start count total)])
         (opt-xml (pair? links) 
-          (ul (@ [class "links"])
-              ,@(map (lambda (link) (xml (li ,link))) links)))))
+          (div (@ [class "links"])
+               (ul (@ [class "links"])
+                   ,@(map (lambda (link) (xml (li ,link))) links))))))
     
     ; -> (listof xml)
     ; Each xml element should be an anchor (link).
@@ -267,11 +269,16 @@
       (xml (div (@ [class "position ui-helper-clearfix"])
                 ,(opt-xml (not (zero? total))
                    (div (@ [class "item-count"])
-                        "Displaying items " ,(max 1 (min total (if start (add1 start) 1)))
-                        " to " ,(max 1 (min total (cond [(and start count) (+ start count)]
-                                                        [count count]
-                                                        [else total])))
-                        " of " ,total ".")))))
+                        ,(render-position-text seed
+                                               (max 1 (min total (if start (add1 start) 1)))
+                                               (max 1 (min total (cond [(and start count) (+ start count)]
+                                                                       [count count]
+                                                                       [else total])))
+                                               total))))))
+    
+    ; seed -> xml
+    (define/public (render-position-text seed from to total)
+      (xml ,(format "Displaying items ~a to ~a of ~a." from to total)))
     
     ; seed integer integer integer -> xml
     (define/public (render-pager seed start count total)

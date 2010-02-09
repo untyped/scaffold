@@ -10,7 +10,7 @@
          "report-internal.ss")
 
 (define default-report-action
-  (create-report-action 'default-report-action "-- Select action --"))
+  (create-report-action 'default-report-action "With selected ..."))
 
 
 ; Classes ----------------------------------------
@@ -155,7 +155,7 @@
     
     ; seed -> xml
     (define/public (render-report-action-selector seed)
-      (xml "With selected: " ,(send report-action-combo render seed)))
+      (xml (div (@ [class "report-actions"]) ,(send report-action-combo render seed))))
     
     ; Overridden rendering -----------------------
     
@@ -166,7 +166,7 @@
     ; seed -> xml
     (define/override (render-preamble seed start count total)
       (xml ,(super render-preamble seed start count total)
-           (div (@ [class "report-actions"]) ,(render-report-action-selector seed))))
+           ,(render-report-action-selector seed)))
     
     ; seed (listof column) snooze-struct -> xml
     (define/override (render-item-columns seed cols struct)
