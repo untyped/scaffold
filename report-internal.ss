@@ -7,6 +7,7 @@
          srfi/19
          (unlib-in list symbol)
          "report-column.ss"
+         "report-pager.ss"
          "report-view.ss"
          "util.ss")
 
@@ -34,17 +35,13 @@
     ; (cell (U snooze-report-column% #f))
     (init-cell sort-col #:accessor #:mutator)
     
+    ; report-pager<%>
+    (init-field pager-field 
+      (new linked-report-pager%)
+      #:child #:accessor)
+    
     ; (cell (U 'asc 'desc))
     (init-cell sort-dir 'asc #:accessor #:mutator)
-    
-    ; (cell integer)
-    (init-cell start 0 #:accessor #:mutator)
-    
-    ; (cell integer)
-    (init-cell count 1000000 #:accessor #:mutator)
-    
-    ; (cell integer): [DJB] number of pages added to left and right in pager
-    (init-cell pager-cell-count 4 #:accessor #:mutator)
     
     ; boolean 
     (init-cell show-controls?        #t #:accessor #:mutator)
@@ -52,15 +49,14 @@
                (default-show-csv-link?)
                #:accessor #:mutator)
     (init-cell show-pattern-field?   #t #:accessor #:mutator)
-    (init-cell show-position-top?    #t #:accessor #:mutator)
-    (init-cell show-position-bottom? #f #:accessor #:mutator)
     (init-cell show-pager-top?       #t #:accessor #:mutator)
     (init-cell show-pager-bottom?    #t #:accessor #:mutator)
     
     ; Constructor ------------------------------
     
     ; (listof symbol)
-    (init [classes null])
+    (init [classes null]
+          [count   #f])
     
     (super-new [classes (list* 'smoke-snooze-report 'ui-widget classes)])
     
@@ -68,13 +64,29 @@
     (init [view (car (get-views))])
     (when view (send view-field set-value! view))
     
+    (send pager-field set-count! count)
+    
     ; Miscellaneous ------------------------------
+    
+    ; -> boolean
+    (define/public (get-show-views?)
+      (list-ref? (get-views) 1))
+    
+    (define/public (get-start)
+      (send pager-field get-start))
+    
+    (define/public (set-start! start)
+      (send pager-field set-start! start))
+    
+    (define/public (get-count)
+      (send pager-field get-count))
     
     ; -> boolean 
     (define/override (dirty?) 
       (or (super dirty?) 
-          (send view-field dirty?)
-          (send pattern-field dirty?))) 
+          (send view-field    dirty?)
+          (send pattern-field dirty?)
+          (send pager-field   dirty?))) 
     
     ; -> (listof (U xml (seed -> xml)))
     (define/augment (get-html-requirements)
@@ -129,12 +141,6 @@
     ; Generate the ORDER clause for the SQL query
     (define/public (get-sort-order [col (get-sort-col)] [dir (get-sort-dir)])
       (if col (send col get-order dir) null))
-    
-    ; Paging -----------------------------------
-    
-    ; integer -> void
-    (define/public #:callback (on-page start)
-      (set-start! start))
     
     ; Resorting --------------------------------
     
@@ -215,37 +221,37 @@
     (define/override (render seed)
       (let-values ([(start count total g:item) (do-queries)]) ; integer integer integer (gen-> row-data)
         (xml (div (@ ,@(core-html-attributes seed))
-                  ,(render-preamble  seed start count total)
-                  ,(render-report    seed start count total (get-visible-columns) g:item)
-                  ,(render-postamble seed start count total)))))
+                  (div (@ [class "report-preamble ui-helper-clearfix"])  ,(render-preamble  seed start count total))
+                  ,(render-report seed start count total (get-visible-columns) g:item)
+                  (div (@ [class "report-postamble ui-helper-clearfix"]) ,(render-postamble seed start count total))))))
     
     ; seed integer integer integer -> xml
     (define/public (render-preamble seed start count total)
-      (xml ,(opt-xml (get-show-controls?)     ,(render-controls seed start count total))
-           ,(opt-xml (get-show-position-top?) ,(render-position seed start count total))
-           ,(opt-xml (get-show-pager-top?)    ,(render-pager    seed start count total))))
+      (xml ,(opt-xml (get-show-controls?)
+              (div (@ [id    ,(format "~a-controls" (get-id))]
+                      [class "controls ui-helper-clearfix"])
+                   ,(render-view-field seed)
+                   ,(render-control-links seed start count total)
+                   ,(render-pattern-field seed)))
+           ,(opt-xml (get-show-pager-top?) 
+              ,(render-pager    seed start count total))))
     
     ; seed integer integer integer -> xml
     (define/public (render-postamble seed start count total)
-      (xml ,(opt-xml (get-show-position-bottom?) ,(render-position seed start count total))
-           ,(opt-xml (get-show-pager-bottom?)    ,(render-pager    seed start count total))))
-    
-    ; seed integer integer integer -> xml
-    (define/public (render-controls seed start count total)
-      (let ([show-view-field? (list-ref? (get-views) 1)]) ; multiple views
-        (send view-field    set-visible?! show-view-field?)
-        (send pattern-field set-visible?! (get-show-pattern-field?))
-        (xml (div (@ [id    ,(format "~a-controls" (get-id))]
-                     [class "controls ui-helper-clearfix"])
-                  ,(opt-xml (send view-field get-visible?)
-                     (div (@ [class "view"]) ,(send view-field render seed)))
-                  ,(render-control-links seed start count total)
-                  ,(opt-xml (send pattern-field get-visible?)
-                     ,(render-controls-filter seed))))))
+      (xml ,(opt-xml (get-show-pager-bottom?) 
+              ,(render-pager    seed start count total))))
     
     ; seed -> xml
-    (define/public (render-controls-filter seed)
-      (xml (div (@ [class "filter"]) ,(send pattern-field render seed))))
+    (define/pubment (render-view-field seed)
+      (send view-field set-visible?! (get-show-views?))
+      (opt-xml (send view-field get-visible?)
+        (div (@ [class "view"]) ,(inner (send view-field render seed) render-view-field seed))))
+    
+    ; seed -> xml
+    (define/pubment (render-pattern-field seed)
+      (send pattern-field set-visible?! (get-show-pattern-field?))
+      (opt-xml (send pattern-field get-visible?) 
+        (div (@ [class "filter"]) ,(inner (send pattern-field render seed) render-pattern-field seed))))
     
     ; seed integer integer integer -> xml
     (define/public (render-control-links seed start count total)
@@ -265,108 +271,10 @@
                 "CSV version"))]))
     
     ; seed integer integer integer -> xml
-    (define/public (render-position seed start count total)
-      (xml (div (@ [class "position ui-helper-clearfix"])
-                ,(opt-xml (not (zero? total))
-                   (div (@ [class "item-count"])
-                        ,(render-position-text seed
-                                               (max 1 (min total (if start (add1 start) 1)))
-                                               (max 1 (min total (cond [(and start count) (+ start count)]
-                                                                       [count count]
-                                                                       [else total])))
-                                               total))))))
-    
-    ; seed -> xml
-    (define/public (render-position-text seed from to total)
-      (xml ,(format "Displaying items ~a to ~a of ~a." from to total)))
-    
-    ; seed integer integer integer -> xml
     (define/public (render-pager seed start count total)
-      ;  integer
-      ;  (U integer string)
-      ;  [#:title (U string #f)]
-      ;  [#:active?   boolean]
-      ;  [#:disabled? boolean]
-      ; ->
-      ;  xml
-      (define (link to text #:title [title #f] #:active? [active? #f] #:disabled? [disabled? #f])
-        (xml (td (@ [class ,(cond [active?   'ui-state-active]
-                                  [disabled? "ui-state-default ui-state-disabled"]
-                                  [else      'ui-state-default])]
-                    ,(opt-xml-attr title))
-                 (a (@ [onclick ,(embed/ajax seed (callback on-page to))]) ,text))))
-      
-      ; [DJB] page windowing
-      ; integer integer -> (values integer integer)
-      (define (calculate-pager-limits current-page last-page)
-        (let* ([window-offset       (get-pager-cell-count)]
-               [unbounded-low-page  (- current-page window-offset)]
-               [bounded-low-page    (max unbounded-low-page 0)]
-               [unbounded-high-page (add1 (+ current-page window-offset))]
-               [bounded-high-page   (min unbounded-high-page last-page)])
-          
-          ; integer: pager-window index of first page to display
-          ; if there are unused window cells on high end, add to low
-          (define window-first-page
-            (let ([take-from-low (- unbounded-high-page bounded-high-page)] )
-              (max (- bounded-low-page take-from-low) 0)))
-          
-          ; integer: pager-window index of last page to display
-          ; if there are unused window cells on low end, add to high
-          (define window-last-page
-            (let ([add-to-high   (- bounded-low-page unbounded-low-page)])
-              (min (+ bounded-high-page add-to-high) last-page)))
-          
-          (values window-first-page window-last-page)))
-      
-      ; integer: index (within report) of item that starts last page
-      (define last-item (max 0 (- (sub1 total) (remainder (sub1 total) count))))
-      
-      ; integer: index (within pager) of last page
-      (define last-page (add1 (ceiling (/ last-item count))))
-      
-      ; integer: index (within page) of current page
-      (define current-page  (floor (/ start count)))
-      
-      ; integers: page-index limits of pager-window
-      (define-values (pager-first-page pager-last-page)
-        (calculate-pager-limits current-page last-page))
-      
-      ; integers: indices (within report) of first-page first-item; last-page first-item
-      (define lowest-item  (max (* pager-first-page count) 0))
-      (define highest-item (min (* pager-last-page count) total))      
-      
-      ; xml      
-      ; If we are displaying all items in the list, there is no need for a pager:
-      (opt-xml (not (or (zero? total) (not count) (>= count total)))
-        ; Otherwise, output a list of links like this:
-        ;   < Prev 1 2 Next >
-        ; for each page that can be viewed.
-        (table (@ [class "pager"]) 
-               (tr ,(link 0 (xml (& laquo))
-                          #:title "Jump to page 1"
-                          #:disabled? (zero? current-page))
-                   ,(link (max 0 (- start count))
-                          (xml (& lsaquo)) 
-                          #:title "Previous page"
-                          #:disabled? (zero? current-page))
-                   ; ellipsis
-                   ,(if (not (zero? pager-first-page)) 
-                        (xml (td (@ [class 'spacer]) (span "...")))
-                        (xml (td (@ [class 'spacer]) (span (& nbsp)))))
-                   ,@(for/list ([i (in-range lowest-item highest-item count)])
-                       (link i (add1 (/ i count)) #:active? (and (>= i start) (< i (+ start count)))))
-                   ; ellipsis
-                   ,(if (not (= last-page pager-last-page)) 
-                        (xml (td (@ [class 'last]) (span "...")))
-                        (xml (td (@ [class 'last]) (span (& nbsp)))))
-                   ,(link (min last-item (+ start count))
-                          (xml (& rsaquo))
-                          #:title "Next page"
-                          #:disabled? (not (< current-page (sub1 last-page))))
-                   ,(link last-item (xml (& raquo))
-                          #:title (string-append "Jump to page " (number->string last-page))
-                          #:disabled? (not (< current-page (sub1 last-page))))))))
+      (send* pager-field 
+        [init!  start count total]
+        [render seed]))
     
     ; Main report rendering ----------------------
     
@@ -505,7 +413,8 @@
 ; Provide statements --------------------------- 
 
 (provide (except-out (all-from-out "report-column.ss"
-                                   "report-view.ss")
+                                   "report-view.ss"
+                                   "report-pager.ss")
                      view)
          snooze-report%)
 

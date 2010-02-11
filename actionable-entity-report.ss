@@ -84,36 +84,37 @@
     on-run-report-action          ; -> void
     run-report-action))           ; report-action -> void
 
+; Columns ----------------------------------------
+
+(define report-action-column
+  (make-column 'report-action
+               "Actions"
+               #:xml-name         (xml (input (@ [type 'checkbox] [id 'toggle-all-selection])))
+               #:classes          '(report-action)
+               #:display-in-html? #t
+               #:display-in-csv?  #f))
+
 ; entity-report subclass -------------------------
 
 (define actionable-entity-report%
   (class/cells entity-report% (actionable-entity-report<%>)
     (inherit do-queries 
              get-entity 
-             get-views
+             get-id
              get-show-pattern-field?
              get-show-pager-top?
              get-show-pager-bottom?
-             get-show-position-top?
-             get-show-position-bottom?
-             get-id
-             render-head
+             get-sort-col
+             get-sort-dir
+             get-views
+             get-visible-columns
              render-empty-body
              render-body
-             render-controls
-             render-position
              render-pager
              render-controller-cell
              show-controller-cell?)
     
     ; Fields -------------------------------------
-    
-    (field report-action-column 
-      (make-column 'report-action "" 
-                   #:classes  '(report-action)
-                   #:xml-name (xml (a (@ [id 'select-all]) "All" )
-                                   "|"
-                                   (a (@ [id 'select-none]) "None"))))
     
     ; (listof report-action)
     (init-field report-actions (error "A list of report-actions must be specified."))
@@ -149,6 +150,10 @@
     (define/public (get-report-actions)
       (cons default-report-action report-actions))
     
+    ; -> (listof any)
+    (define/public (get-report-action-column)
+      report-action-column)
+    
     ; -> boolean
     (define/public (report-action-enabled? report-action)
       #t)
@@ -159,30 +164,30 @@
     
     ; Overridden rendering -----------------------
     
-    ; -> (listof column)
-    (define/override (get-visible-columns)
-      (cons report-action-column (super get-visible-columns)))
-    
     ; seed -> xml
     (define/override (render-preamble seed start count total)
       (xml ,(super render-preamble seed start count total)
            ,(render-report-action-selector seed)))
     
+    ; seed (listof column) -> xml
+    (define/override (render-head seed cols)
+      (let ([current-col (get-sort-col)]
+            [current-dir (get-sort-dir)])
+        (xml (thead (tr (@ [class 'ui-widget-header])
+                        ,(send report-action-column render-head seed #f)
+                        ,(opt-xml (show-controller-cell?)
+                           (th (@ [class "controller-cell"])
+                               (& nbsp)))
+                        ,@(for/list ([col (in-list (get-visible-columns))])
+                            (send col render-head seed (and (equal? col current-col) current-dir))))))))
+    
     ; seed (listof column) snooze-struct -> xml
-    (define/override (render-item-columns seed cols struct)
-      (xml ,(opt-xml (show-controller-cell?)
-              ,(render-controller-cell seed struct))
-           ,@(for/list ([col (in-list cols)])
-               (render-column seed col struct))))
+    (define/overment (render-item-columns seed cols struct)
+      (xml ,(render-report-action-column seed struct)
+           ,(inner (super render-item-columns seed cols struct) render-item-columns seed cols struct)))
     
-    ; seed column snooze-struct -> xml
-    (define/overment (render-column seed col struct)
-      (if (eq? col report-action-column)
-          (render-report-action-column seed col struct)
-          (inner (super render-column seed col struct) render-column seed col struct)))
-    
-    ; seed column snooze-struct -> xml
-    (define/public (render-report-action-column seed col struct)
+    ; seed snooze-struct -> xml
+    (define/public (render-report-action-column seed struct)
       (let ([input-id (data->report-action-input-id struct)])
         (xml (td (@ [class "report-action-cell"])
                  (input (@ [type 'checkbox]
@@ -241,14 +246,12 @@
                                 (if (== (!dot ($ ,(format "#~a input.report-action:checked" (get-id))) (size)) 0)
                                     (!block (!dot actionCombo (attr "disabled" "disabled")))
                                     (!block (!dot actionCombo (removeAttr "disabled")))))])
-          (!dot ($ "#select-all")
-                (click (function (event ui)
-                         (!dot allCheckboxes (attr "checked" "checked"))
-                         (enableCombo))))
-          (!dot ($ "#select-none")
-                (click (function (event ui)
-                         (!dot ($ ,(format "#~a input.report-action:checked" (get-id))) (removeAttr "checked"))
-                         (enableCombo))))
+          (!dot ($ "#toggle-all-selection")
+                (change (function (event ui)
+                          (if (!dot ($ this) (attr "checked"))
+                              (!block (!dot allCheckboxes (attr "checked" "checked")))
+                              (!block (!dot allCheckboxes (removeAttr "checked"))))
+                          (enableCombo))))
           (!dot allCheckboxes (click enableCombo))
           (enableCombo)))
     
