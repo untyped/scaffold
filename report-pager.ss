@@ -86,7 +86,7 @@
     (init-field viewport-sizes (list 10 50 100) #:accessor)
     
     ; boolean
-    (init-field allow-show-all? #t #:accessor)
+    (init-field show-all? #t #:accessor)
     
     (field pager-start-field 
       (new integer-field% 
@@ -146,7 +146,7 @@
                                                                  (values (cons (cons opt total) options) #t)]
                                                                 [else
                                                                  (values (cons opt+inc options) total-seen?)])))])
-                                  (reverse (if (and (not seen?) allow-show-all?) (cons (cons #f total) options) options)))])
+                                  (reverse (if (and (not seen?) show-all?) (cons (cons #f total) options) options)))])
         (send pager-count-field set-options! options)))
     
     ; Rendering ----------------------------------
