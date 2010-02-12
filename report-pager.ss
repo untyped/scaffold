@@ -193,10 +193,11 @@
                                     (xml (td (@ [class "pager-pages"])
                                              ,(if (= total 1) "1 item" (format "~a items" total))))
                                     (xml (td (@ [class "pager-pages"])
-                                             ,(send pager-start-field render seed)
-                                             " to "
-                                             ,(send pager-count-field render seed)
-                                             " of " ,total)))
+                                             (span (@ [style "white-space: nowrap;"])
+                                                   ,(send pager-start-field render seed)
+                                                   " to "
+                                                   ,(send pager-count-field render seed)
+                                                   " of " ,total))))
                                ,(link seed 
                                       (if count (min last-item (+ start count)) 0)
                                       (xml (& rsaquo))
