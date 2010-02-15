@@ -12,7 +12,6 @@
 (define default-report-action
   (create-report-action 'default-report-action "With selected ..."))
 
-
 ; Classes ----------------------------------------
 
 (define report-action-combo-box%
@@ -45,8 +44,8 @@
           (and (eq? raw-sym (report-action-id report-action)) report-action))))
     
     ; any -> string
-    (define/override (option->string report-action)
-      (report-action-string report-action))
+    (define/override (option->xml report-action)
+      (report-action-xml report-action))
     
     ; any -> string
     (define/override (option->classes report-action)
@@ -150,6 +149,10 @@
     (define/public (get-report-actions)
       (cons default-report-action report-actions))
     
+    ; -> boolean
+    (define/public (report-actions-enabled?)
+      (pair? (get-report-actions)))
+    
     ; -> (listof any)
     (define/public (get-report-action-column)
       report-action-column)
@@ -160,7 +163,9 @@
     
     ; seed -> xml
     (define/public (render-report-action-selector seed)
-      (xml (div (@ [class "report-actions"]) ,(send report-action-combo render seed))))
+      (xml (div (@ [class "report-actions"]) 
+                ,(opt-xml (report-actions-enabled?)
+                   ,(send report-action-combo render seed)))))
     
     ; Overridden rendering -----------------------
     
@@ -174,9 +179,10 @@
       (let ([current-col (get-sort-col)]
             [current-dir (get-sort-dir)])
         (xml (thead (tr (@ [class 'ui-widget-header])
-                        ,(send report-action-column render-head seed #f)
+                        ,(opt-xml (report-actions-enabled?)
+                           ,(send report-action-column render-head seed #f))
                         ,(opt-xml (show-controller-cell?)
-                           (th (@ [class "controller-cell"])
+                           (th (@ [class "controller-cell ui-state-default"])
                                (& nbsp)))
                         ,@(for/list ([col (in-list (get-visible-columns))])
                             (send col render-head seed (and (equal? col current-col) current-dir))))))))
@@ -189,12 +195,13 @@
     ; seed snooze-struct -> xml
     (define/public (render-report-action-column seed struct)
       (let ([input-id (data->report-action-input-id struct)])
-        (xml (td (@ [class "report-action-cell"])
-                 (input (@ [type 'checkbox]
-                           [class "report-action"]
-                           [id    ,input-id]
-                           ,(opt-xml-attr (memq input-id (get-selected-items))
-                                          checked 'checked)))))))
+        (opt-xml (report-actions-enabled?)
+          (td (@ [class "report-action-cell"])
+              (input (@ [type 'checkbox]
+                        [class "report-action"]
+                        [id    ,input-id]
+                        ,(opt-xml-attr (memq input-id (get-selected-items))
+                           checked 'checked)))))))
     
     (define/public (get-empty-selection-message)
       (xml "You must select one or more " ,(entity-pretty-name-plural (get-entity)) " to do that..."))
@@ -240,20 +247,21 @@
     ; seed -> js
     (define/override (get-on-attach seed)
       (js ,(super get-on-attach seed)
-          (var [allCheckboxes ($ ,(format "#~a input.report-action" (get-id)))]
-               [actionCombo   ($ ,(format "#~a" (send report-action-combo get-id)))]
-               [enableCombo   (function ()
-                                (if (== (!dot ($ ,(format "#~a input.report-action:checked" (get-id))) (size)) 0)
-                                    (!block (!dot actionCombo (attr "disabled" "disabled")))
-                                    (!block (!dot actionCombo (removeAttr "disabled")))))])
-          (!dot ($ "#toggle-all-selection")
-                (click (function (event ui)
-                         (if (!dot ($ this) (attr "checked"))
-                             (!block (!dot allCheckboxes (attr "checked" "checked")))
-                             (!block (!dot allCheckboxes (removeAttr "checked"))))
-                         (enableCombo))))
-          (!dot allCheckboxes (click enableCombo))
-          (enableCombo)))
+          ,(opt-js (report-actions-enabled?)
+             (var [allCheckboxes ($ ,(format "#~a input.report-action" (get-id)))]
+                  [actionCombo   ($ ,(format "#~a" (send report-action-combo get-id)))]
+                  [enableCombo   (function ()
+                                   (if (== (!dot ($ ,(format "#~a input.report-action:checked" (get-id))) (size)) 0)
+                                       (!block (!dot actionCombo (attr "disabled" "disabled")))
+                                       (!block (!dot actionCombo (removeAttr "disabled")))))])
+             (!dot ($ "#toggle-all-selection")
+                   (click (function (event ui)
+                            (if (!dot ($ this) (attr "checked"))
+                                (!block (!dot allCheckboxes (attr "checked" "checked")))
+                                (!block (!dot allCheckboxes (removeAttr "checked"))))
+                            (enableCombo))))
+             (!dot allCheckboxes (click enableCombo))
+             (enableCombo))))
     
     ; seed -> js
     (define/override (get-on-detach seed)
@@ -265,5 +273,7 @@
 ; Provide statements -----------------------------
 
 (provide actionable-entity-report%)
+
 (provide (except-out (all-from-out "actionable-entity-report-internal.ss") create-report-action make-report-action)
-         (rename-out [create-report-action make-report-action]))
+         (rename-out [create-report-action make-report-action])
+         default-report-action)

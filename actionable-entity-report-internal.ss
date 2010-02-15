@@ -4,8 +4,8 @@
 
 ; Structure types --------------------------------
 
-; (struct symbol string (listof string))
-(define-struct report-action (id string classes) #:transparent)
+; (struct symbol xml (listof string))
+(define-struct report-action (id xml classes) #:transparent)
 
 ; symbol string (listof string) -> report-action
 (define (create-report-action id str [classes null])
@@ -14,5 +14,5 @@
 ; Provide statements -----------------------------
 
 (provide/contract 
- [struct report-action ([id symbol?] [string string?] [classes (listof string?)])]
- [create-report-action (->* (symbol? string?) ((listof string?)) report-action?)])
+ [struct report-action ([id symbol?] [xml xml+quotable?] [classes (listof string?)])]
+ [create-report-action (->* (symbol? xml+quotable?) ((listof string?)) report-action?)])
