@@ -107,7 +107,6 @@
              get-sort-dir
              get-views
              get-visible-columns
-             render-empty-body
              render-body
              render-pager
              render-controller-cell
@@ -174,6 +173,15 @@
       (xml ,(super render-preamble seed start count total)
            ,(render-report-action-selector seed)))
     
+    ; seed (listof column) -> xml
+    (define/override (render-empty-body seed cols)
+      (xml (tbody (tr (td (@ [colspan ,(+ (length cols)
+                                          (if (show-controller-cell?)
+                                              (if (report-actions-enabled?) 2 1)
+                                              (if (report-actions-enabled?) 1 0)))]
+                             [class "empty-row"])
+                          "There are no items to display in this list.")))))
+
     ; seed (listof column) -> xml
     (define/override (render-head seed cols)
       (let ([current-col (get-sort-col)]
