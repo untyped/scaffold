@@ -6,6 +6,7 @@
          "delete-page.ss"
          "entity-view.ss"
          "view-internal.ss"
+         "relationship-view.ss"
          "review-page.ss")
 
 ; Provide statements -----------------------------
@@ -14,4 +15,5 @@
                        "delete-page.ss"
                        "entity-view.ss"
                        "view-internal.ss"
+                       "relationship-view.ss"
                        "review-page.ss"))
