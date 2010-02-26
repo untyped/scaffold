@@ -3,10 +3,8 @@
 (require "base.ss")
 
 (require (unlib-in symbol)
-         "attribute-view.ss"
          "entity-view.ss"
-         "page-internal.ss"
-         "view-internal.ss")
+         "page-internal.ss")
 
 ; Interfaces -------------------------------------
 
@@ -33,17 +31,14 @@
     ; (listof attribute)
     (init [attributes (and entity (entity-data-attributes entity))])
     
-    ; (listof attribute-view<%>)
-    (init [views (and attributes (map default-attribute-view attributes))])
-    
     ; entity-view%
     (init-field view
       (or (and entity
-               views
+               attributes
                (new entity-view%
-                    [id     (symbol-append (get-id) '-view)]
-                    [entity entity]
-                    [views  views]))
+                    [id         (symbol-append (get-id) '-view)]
+                    [entity     entity]
+                    [attributes attributes]))
           (string-append "entity-review-page constructor: insufficient arguments"))
       #:child)
     

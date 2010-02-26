@@ -2,4 +2,5 @@
 
 (require "../content-base.ss")
 
-(require "editor.ss")
+(require "editor.ss"
+         "review.ss")

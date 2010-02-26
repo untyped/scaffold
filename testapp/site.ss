@@ -8,7 +8,8 @@
 
 (define-site test-site
   ([("")        home]
-   [("/editor") editor])
+   [("/editor") editor]
+   [("/review") review])
   #:requestless? #t)
 
 ; Controllers ------------------------------------
