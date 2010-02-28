@@ -2,7 +2,8 @@
 
 (require "base.ss")
 
-(require (unlib-in symbol)
+(require (smoke-in core/send)
+         (unlib-in symbol)
          "attribute-view.ss"
          "entity-view.ss"
          "page-internal.ss"
@@ -121,7 +122,7 @@
            ,(format-snooze-struct struct) "."))
     
     ; -> snooze-struct
-    (define/public #:callback/return (on-delete)
+    (define/public #:callback* (on-delete)
       (let ([struct (get-value)])
         (call-with-transaction
          #:metadata (list (format "Delete ~a" (format-snooze-struct struct)))

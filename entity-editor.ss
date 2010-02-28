@@ -2,7 +2,8 @@
 
 (require "base.ss")
 
-(require (unlib-in symbol)
+(require (smoke-in core/send)
+         (unlib-in symbol)
          "attribute-editor.ss"
          "check-label.ss"
          "editor-internal.ss")

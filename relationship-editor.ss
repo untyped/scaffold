@@ -2,7 +2,8 @@
 
 (require "base.ss")
 
-(require "attribute-editor-internal.ss"
+(require (smoke-in core/send)
+         "attribute-editor-internal.ss"
          "foreign-key-editor.ss"
          "util.ss")
 

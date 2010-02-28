@@ -2,8 +2,7 @@
 
 (require "base.ss")
 
-(require (planet untyped/dispatch:3)
-         (planet untyped/dispatch:3/core)
+(require (planet untyped/smoke:1/lib/dispatch/core)
          (planet untyped/unlib:3/symbol)
          (planet untyped/snooze:3))
 

@@ -3,7 +3,8 @@
 (require "base.ss")
 
 (require (for-syntax scheme/base
-                     (unlib-in syntax)))
+                     (unlib-in syntax))
+         (smoke-in lib/dispatch/core))
 
 ; Caches -----------------------------------------
 
@@ -47,7 +48,7 @@
 (define-syntax-rule (define/provide-controller-set! id cache)
   (begin (define (id entity controller)
            (hash-set! cache entity controller))
-         (provide/contract [id (-> entity? procedure? void?)])))
+         (provide/contract [id (-> entity? (is-a?/c page<%>) void?)])))
 
 ; entity controller -> void
 (define/provide-controller-set! report-controller-set! report-controllers)
@@ -107,7 +108,6 @@
                      #:class   [class       #f]
                      #:classes [classes     (if class (list class) null)]
                      #:title   [title       #f]
-                     #:format  [link-format (default-link-format)]
                      #:else    [substitute  (default-link-substitute)])
            (controller-link (controller-ref entity)
                             #:body    [body        (format "~a ~a" type (pretty-name-ref entity))]
@@ -115,7 +115,6 @@
                             #:class   [class       #f]
                             #:classes [classes     (if class (list class) null)]
                             #:title   [title       #f]
-                            #:format  [link-format (default-link-format)]
                             #:else    [substitute  (default-link-substitute)]))
          (provide/contract [id (->* (entity?)
                                     (#:body (or/c xml+quotable? pair? null? #f)
@@ -123,7 +122,6 @@
                                             #:class   (or/c symbol? string? #f)
                                             #:classes (listof (or/c symbol? string?))
                                             #:title   (or/c string? #f)
-                                            #:format  (enum-value/c link-formats)
                                             #:else    any/c)
                                     any)])))
 
@@ -134,7 +132,6 @@
                      #:class   [class       #f]
                      #:classes [classes     (if class (list class) null)]
                      #:title   [title       #f]
-                     #:format  [link-format (default-link-format)]
                      #:else    [substitute  (default-link-substitute)])
            (controller-link (controller-ref struct) struct
                             #:body    [body        (format "~a ~a" type (format-snooze-struct struct))]
@@ -142,7 +139,6 @@
                             #:class   [class       #f]
                             #:classes [classes     (if class (list class) null)]
                             #:title   [title       #f]
-                            #:format  [link-format (default-link-format)]
                             #:else    [substitute  (default-link-substitute)]))
          (provide/contract [id (->* (snooze-struct?)
                                     (#:body (or/c xml+quotable? pair? null? #f)
@@ -150,7 +146,6 @@
                                             #:class   (or/c symbol? string? #f)
                                             #:classes (listof (or/c symbol? string?))
                                             #:title   (or/c string? #f)
-                                            #:format  (enum-value/c link-formats)
                                             #:else    any/c)
                                     any)])))
 

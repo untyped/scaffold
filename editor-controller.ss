@@ -55,7 +55,7 @@
       (xml "Your changes have been saved successfully."))
     
     ; -> any
-    (define/public #:callback/return (on-update)
+    (define/public #:callback* (on-update)
       (set-submitted-once?! #t)
       (process-parse-results (send (get-editor) parse)))
     

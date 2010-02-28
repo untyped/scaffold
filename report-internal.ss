@@ -5,6 +5,7 @@
 (require (only-in srfi/1 filter)
          srfi/13
          srfi/19
+         (smoke-in core/send)
          (unlib-in list symbol)
          "report-column.ss"
          "report-pager.ss"
@@ -351,11 +352,10 @@
     ; [(listof column)] -> void
     (define/public (respond/csv [cols (get-csv-columns)])
       ; void
-      (send/suspend/dispatch
-       (lambda (embed-url)
-         (make-csv-response
-          #:headers (get-csv-download-headers)
-          (render/csv cols)))))
+      (send/back
+       (make-csv-response
+        #:headers (get-csv-download-headers)
+        (render/csv cols))))
     
     ; [(listof column)] -> csv:sheet
     (define/public (render/csv [cols (get-csv-columns)])
