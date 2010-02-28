@@ -2,7 +2,7 @@
 
 (require (planet untyped/unlib:3/require))
 
-(define-library-aliases cce-scheme (planet cce/scheme:4)            #:provide)
+(define-library-aliases cce-scheme (planet cce/scheme:6)            #:provide)
 (define-library-aliases schemeunit (planet schematics/schemeunit:3) #:provide)
 (define-library-aliases delirium   (planet untyped/delirium:3)      #:provide)
 (define-library-aliases dispatch   (planet untyped/dispatch:3)      #:provide)
