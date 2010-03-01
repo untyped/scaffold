@@ -2,36 +2,19 @@
 
 (require "../content-base.ss")
 
-(require (unlib-in list symbol))
+(require (planet untyped/snooze:3))
 
 ; Pages ------------------------------------------
 
-
-(define-object post-view entity-view% ()
-  (inherit get-attributes get-value render-wrapper render-attributes render-label+value)
-  (super-new [entity post])
-  
-  (define/override (render seed)
-    (let ([struct (get-value)])
-      (render-wrapper
-       seed
-       (xml ,(render-attributes seed struct (get-attributes))
-            ,(render-label+value seed "All comments" (render-related-structs seed (find-comments #:post struct))))))))
-
-(define-object post-review-page (entity-review-page-mixin html-page%) ()
-  (super-new [view post-view]))
-
-(define-object comment-review-page (entity-review-page-mixin html-page%) ()
-  (super-new [entity comment]))
-
-
+(define-object kitchen-sink-editor-page (entity-editor-page-mixin html-page%) ()
+  (super-new [entity kitchen-sink]))
 
 ; == [1] Default scaffolded page ==
 (define-object review-page (entity-review-page-mixin html-page%) ()
   (super-new [title  "A vanilla entity-view"]
              [entity kitchen-sink]))
 
-; == [1] Default scaffolded page with a subset of attributes ==
+; == [2] Default scaffolded page with a subset of attributes ==
 
 (define-object review/attrs-page (entity-review-page-mixin html-page%) ()
   (super-new [title      "An entity-view with custom attributes"]
@@ -95,17 +78,6 @@
 
 ; Controllers ------------------------------------
 
-(define-controller (post-review post)
-  (send* post-review-page
-    [set-value! post]
-    [respond]))
-
-(define-controller (comment-review comm)
-  (send* comment-review-page
-    [set-value! comm]
-    [respond]))
-
-
 (define-controller (sink-review sink)
   (send* review-page 
     [set-value! sink]
@@ -130,3 +102,13 @@
   (send* review-relations-page
     [set-value! sink]
     [respond]))
+
+(define-controller (sink-creator)
+  (let loop ([val ((entity-defaults-constructor kitchen-sink))])
+    (send kitchen-sink-editor-page set-value! val)
+    (loop (send kitchen-sink-editor-page respond))))
+
+(define-controller (sink-editor sink)
+  (let loop ([val sink])
+    (send kitchen-sink-editor-page set-value! val)
+    (loop (send kitchen-sink-editor-page respond))))

@@ -2,5 +2,6 @@
 
 (require "../content-base.ss")
 
-(require "editor.ss"
-         "review.ss")
+(require "comment.ss"
+         "kitchen-sink.ss"
+         "post.ss")
