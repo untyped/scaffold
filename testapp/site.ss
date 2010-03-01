@@ -7,9 +7,11 @@
 ; Site -------------------------------------------
 
 (define-site test-site
-  ([("")        home]
-   [("/editor") editor]
-   [("/review") review])
+  ([("")                   home]
+   [("/editor")            editor]
+   [("/review-attrs")      review/attrs]
+   [("/review-customized") review/customized-attrs]
+   [("/review")            review])
   #:requestless? #t)
 
 ; Controllers ------------------------------------
