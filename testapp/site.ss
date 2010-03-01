@@ -12,14 +12,17 @@
 (define-site test-site
   ([("")                                                 home]
    ; post pages
+   [("/posts")                                            post-report]
    [("/posts/new")                                        post-creator]
    [("/posts/edit/"            (entity-arg post))         post-editor]
    [("/posts/view/"            (entity-arg post))         post-review]
    ; comment pages
+   [("/comments")                                         comment-report]
    [("/comments/new")                                     comment-creator]
    [("/comments/edit/"         (entity-arg comment))      comment-editor]
    [("/comments/view/"         (entity-arg comment))      comment-review]
    ; kitchen sink pages
+   [("/sinks")                                            sink-report]
    [("/sinks/new")                                        sink-creator]
    [("/sinks/edit/"            (entity-arg kitchen-sink)) sink-editor]
    [("/sinks/view/"            (entity-arg kitchen-sink)) sink-review]

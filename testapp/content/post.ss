@@ -6,6 +6,9 @@
 
 ; Pages ------------------------------------------
 
+(define-object post-report-page (entity-report-page-mixin html-page%) ()
+  (super-new [entity post]))
+
 (define-object post-editor-page (entity-editor-page-mixin html-page%) ()
   (super-new [entity post]))
 
@@ -25,6 +28,9 @@
   (super-new [view post-view]))
 
 ; Controllers ------------------------------------
+
+(define-controller (post-report)
+  (send* post-report-page [respond]))
 
 (define-controller (post-review post)
   (send* post-review-page

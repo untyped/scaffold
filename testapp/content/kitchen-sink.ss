@@ -6,6 +6,9 @@
 
 ; Pages ------------------------------------------
 
+(define-object kitchen-sink-report-page (entity-report-page-mixin html-page%) ()
+  (super-new [entity kitchen-sink]))
+
 (define-object kitchen-sink-editor-page (entity-editor-page-mixin html-page%) ()
   (super-new [entity kitchen-sink]))
 
@@ -77,6 +80,9 @@
              [view  entity/related-view]))
 
 ; Controllers ------------------------------------
+
+(define-controller (sink-report)
+  (send* kitchen-sink-report-page [respond]))
 
 (define-controller (sink-review sink)
   (send* review-page 

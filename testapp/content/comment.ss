@@ -6,6 +6,9 @@
 
 ; Pages ------------------------------------------
 
+(define-object comment-report-page (entity-report-page-mixin html-page%) ()
+  (super-new [entity comment]))
+
 (define-object comment-editor-page (entity-editor-page-mixin html-page%) ()
   (super-new [entity comment]))
 
@@ -13,6 +16,9 @@
   (super-new [entity comment]))
 
 ; Controllers ------------------------------------
+
+(define-controller (comment-report)
+  (send* comment-report-page [respond]))
 
 (define-controller (comment-creator)
   (let loop ([val ((entity-defaults-constructor comment))])
