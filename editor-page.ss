@@ -12,106 +12,108 @@
 
 ; Mixins -----------------------------------------
 
+(define-mixin editor-page-inner-mixin (html-element<%> html-page<%> editor-controller<%>) ()
+  
+  (inherit get-id
+           get-editor
+           on-update)
+  
+  ; Fields ----------------------------
+  
+  ; editor%
+  (init [editor (error "editor-page constructor: insufficient arguments")])
+  
+  (super-new [editor editor])
+  
+  (send editor set-id! (symbol-append (get-id) '-editor))
+  
+  ; submit-button%
+  (field submit-button
+    (new submit-button%
+         [id     (symbol-append (get-id) '-submit)]
+         [action (callback on-update)])
+    #:child #:accessor)
+  
+  ; Methods ---------------------------
+  
+  ; -> (listof html-component<%>)
+  (define/override (get-child-components)
+    (cons (get-editor)
+          (super get-child-components)))
+  
+  ; -> (listof (U xml (seed -> xml)))
+  (define/augment (get-html-requirements)
+    (list* snooze-styles
+           (inner null get-html-requirements)))
+  
+  ; -> (U snooze-struct #f)
+  (define/public (get-value)
+    (send (get-editor) get-value))
+  
+  ; snooze-struct -> void
+  (define/public (set-value! struct)
+    (send (get-editor) set-value! struct))
+  
+  ; seed -> xml
+  (define/augment (render seed)
+    (xml ,(send (get-editor) render seed)
+         ,(send submit-button render seed))))
+
 (define editor-page-mixin
-  (compose
-   (mixin/cells (html-element<%> html-page<%> editor-controller<%>) ()
-     
-     (inherit get-id
-              get-editor
-              on-update)
-     
-     ; Fields ----------------------------
-     
-     ; editor%
-     (init [editor (error "editor-page constructor: insufficient arguments")])
-     
-     (super-new [editor editor])
-     
-     (send editor set-id! (symbol-append (get-id) '-editor))
-     
-     ; submit-button%
-     (field submit-button
-       (new submit-button%
-            [id     (symbol-append (get-id) '-submit)]
-            [action (callback on-update)])
-       #:child #:accessor)
-     
-     ; Methods ---------------------------
-     
-     ; -> (listof html-component<%>)
-     (define/override (get-child-components)
-       (cons (get-editor)
-             (super get-child-components)))
-     
-    ; -> (listof (U xml (seed -> xml)))
-    (define/augment (get-html-requirements)
-      (list* snooze-styles
-             (inner null get-html-requirements)))
-          
-     ; -> (U snooze-struct #f)
-     (define/public (get-value)
-       (send (get-editor) get-value))
-     
-     ; snooze-struct -> void
-     (define/public (set-value! struct)
-       (send (get-editor) set-value! struct))
-     
-     ; seed -> xml
-     (define/augment (render seed)
-       (xml ,(send (get-editor) render seed)
-            ,(send submit-button render seed))))
-   editor-controller-mixin))
+  (compose editor-page-inner-mixin editor-controller-mixin))
+
+
+(define-mixin entity-editor-page-inner-mixin (html-element<%> html-page<%> editor-controller<%>) ()
+  
+  (inherit get-id
+           get-editor
+           on-update)
+  
+  ; Fields ----------------------------
+  
+  ; entity
+  (init [entity #f])
+  
+  ; (listof attribute)
+  (init [attributes (and entity (entity-data-attributes entity))])
+  
+  ; (listof attribute-editor<%>)
+  (init [editors (and attributes (map default-attribute-editor attributes))])
+  
+  ; entity-editor%
+  (init [editor (or (and entity
+                         editors
+                         (new entity-editor%
+                              [entity  entity]
+                              [editors editors]))
+                    (error "entity-editor-page constructor: insufficient arguments"))])
+  
+  (super-new [editor editor])
+  
+  ; Methods ---------------------------
+  
+  ; -> entity
+  (define/public (get-entity)
+    (send (get-editor) get-entity))
+  
+  ; -> (U snooze-struct #f)
+  (define/public (get-initial-value)
+    (send (get-editor) get-initial-value))
+  
+  ; -> string
+  (define/override (get-title)
+    (let* ([title  (super get-title)]
+           [entity (get-entity)]
+           [struct (get-initial-value)])
+      (cond [title title]
+            [(and struct (snooze-struct-saved? struct))
+             (format "Edit ~a: ~a" (entity-pretty-name entity) (format-snooze-struct struct))]
+            [struct (format "New ~a" (entity-pretty-name entity))]
+            [else   (format "Editing ~a" (entity-pretty-name entity))]))))
+
 
 (define entity-editor-page-mixin
-  (compose
-   (mixin/cells (html-element<%> html-page<%> editor-controller<%>) ()
-     
-     (inherit get-id
-              get-editor
-              on-update)
-     
-     ; Fields ----------------------------
-     
-     ; entity
-     (init [entity #f])
-     
-     ; (listof attribute)
-     (init [attributes (and entity (entity-data-attributes entity))])
-     
-     ; (listof attribute-editor<%>)
-     (init [editors (and attributes (map default-attribute-editor attributes))])
-     
-     ; entity-editor%
-     (init [editor (or (and entity
-                            editors
-                            (new entity-editor%
-                                 [entity  entity]
-                                 [editors editors]))
-                       (error "entity-editor-page constructor: insufficient arguments"))])
-     
-     (super-new [editor editor])
-     
-     ; Methods ---------------------------
-     
-     ; -> entity
-     (define/public (get-entity)
-       (send (get-editor) get-entity))
-     
-     ; -> (U snooze-struct #f)
-     (define/public (get-initial-value)
-       (send (get-editor) get-initial-value))
-
-     ; -> string
-     (define/override (get-title)
-       (let* ([title  (super get-title)]
-              [entity (get-entity)]
-              [struct (get-initial-value)])
-         (cond [title title]
-               [(and struct (snooze-struct-saved? struct))
-                (format "Edit ~a: ~a" (entity-pretty-name entity) (format-snooze-struct struct))]
-               [struct (format "New ~a" (entity-pretty-name entity))]
-               [else   (format "Editing ~a" (entity-pretty-name entity))]))))
-   editor-page-mixin))
+  (compose entity-editor-page-inner-mixin editor-page-mixin))
 
 ; Procedures -------------------------------------
 

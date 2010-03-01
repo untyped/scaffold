@@ -8,17 +8,14 @@
 
 ; Pages ------------------------------------------
 
-(define kitchen-sink-editor-page
-  (singleton/cells (entity-editor-page-mixin html-page%) ()
-    (super-new [entity kitchen-sink])))
+(define-object kitchen-sink-editor-page (entity-editor-page-mixin html-page%) ()
+  (super-new [entity kitchen-sink]))
 
-(define post-editor-page
-  (singleton/cells (entity-editor-page-mixin html-page%) ()
-    (super-new [entity post])))
+(define-object post-editor-page (entity-editor-page-mixin html-page%) ()
+  (super-new [entity post]))
 
-(define comment-editor-page
-  (singleton/cells (entity-editor-page-mixin html-page%) ()
-    (super-new [entity comment])))
+(define-object comment-editor-page (entity-editor-page-mixin html-page%) ()
+  (super-new [entity comment]))
 
 ; Controllers ------------------------------------
 

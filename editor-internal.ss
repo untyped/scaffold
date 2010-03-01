@@ -16,75 +16,73 @@
 
 ; Mixins -----------------------------------------
 
-(define simple-editor-mixin/html-element
-  (mixin/cells (html-element<%>) (editor<%>)
-    
-    ; Fields ------------------------------
-    
-    (super-new)
-    
-    ; (listof editor<%>)
-    (init-field editors null #:accessor #:children)
-    
-    ; Methods -----------------------------
-    
-    ; (listof check-result) -> void
-    (define/public (set-check-results! results)
-      (for-each (cut send <> set-check-results! results)
-                (get-editors)))
-    
-    ; -> (listof check-result)
-    (define/public (parse)
-      (apply check-problems (map (cut send <> parse) (get-editors))))
-    
-    ; -> (listof check-result)
-    (define/public (validate)
-      (apply check-problems
-             (map (cut send <> validate)
-                  (get-editors))))
-    
-    ; -> boolean
-    (define/public (value-changed?)
-      (or (ormap (cut send <> value-changed?)
-                 (get-editors))))))
+(define-mixin simple-editor-mixin/html-element (html-element<%>) (editor<%>)
+  
+  ; Fields ------------------------------
+  
+  (super-new)
+  
+  ; (listof editor<%>)
+  (init-field editors null #:accessor #:children)
+  
+  ; Methods -----------------------------
+  
+  ; (listof check-result) -> void
+  (define/public (set-check-results! results)
+    (for-each (cut send <> set-check-results! results)
+              (get-editors)))
+  
+  ; -> (listof check-result)
+  (define/public (parse)
+    (apply check-problems (map (cut send <> parse) (get-editors))))
+  
+  ; -> (listof check-result)
+  (define/public (validate)
+    (apply check-problems
+           (map (cut send <> validate)
+                (get-editors))))
+  
+  ; -> boolean
+  (define/public (value-changed?)
+    (or (ormap (cut send <> value-changed?)
+               (get-editors)))))
 
-(define simple-editor-mixin/form-element
-  (mixin/cells (form-element<%>) (editor<%>)
-    
-    (inherit get-value)
-    
-    ; Fields ------------------------------
-    
-    (super-new)
-    
-    ; (listof editor<%>)
-    (init-field editors null #:accessor #:children)
-    
-    ; Methods -----------------------------
-    
-    ; (listof check-result) -> void
-    (define/public (set-check-results! results)
-      (for-each (cut send <> set-check-results! results)
-                (get-editors)))
-    
-    ; -> (listof check-result)
-    (define/public (parse)
-      (apply check-problems
-             (check/annotate ([ann:form-elements (list this)])
-               (with-handlers ([exn:smoke:form? (lambda (exn) (check-fail (exn-message exn)))])
-                 (get-value)
-                 (check-pass)))
-             (map (cut send <> parse) (get-editors))))
-    
-    ; -> (listof check-result)
-    (define/public (validate)
-      (apply check-problems (map (cut send <> validate) (get-editors))))
-    
-    ; -> boolean
-    (define/override (value-changed?)
-      (or (super value-changed?)
-          (ormap (cut send <> value-changed?)
-                 (get-editors))))))
+(define-mixin simple-editor-mixin/form-element (form-element<%>) (editor<%>)
+  
+  (inherit get-value)
+  
+  ; Fields ------------------------------
+  
+  (super-new)
+  
+  ; (listof editor<%>)
+  (init-field editors null #:accessor #:children)
+  
+  ; Methods -----------------------------
+  
+  ; (listof check-result) -> void
+  (define/public (set-check-results! results)
+    (for-each (cut send <> set-check-results! results)
+              (get-editors)))
+  
+  ; -> (listof check-result)
+  (define/public (parse)
+    (apply check-problems
+           (check/annotate ([ann:form-elements (list this)])
+             (with-handlers ([exn:smoke:form? (lambda (exn) (check-fail (exn-message exn)))])
+               (get-value)
+               (check-pass)))
+           (map (cut send <> parse) (get-editors))))
+  
+  ; -> (listof check-result)
+  (define/public (validate)
+    (apply check-problems (map (cut send <> validate) (get-editors))))
+  
+  ; -> boolean
+  (define/override (value-changed?)
+    (or (super value-changed?)
+        (ormap (cut send <> value-changed?)
+               (get-editors)))))
 
 ; html-element<%> -> editor<%>
 (define (simple-editor-mixin class)

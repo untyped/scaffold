@@ -45,54 +45,53 @@
 
 ; Mixins -----------------------------------------
 
-(define entity-view-mixin
-  (mixin/cells (html-element<%>) (entity-view<%>)
-    
-    (inherit core-html-attributes)
-    
-    ; Fields -------------------------------------
-    
-    ; entity
-    (init-field entity #:accessor)
-    
-    ; (listof attribute)
-    (init-field attributes (and entity (entity-data-attributes entity)) #:accessor)
-    
-    ; (cellof (U snooze-struct #f))
-    (init-cell value #f #:accessor #:mutator)
-    
-    ; (listof (U string symbol))
-    (init [classes null])
-    
-    (super-new [classes (list* 'entity-view 'ui-widget classes)])
-    
-    ; Methods ------------------------------------
-    
-    ; seed -> xml
-    (define/override (render seed)
-      (let ([struct (get-value)])
-        (render-wrapper seed (render-attributes seed struct (get-attributes)))))
-    
-    ; seed xml+quotable -> xml
-    (define/public (render-wrapper seed contents)
-      (xml (table (@ ,(core-html-attributes seed))
-                  (tbody ,contents))))
-    
-    ; seed snooze-struct (listof attribute) -> xml
-    (define/public (render-attributes seed struct attributes)
-      (xml ,@(for/list ([attribute (in-list attributes)])
-               (render-attribute seed struct attribute))))
-    
-    ; seed snooze-struct attribute -> xml
-    (define/public (render-attribute seed struct attribute)
-      (render-label+value seed
-                          (attribute-pretty-name attribute)
-                          (snooze-struct-xml-ref struct attribute)))
-    
-    ; seed xml+quotable xml+quotable -> xml
-    (define/public (render-label+value seed label value)
-      (xml (tr (th ,label)
-               (td ,value))))))
+(define-mixin entity-view-mixin (html-element<%>) (entity-view<%>)
+  
+  (inherit core-html-attributes)
+  
+  ; Fields -------------------------------------
+  
+  ; entity
+  (init-field entity #:accessor)
+  
+  ; (listof attribute)
+  (init-field attributes (and entity (entity-data-attributes entity)) #:accessor)
+  
+  ; (cellof (U snooze-struct #f))
+  (init-cell value #f #:accessor #:mutator)
+  
+  ; (listof (U string symbol))
+  (init [classes null])
+  
+  (super-new [classes (list* 'entity-view 'ui-widget classes)])
+  
+  ; Methods ------------------------------------
+  
+  ; seed -> xml
+  (define/override (render seed)
+    (let ([struct (get-value)])
+      (render-wrapper seed (render-attributes seed struct (get-attributes)))))
+  
+  ; seed xml+quotable -> xml
+  (define/public (render-wrapper seed contents)
+    (xml (table (@ ,(core-html-attributes seed))
+                (tbody ,contents))))
+  
+  ; seed snooze-struct (listof attribute) -> xml
+  (define/public (render-attributes seed struct attributes)
+    (xml ,@(for/list ([attribute (in-list attributes)])
+             (render-attribute seed struct attribute))))
+  
+  ; seed snooze-struct attribute -> xml
+  (define/public (render-attribute seed struct attribute)
+    (render-label+value seed
+                        (attribute-pretty-name attribute)
+                        (snooze-struct-xml-ref struct attribute)))
+  
+  ; seed xml+quotable xml+quotable -> xml
+  (define/public (render-label+value seed label value)
+    (xml (tr (th ,label)
+             (td ,value)))))
 
 
 (define entity-view%

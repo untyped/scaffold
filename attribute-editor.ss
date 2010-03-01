@@ -11,58 +11,53 @@
 
 ; Helper mixins ----------------------------------
 
-(define text-field-editor-mixin
-  (mixin/cells (text-input<%> editor<%>) ()
-    (init [attributes null]
-          [max-length (or (and (pair? attributes)
-                               (character-type? (attribute-type (car attributes)))
-                               (character-type-max-length (attribute-type (car attributes))))
-                          25)]
-          [size       (default-text-field-size max-length)])
-    (super-new [attributes attributes]
-               [max-length max-length]
-               [size       size])))
+(define-mixin text-field-editor-mixin (text-input<%> editor<%>) ()
+  (init [attributes null]
+        [max-length (or (and (pair? attributes)
+                             (character-type? (attribute-type (car attributes)))
+                             (character-type-max-length (attribute-type (car attributes))))
+                        25)]
+        [size       (default-text-field-size max-length)])
+  (super-new [attributes attributes]
+             [max-length max-length]
+             [size       size]))
 
-(define time-utc-editor-mixin
-  (mixin/cells (date-field<%> editor<%>) ()
-    (inherit get-time-utc)
-    ; -> (U time-utc #f)
-    (define/override (get-value)
-      (get-time-utc))))
+(define-mixin time-utc-editor-mixin (date-field<%> editor<%>) ()
+  (inherit get-time-utc)
+  ; -> (U time-utc #f)
+  (define/override (get-value)
+    (get-time-utc)))
 
-(define time-tai-editor-mixin
-  (mixin/cells (date-field<%> editor<%>) ()
-    (inherit get-time-tai)
-    ; -> (U time-tai #f)
-    (define/override (get-value)
-      (get-time-tai))))
+(define-mixin time-tai-editor-mixin (date-field<%> editor<%>) ()
+  (inherit get-time-tai)
+  ; -> (U time-tai #f)
+  (define/override (get-value)
+    (get-time-tai)))
 
-(define symbol-editor-mixin
-  (mixin/cells (form-element<%> editor<%>) ()
-    ; -> (U symbol #f)
-    (define/override (get-value)
-      (let ([str (super get-value)])
-        (and str (string->symbol str))))
-    ; (U symbol #f) -> void
-    (define/override (set-value! sym)
-      (super set-value! (and sym (symbol->string sym))))))
+(define-mixin symbol-editor-mixin (form-element<%> editor<%>) ()
+  ; -> (U symbol #f)
+  (define/override (get-value)
+    (let ([str (super get-value)])
+      (and str (string->symbol str))))
+  ; (U symbol #f) -> void
+  (define/override (set-value! sym)
+    (super set-value! (and sym (symbol->string sym)))))
 
-(define enum-editor-mixin
-  (mixin/cells (attribute-editor<%>) ()
-    
-    (init attributes
-          [null-label (if (is-a? this radio-combo%)
-                          "None"
-                          "-- No selection --")]
-          [options    (let* ([type (and (pair? attributes) (attribute-type (car attributes)))])
-                        (if (enum-type? type)
-                            (enum-type-options type null-label)
-                            (raise-exn exn:fail:contract
-                              (format "enum-combo-box-editor% constructor: ~a: ~s"
-                                      "options must be specified for non-enum attributes"
-                                      attributes))))])
-    
-    (super-new [attributes attributes] [options options])))
+(define-mixin enum-editor-mixin (attribute-editor<%>) ()
+  
+  (init attributes
+        [null-label (if (is-a? this radio-combo%)
+                        "None"
+                        "-- No selection --")]
+        [options    (let* ([type (and (pair? attributes) (attribute-type (car attributes)))])
+                      (if (enum-type? type)
+                          (enum-type-options type null-label)
+                          (raise-exn exn:fail:contract
+                            (format "enum-combo-box-editor% constructor: ~a: ~s"
+                                    "options must be specified for non-enum attributes"
+                                    attributes))))])
+  
+  (super-new [attributes attributes] [options options]))
 
 ; Classes ----------------------------------------
 

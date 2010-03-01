@@ -12,35 +12,34 @@
 
 ; Components -------------------------------------
 
-(define view-combo-box%
-  (class/cells vanilla-combo-box% ()
-    
-    ; Fields -------------------------------------
-    
-    ; snooze-report%
-    (init-field report #f #:accessor #:mutator)
-    
-    ; Methods ------------------------------------
-    
-    ; -> (listof view)
-    (define/override (get-options)
-      (send report get-views))
-    
-    ; view -> string
-    (define/override (option->raw view)
-      (symbol->string (view-id view)))
-    
-    ; (U string #f) -> (U view #f)
-    (define/override (raw->option raw-string)
-      (and raw-string
-           (let ([raw-symbol (string->symbol raw-string)])
-             (ormap (lambda (view)
-                      (and (eq? raw-symbol (view-id view)) view))
-                    (get-options)))))
-    
-    ; view -> string
-    (define/override (option->string view)
-      (format "Show ~a" (view-name view)))))
+(define-class view-combo-box% vanilla-combo-box% ()
+  
+  ; Fields -------------------------------------
+  
+  ; snooze-report%
+  (init-field report #f #:accessor #:mutator)
+  
+  ; Methods ------------------------------------
+  
+  ; -> (listof view)
+  (define/override (get-options)
+    (send report get-views))
+  
+  ; view -> string
+  (define/override (option->raw view)
+    (symbol->string (view-id view)))
+  
+  ; (U string #f) -> (U view #f)
+  (define/override (raw->option raw-string)
+    (and raw-string
+         (let ([raw-symbol (string->symbol raw-string)])
+           (ormap (lambda (view)
+                    (and (eq? raw-symbol (view-id view)) view))
+                  (get-options)))))
+  
+  ; view -> string
+  (define/override (option->string view)
+    (format "Show ~a" (view-name view))))
 
 ; Provide statements -----------------------------
 

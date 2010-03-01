@@ -107,73 +107,71 @@
 (define filter2 (make-filter 'filter2 "Filter 2"))
 (define filter3 (make-filter 'filter3 "Filter 3"))
 
-(define test-report%
-  (class/cells snooze-report% ()
-    
-    ; Constructor ------------------------------
-    
-    ; column
-    (super-new [sort-col symbol-col] [count 5])
-    
-    ; SQL --------------------------------------
-    
-    ; filter any -> integer
-    (define/override (query-num-items filter pattern)
-      (length (g:collect (query-items filter pattern string-col 'asc 0 999999))))
-    
-    ; filter any column (U 'asc 'desc) integer integer -> (gen-> item)
-    (define/override (query-items filter pattern col dir start count)
-      (items-ref filter pattern col dir start count))
-    
-    ; Columns and views ------------------------
-    
-    ; -> (listof view)
-    (define/override (get-views)
-      (list view1 view2 view3))
-    
-    ; Filters ----------------------------------
-    
-    ; -> (listof filter)
-    (define/override (get-filters)
-      (list filter1 filter2 filter3))
-    
-    ; Rendering --------------------------------
-    
-    ; seed (listof column) (list string symbol number) -> xml
-    (define/override (render-item seed cols item)
-      (match item
-        [(list str sym num)
-         (xml (tr ,@(map (lambda (col)
-                           (cond [(eq? col string-col) (xml (td ,str))]
-                                 [(eq? col symbol-col) (xml (td ,sym))]
-                                 [(eq? col number-col) (xml (td ,num))]))
-                         cols)))]))
-    
-    ; CSV ----------------------------------------
-    
-    ; (listof column) (list string symbol number) -> xml
-    (define/override (render-item/csv cols item)
-      (match item
-        [(list str sym num)
-         (csv:row (map (lambda (col)
-                         (csv:cell (cond [(eq? col string-col) str]
-                                         [(eq? col symbol-col) sym]
-                                         [(eq? col number-col) num])))
-                       cols))]))))
+(define-class test-report% snooze-report% ()
+  
+  ; Constructor ------------------------------
+  
+  ; column
+  (super-new [sort-col symbol-col] [count 5])
+  
+  ; SQL --------------------------------------
+  
+  ; filter any -> integer
+  (define/override (query-num-items filter pattern)
+    (length (g:collect (query-items filter pattern string-col 'asc 0 999999))))
+  
+  ; filter any column (U 'asc 'desc) integer integer -> (gen-> item)
+  (define/override (query-items filter pattern col dir start count)
+    (items-ref filter pattern col dir start count))
+  
+  ; Columns and views ------------------------
+  
+  ; -> (listof view)
+  (define/override (get-views)
+    (list view1 view2 view3))
+  
+  ; Filters ----------------------------------
+  
+  ; -> (listof filter)
+  (define/override (get-filters)
+    (list filter1 filter2 filter3))
+  
+  ; Rendering --------------------------------
+  
+  ; seed (listof column) (list string symbol number) -> xml
+  (define/override (render-item seed cols item)
+    (match item
+      [(list str sym num)
+       (xml (tr ,@(map (lambda (col)
+                         (cond [(eq? col string-col) (xml (td ,str))]
+                               [(eq? col symbol-col) (xml (td ,sym))]
+                               [(eq? col number-col) (xml (td ,num))]))
+                       cols)))]))
+  
+  ; CSV ----------------------------------------
+  
+  ; (listof column) (list string symbol number) -> xml
+  (define/override (render-item/csv cols item)
+    (match item
+      [(list str sym num)
+       (csv:row (map (lambda (col)
+                       (csv:cell (cond [(eq? col string-col) str]
+                                       [(eq? col symbol-col) sym]
+                                       [(eq? col number-col) num])))
+                     cols))])))
 
 ; html-page%
-(define test-page
-  (singleton/cells html-page% ()
-    
-    ; Fields -------------------------------------
-    
-    (field report
-      (new test-report% [id 'report])
-      #:child #:accessor #:mutator)
-    
-    ; Constructor --------------------------------
-    
-    (super-new [id 'page])))
+(define-object test-page html-page% ()
+  
+  ; Fields -------------------------------------
+  
+  (field report
+    (new test-report% [id 'report])
+    #:child #:accessor #:mutator)
+  
+  ; Constructor --------------------------------
+  
+  (super-new [id 'page]))
 
 ; filter any column (U 'asc 'desc) integer integer -> (gen-> item)
 (define (items-ref filter pattern sort-col sort-dir start count)

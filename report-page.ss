@@ -14,41 +14,40 @@
 
 ; Mixins -----------------------------------------
 
-(define entity-report-page-mixin
-  (mixin/cells (html-element<%> html-page<%>) ()
-    
-    (inherit get-id)
-    
-    ; Fields ----------------------------
-    
-    (super-new)
-    
-    ; entity
-    (init [entity #f])
-    
-    ; (listof attribute)
-    (init [attributes (and entity (entity-data-attributes entity))])
-    
-    ; snooze-report%
-    (init-field report
-      (or (and entity (new (default-scaffolded-report-superclass) [entity entity] [attributes attributes]))
-          (string-append "entity-report-page constructor: insufficient arguments"))
-      #:child)
-    
-    ; Methods ---------------------------
-    
-    ; -> entity
-    (define/public (get-entity)
-      (send report get-entity))
-    
-    ; -> string
-    (define/override (get-title)
-      (or (super get-title)
-          (string-sentencecase (entity-pretty-name-plural (get-entity)))))
-    
-    ; seed -> xml
-    (define/augment (render seed)
-      (send report render seed))))
+(define-mixin entity-report-page-mixin (html-element<%> html-page<%>) ()
+  
+  (inherit get-id)
+  
+  ; Fields ----------------------------
+  
+  (super-new)
+  
+  ; entity
+  (init [entity #f])
+  
+  ; (listof attribute)
+  (init [attributes (and entity (entity-data-attributes entity))])
+  
+  ; snooze-report%
+  (init-field report
+    (or (and entity (new (default-scaffolded-report-superclass) [entity entity] [attributes attributes]))
+        (string-append "entity-report-page constructor: insufficient arguments"))
+    #:child)
+  
+  ; Methods ---------------------------
+  
+  ; -> entity
+  (define/public (get-entity)
+    (send report get-entity))
+  
+  ; -> string
+  (define/override (get-title)
+    (or (super get-title)
+        (string-sentencecase (entity-pretty-name-plural (get-entity)))))
+  
+  ; seed -> xml
+  (define/augment (render seed)
+    (send report render seed)))
 
 ; Procedures -------------------------------------
 
