@@ -22,7 +22,13 @@
 (define snooze-struct-xml-ref-defaults
   (make-parameter
    (lambda (struct attr)
-     (snooze-struct-ref struct attr))))
+     (let ([type (attribute-type attr)]
+           [val  (snooze-struct-ref struct attr)])
+       (cond [(snooze-struct? val) (format-snooze-struct val)]
+             [(guid? val)          (format-snooze-struct (find-by-guid val))]
+             [(and (enum-type? type) (enum-type-enum type))
+              => (cut enum-prettify <> val)]
+             [else val])))))
 
 ; snooze-struct attribute -> xml
 (define (snooze-struct-xml-ref struct attr)
@@ -94,6 +100,7 @@
 
 ; Helpers ----------------------------------------
 
+; seed (listof snooze-struct) -> xml
 (define (render-related-structs seed relateds)
   (xml (ul (@ [class "relationship-view"])
            ,@(for/list ([related (in-list relateds)])
@@ -108,9 +115,9 @@
  [attribute-xml-defaults         (parameter/c (-> attribute? any/c xml+quotable?))]
  [attribute-xml                  (-> attribute? any/c xml+quotable?)]
  [snooze-struct-xml-ref-defaults (parameter/c (-> snooze-struct? attribute? xml+quotable?))]
- [snooze-struct-xml-ref          (-> snooze-struct? attribute? xml+quotable?)])
+ [snooze-struct-xml-ref          (-> snooze-struct? attribute? xml+quotable?)]
+ [render-related-structs         (-> seed? (listof snooze-struct?) xml?)])
 
 (provide entity-view<%>
          entity-view-mixin
-         entity-view%
-         render-related-structs)
+         entity-view%)
