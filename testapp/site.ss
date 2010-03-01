@@ -2,16 +2,31 @@
 
 (require "../base.ss")
 
-(require (dispatch-in))
+(require (dispatch-in)
+         "../arg.ss"
+         "model/db.ss"
+         "model/entities.ss")
 
 ; Site -------------------------------------------
 
 (define-site test-site
-  ([("")                   home]
-   [("/editor")            editor]
-   [("/review-attrs")      review/attrs]
-   [("/review-customized") review/customized-attrs]
-   [("/review")            review])
+  ([("")                                                 home]
+   ; post pages
+   [("/posts/new")                                        post-creator]
+   [("/posts/edit/"            (entity-arg post))         post-editor]
+   [("/posts/view/"            (entity-arg post))         post-review]
+   ; comment pages
+   [("/comments/new")                                     comment-creator]
+   [("/comments/edit/"         (entity-arg comment))      comment-editor]
+   [("/comments/view/"         (entity-arg comment))      comment-review]
+   ; kitchen sink pages
+   [("/sinks/new")                                        sink-creator]
+   [("/sinks/edit/"            (entity-arg kitchen-sink)) sink-editor]
+   [("/sinks/view/"            (entity-arg kitchen-sink)) sink-review]
+   [("/sinks/view-attrs/"      (entity-arg kitchen-sink)) sink-review/attrs]
+   [("/sinks/view-customized/" (entity-arg kitchen-sink)) sink-review/customized-attrs]
+   [("/sinks/view-compound/"   (entity-arg kitchen-sink)) sink-review/compound-attrs]
+   [("/sinks/view-related/"    (entity-arg kitchen-sink)) sink-review/related-attrs])
   #:requestless? #t)
 
 ; Controllers ------------------------------------
@@ -20,12 +35,12 @@
   (make-html-response
    (xml (html (head (title "Test application"))
               (body (h1 "Test application")
-                    (ul ,@(reverse (for/list ([controller (site-controllers test-site)])
-                                     (with-handlers ([exn? (lambda _ (xml))])
-                                       (if (eq? controller home)
-                                           (xml)
-                                           (xml (li (a (@ [href ,(controller-url controller)])
-                                                       ,(controller-id controller))))))))))))))
+                    (ul ,@(for/list ([controller (site-controllers test-site)])
+                            (with-handlers ([exn? (lambda _ (xml))])
+                              (if (eq? controller home)
+                                  (xml)
+                                  (xml (li (a (@ [href ,(controller-url controller)])
+                                              ,(controller-id controller)))))))))))))
 
 ; Provide statements -----------------------------
 

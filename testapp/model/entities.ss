@@ -31,6 +31,15 @@
   (lambda (post)
     (post-subject post)))
 
+(define-entity comment
+  ([post    post #:allow-null? #f]
+   [content string])
+  #:pretty-formatter
+  (lambda (comment)
+    (comment-content comment)))
+
+;(call-with-connection (lambda () (create-table comment)))
+
 (define-entity kitchen-sink
   ([a-boolean                 boolean]
    [a-integer                 integer]
@@ -63,4 +72,5 @@
 
 (provide/contract/entities
  [entity post]
+ [entity comment]
  [entity kitchen-sink])

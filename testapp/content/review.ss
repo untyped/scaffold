@@ -6,16 +6,37 @@
 
 ; Pages ------------------------------------------
 
-(define review-page
-  (singleton/cells (entity-review-page-mixin html-page%) ()
-    (super-new [title  "A vanilla entity-view"]
-               [entity kitchen-sink])))
 
-(define review/attrs-page
-  (singleton/cells (entity-review-page-mixin html-page%) ()
-    (super-new [title      "An entity-view with custom attributes"]
-               [entity     kitchen-sink]
-               [attributes (attr-list kitchen-sink a-boolean a-real a-integer)])))
+(define-object post-view entity-view% ()
+  (inherit get-attributes get-value render-wrapper render-attributes render-label+value)
+  (super-new [entity post])
+  
+  (define/override (render seed)
+    (let ([struct (get-value)])
+      (render-wrapper
+       seed
+       (xml ,(render-attributes seed struct (get-attributes))
+            ,(render-label+value seed "All comments" (render-related-structs seed (find-comments #:post struct))))))))
+
+(define-object post-review-page (entity-review-page-mixin html-page%) ()
+  (super-new [view post-view]))
+
+(define-object comment-review-page (entity-review-page-mixin html-page%) ()
+  (super-new [entity comment]))
+
+
+
+; == [1] Default scaffolded page ==
+(define-object review-page (entity-review-page-mixin html-page%) ()
+  (super-new [title  "A vanilla entity-view"]
+             [entity kitchen-sink]))
+
+; == [1] Default scaffolded page with a subset of attributes ==
+
+(define-object review/attrs-page (entity-review-page-mixin html-page%) ()
+  (super-new [title      "An entity-view with custom attributes"]
+             [entity     kitchen-sink]
+             [attributes (attr-list kitchen-sink a-boolean a-real a-integer)]))
 
 ; == [3] Single attribute view modified; rest unchanged ==
 
@@ -23,35 +44,89 @@
   (inherit render-label+value)
   (super-new [entity     kitchen-sink]
              [attributes (attr-list kitchen-sink a-boolean a-real a-integer)])
-    (define/override (render-attribute seed struct attribute)
-      (if (eq? attribute (attr kitchen-sink a-real))
-          (render-label+value seed "A real, customized" (xml (b ,(snooze-struct-xml-ref struct attribute))))
-          (super render-attribute seed struct attribute))))
+  (define/override (render-attribute seed struct attribute)
+    (if (eq? attribute (attr kitchen-sink a-real))
+        (render-label+value seed "A real, customized" (xml (b ,(snooze-struct-xml-ref struct attribute))))
+        (super render-attribute seed struct attribute))))
+
+(define-object review-customized-attrs-page (entity-review-page-mixin html-page%) ()
+  (super-new [title "An entity-view with customized attributes"]
+             [view  customized-kitchen-sink]))
+
+
+; == [4] Multiple-attribute view, rest unchanged ==
+
+(define-object compound-kitchen-sink entity-view% ()
+  (inherit render-label+value)
+  (super-new [entity     kitchen-sink]
+             [attributes (attr-list kitchen-sink a-boolean a-real a-integer a-string a-symbol)])
+  ; seed snooze-struct -> xml
+  (define/override (render-attributes seed struct attributes)
+    (xml ,(super render-attributes seed struct (attr-list kitchen-sink a-boolean a-real))
+         ,(render-label+value 
+           seed
+           "A-integer+a-string" 
+           (xml (span ,(snooze-struct-xml-ref struct (attr kitchen-sink a-integer)) 
+                      " >> "
+                      ,(snooze-struct-xml-ref struct (attr kitchen-sink a-string)))))
+         ,(super render-attributes seed struct (attr-list kitchen-sink a-symbol)))))
+
+(define-object review-compound-attrs-page (entity-review-page-mixin html-page%) ()
+  (super-new [title "An entity-view with compound attributes"]
+             [view  compound-kitchen-sink]))
+
+; [5] == View extended with a relationship (i.e. a non-attribute view) ==
+
+(define-object entity/related-view entity-view% ()
+  (inherit get-value render-wrapper render-attributes render-label+value)
+  (super-new [entity kitchen-sink])
   
-(define review-customized-attrs-page
-  (singleton/cells (entity-review-page-mixin html-page%) ()
-    (super-new [title "An entity-view with customized attributes"]
-               [view  customized-kitchen-sink])))
+  (define/override (render seed)
+    (let ([struct (get-value)])
+      (render-wrapper
+       seed
+       (xml ,(render-attributes seed struct (attr-list kitchen-sink a-boolean a-real))
+            ,(render-label+value seed "All posts" (render-related-structs seed (find-posts)))
+            ,(render-attributes seed struct (attr-list kitchen-sink a-integer a-string a-symbol)))))))
+
+(define-object review-relations-page (entity-review-page-mixin html-page%) ()
+  (super-new [title "An entity-view with relations"]
+             [view  entity/related-view]))
 
 ; Controllers ------------------------------------
 
-(define-controller (review)
-  (with-connection
-   (let ([entity (send review-page get-entity)])
-     (let loop ([val ((entity-defaults-constructor entity))])
-       (send review-page set-value! val)
-       (loop (send review-page respond))))))
+(define-controller (post-review post)
+  (send* post-review-page
+    [set-value! post]
+    [respond]))
 
-(define-controller (review/attrs)
-  (with-connection
-   (let ([entity (send review/attrs-page get-entity)])
-     (let loop ([val ((entity-defaults-constructor entity))])
-       (send review/attrs-page set-value! val)
-       (loop (send review/attrs-page respond))))))
+(define-controller (comment-review comm)
+  (send* comment-review-page
+    [set-value! comm]
+    [respond]))
 
-(define-controller (review/customized-attrs)
-  (with-connection
-   (let ([entity (send review-customized-attrs-page get-entity)])
-     (let loop ([val ((entity-defaults-constructor entity))])
-       (send review-customized-attrs-page set-value! val)
-       (loop (send review-customized-attrs-page respond))))))
+
+(define-controller (sink-review sink)
+  (send* review-page 
+    [set-value! sink]
+    [respond]))
+
+(define-controller (sink-review/attrs sink)
+  (send* review/attrs-page 
+    [set-value! sink]
+    [respond]))
+
+(define-controller (sink-review/customized-attrs sink)
+  (send* review-customized-attrs-page
+    [set-value! sink]
+    [respond]))
+
+(define-controller (sink-review/compound-attrs sink)
+  (send* review-compound-attrs-page
+    [set-value! sink]
+    [respond]))
+
+(define-controller (sink-review/related-attrs sink)
+  (send* review-relations-page
+    [set-value! sink]
+    [respond]))
