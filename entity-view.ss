@@ -26,7 +26,7 @@
 
 ; snooze-struct attribute -> xml
 (define (snooze-struct-xml-ref struct attr)
-  ((snooze-struct-xml-ref-defaults) attr))
+  ((snooze-struct-xml-ref-defaults) struct attr))
 
 ; Interfaces -------------------------------------
 
@@ -103,6 +103,12 @@
                                [else (format-snooze-struct related)])))))))
 
 ; Provide statements -----------------------------
+
+(provide/contract 
+ [attribute-xml-defaults         (parameter/c (-> attribute? any/c xml+quotable?))]
+ [attribute-xml                  (-> attribute? any/c xml+quotable?)]
+ [snooze-struct-xml-ref-defaults (parameter/c (-> snooze-struct? attribute? xml+quotable?))]
+ [snooze-struct-xml-ref          (-> snooze-struct? attribute? xml+quotable?)])
 
 (provide entity-view<%>
          entity-view-mixin
