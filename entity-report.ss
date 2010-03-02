@@ -7,7 +7,8 @@
          (unlib-in string symbol)
          "controller-internal.ss"
          "report-column.ss"
-         "report-internal.ss")
+         "report-internal.ss"
+         "view-common.ss")
 
 ; Columns ----------------------------------------
 
@@ -34,30 +35,11 @@
   ; seed any -> xml
   ; val is the raw attribute value - the report has to do all the destructuring.
   (define/public (render-body seed val)
-    (xml (td ,(cond [(snooze-struct? val)
-                     (cond [(get-review-controller)
-                            => (lambda (controller)
-                                 (xml (a (@ [href ,(controller-url controller val)])
-                                         ,(format-snooze-struct val))))]
-                           [(review-controller-set? val)
-                            (xml (a (@ [href ,(review-controller-url val)])
-                                    ,(format-snooze-struct val)))]
-                           [else (format-snooze-struct val)])]
-                    [(and (enum-type? (attribute-type attribute))
-                          (enum-type-enum (attribute-type attribute)))
-                     => (lambda (enum)
-                          (enum-prettify enum val))]
-                    [else val]))))
+    (xml (td ,val)))
   
   ; any -> csv-cell
   (define/public (render-body/csv val)
-    (csv:cell (cond [(snooze-struct? val)
-                     (format-snooze-struct val)]
-                    [(and (enum-type? (attribute-type attribute))
-                          (enum-type-enum (attribute-type attribute)))
-                     => (lambda (enum)
-                          (enum-prettify enum val))]
-                    [else val]))))
+    (csv:cell val)))
 
 ; attribute -> column
 (define (default-attribute-column attr)
@@ -189,7 +171,7 @@
   (define/public (render-column seed col struct)
     (if (is-a? col attribute-report-column%)
         (let ([attr (send col get-attribute)])
-          (send col render-body seed (snooze-struct-ref struct attr)))
+          (xml (td ,(snooze-struct-xml-ref struct attr))))
         (error "entity-report.render-column: could not render column" col)))
   
   ; entity -> string
