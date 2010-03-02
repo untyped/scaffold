@@ -45,10 +45,17 @@
                  ,(format-snooze-struct val)))]
         [else (format-snooze-struct val)]))
 
+; seed (listof snooze-struct) -> xml
+(define (render-related-structs seed relateds)
+  (xml (ul (@ [class "relationship-view"])
+           ,@(for/list ([related (in-list relateds)])
+               (xml (li ,(format-snooze-struct/link related)))))))
+
 ; Provides ---------------------------------------
 
 (provide/contract 
  [attribute-xml-defaults         (parameter/c (-> attribute? any/c xml+quotable?))]
  [attribute-xml                  (-> attribute? any/c xml+quotable?)]
  [snooze-struct-xml-ref-defaults (parameter/c (-> snooze-struct? attribute? xml+quotable?))]
- [snooze-struct-xml-ref          (-> snooze-struct? attribute? xml+quotable?)])
+ [snooze-struct-xml-ref          (-> snooze-struct? attribute? xml+quotable?)]
+ [render-related-structs         (-> seed? (listof snooze-struct?) xml?)])

@@ -70,21 +70,8 @@
 (define entity-view%
   (entity-view-mixin html-element%))
 
-; Helpers ----------------------------------------
-
-; seed (listof snooze-struct) -> xml
-(define (render-related-structs seed relateds)
-  (xml (ul (@ [class "relationship-view"])
-           ,@(for/list ([related (in-list relateds)])
-               (xml (li ,(cond [(review-controller-set? related)
-                                (controller-link seed (review-controller-ref related) related
-                                                 #:body (format-snooze-struct related))]
-                               [else (format-snooze-struct related)])))))))
 
 ; Provide statements -----------------------------
-
-(provide/contract 
- [render-related-structs (-> seed? (listof snooze-struct?) xml?)])
 
 (provide entity-view<%>
          entity-view-mixin

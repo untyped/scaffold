@@ -6,27 +6,21 @@
 
 ; Pages ------------------------------------------
 
-(define-object kitchen-sink-report-page (entity-report-page-mixin html-page%) ()
-  (super-new [entity kitchen-sink]))
-
-(define-object kitchen-sink-editor-page (entity-editor-page-mixin html-page%) ()
-  (super-new [entity kitchen-sink]))
-
 ; == [1] Default scaffolded page ==
-(define-object review-page (entity-review-page-mixin html-page%) ()
+(define-object sink-review-page (entity-review-page-mixin html-page%) ()
   (super-new [title  "A vanilla entity-view"]
              [entity kitchen-sink]))
 
 ; == [2] Default scaffolded page with a subset of attributes ==
 
-(define-object review/attrs-page (entity-review-page-mixin html-page%) ()
+(define-object sink-review-page/attrs (entity-review-page-mixin html-page%) ()
   (super-new [title      "An entity-view with custom attributes"]
              [entity     kitchen-sink]
              [attributes (attr-list kitchen-sink a-boolean a-real a-integer)]))
 
 ; == [3] Single attribute view modified; rest unchanged ==
 
-(define-object customized-kitchen-sink entity-view% ()
+(define-object sink-view/attrs-customized entity-view% ()
   (inherit render-label+value)
   (super-new [entity     kitchen-sink]
              [attributes (attr-list kitchen-sink a-boolean a-real a-integer)])
@@ -35,14 +29,14 @@
         (render-label+value seed "A real, customized" (xml (b ,(snooze-struct-xml-ref struct attribute))))
         (super render-attribute seed struct attribute))))
 
-(define-object review-customized-attrs-page (entity-review-page-mixin html-page%) ()
+(define-object sink-review-page/customized-attrs (entity-review-page-mixin html-page%) ()
   (super-new [title "An entity-view with customized attributes"]
-             [view  customized-kitchen-sink]))
+             [view  sink-view/attrs-customized]))
 
 
 ; == [4] Multiple-attribute view, rest unchanged ==
 
-(define-object compound-kitchen-sink entity-view% ()
+(define-object sink-view/compound-attrs entity-view% ()
   (inherit render-label+value)
   (super-new [entity     kitchen-sink]
              [attributes (attr-list kitchen-sink a-boolean a-real a-integer a-string a-symbol)])
@@ -57,13 +51,13 @@
                       ,(snooze-struct-xml-ref struct (attr kitchen-sink a-string)))))
          ,(super render-attributes seed struct (attr-list kitchen-sink a-symbol)))))
 
-(define-object review-compound-attrs-page (entity-review-page-mixin html-page%) ()
+(define-object sink-review-page/compound-attrs (entity-review-page-mixin html-page%) ()
   (super-new [title "An entity-view with compound attributes"]
-             [view  compound-kitchen-sink]))
+             [view  sink-view/compound-attrs]))
 
 ; [5] == View extended with a relationship (i.e. a non-attribute view) ==
 
-(define-object entity/related-view entity-view% ()
+(define-object sink-view/related-attrs entity-view% ()
   (inherit get-value render-wrapper render-attributes render-label+value)
   (super-new [entity kitchen-sink])
   
@@ -75,46 +69,35 @@
             ,(render-label+value seed "All posts" (render-related-structs seed (find-posts)))
             ,(render-attributes seed struct (attr-list kitchen-sink a-integer a-string a-symbol)))))))
 
-(define-object review-relations-page (entity-review-page-mixin html-page%) ()
+(define-object sink-review-page/related-attrs (entity-review-page-mixin html-page%) ()
   (super-new [title "An entity-view with relations"]
-             [view  entity/related-view]))
+             [view  sink-view/related-attrs]))
 
 ; Controllers ------------------------------------
 
-(define-controller (sink-report)
-  (send* kitchen-sink-report-page [respond]))
+(define-report-controller sink-report kitchen-sink)
+(define-review-controller sink-review kitchen-sink #:page sink-review-page)
+(define-create-controller sink-create kitchen-sink)
+(define-update-controller sink-update kitchen-sink)
+(define-delete-controller sink-delete kitchen-sink)
 
-(define-controller (sink-review sink)
-  (send* review-page 
-    [set-value! sink]
-    [respond]))
-
+; Custom controllers
 (define-controller (sink-review/attrs sink)
-  (send* review/attrs-page 
+  (send* sink-review-page/attrs 
     [set-value! sink]
     [respond]))
 
 (define-controller (sink-review/customized-attrs sink)
-  (send* review-customized-attrs-page
+  (send* sink-review-page/customized-attrs
     [set-value! sink]
     [respond]))
 
 (define-controller (sink-review/compound-attrs sink)
-  (send* review-compound-attrs-page
+  (send* sink-review-page/compound-attrs
     [set-value! sink]
     [respond]))
 
 (define-controller (sink-review/related-attrs sink)
-  (send* review-relations-page
+  (send* sink-review-page/related-attrs
     [set-value! sink]
     [respond]))
-
-(define-controller (sink-creator)
-  (let loop ([val ((entity-defaults-constructor kitchen-sink))])
-    (send kitchen-sink-editor-page set-value! val)
-    (loop (send kitchen-sink-editor-page respond))))
-
-(define-controller (sink-editor sink)
-  (let loop ([val sink])
-    (send kitchen-sink-editor-page set-value! val)
-    (loop (send kitchen-sink-editor-page respond))))

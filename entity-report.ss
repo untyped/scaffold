@@ -32,7 +32,7 @@
              [string-name string-name]
              [order       order])
   
-  ; seed any -> xml
+  ; seed xml -> xml
   ; val is the raw attribute value - the report has to do all the destructuring.
   (define/public (render-body seed val)
     (xml (td ,val)))
@@ -171,7 +171,7 @@
   (define/public (render-column seed col struct)
     (if (is-a? col attribute-report-column%)
         (let ([attr (send col get-attribute)])
-          (xml (td ,(snooze-struct-xml-ref struct attr))))
+          (send col render-body seed (snooze-struct-xml-ref struct attr)))
         (error "entity-report.render-column: could not render column" col)))
   
   ; entity -> string

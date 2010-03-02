@@ -6,12 +6,6 @@
 
 ; Pages ------------------------------------------
 
-(define-object post-report-page (entity-report-page-mixin html-page%) ()
-  (super-new [entity post]))
-
-(define-object post-editor-page (entity-editor-page-mixin html-page%) ()
-  (super-new [entity post]))
-
 (define-object post-view entity-view% ()
   (inherit get-attributes get-value render-wrapper render-attributes render-label+value)
   (super-new [entity post])
@@ -29,21 +23,9 @@
 
 ; Controllers ------------------------------------
 
-(define-controller (post-report)
-  (send* post-report-page [respond]))
-
-(define-controller (post-review post)
-  (send* post-review-page
-    [set-value! post]
-    [respond]))
-
-(define-controller (post-creator)
-  (let loop ([val ((entity-defaults-constructor post))])
-    (send post-editor-page set-value! val)
-    (loop (send post-editor-page respond))))
-
-(define-controller (post-editor post)
-  (let loop ([val post])
-    (send post-editor-page set-value! val)
-    (loop (send post-editor-page respond))))
+(define-report-controller post-report post)
+(define-review-controller post-review post #:page post-review-page)
+(define-create-controller post-create post)
+(define-update-controller post-update post)
+(define-delete-controller post-delete post)
 

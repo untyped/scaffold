@@ -10,26 +10,29 @@
 ; Site -------------------------------------------
 
 (define-site test-site
-  ([("")                                                 home]
+  ([("")                                                     home]
    ; post pages
-   [("/posts")                                            post-report]
-   [("/posts/new")                                        post-creator]
-   [("/posts/edit/"            (entity-arg post))         post-editor]
-   [("/posts/view/"            (entity-arg post))         post-review]
+   [("/posts")                                               post-report]
+   [("/posts/new")                                           post-create]
+   [("/posts/" (entity-arg post))                            post-review]
+   [("/posts/" (entity-arg post) "/edit")                    post-update]
+   [("/posts/" (entity-arg post) "/delete")                  post-delete]
    ; comment pages
-   [("/comments")                                         comment-report]
-   [("/comments/new")                                     comment-creator]
-   [("/comments/edit/"         (entity-arg comment))      comment-editor]
-   [("/comments/view/"         (entity-arg comment))      comment-review]
+   [("/comments")                                            comment-report]
+   [("/comments/new")                                        comment-create]
+   [("/comments/" (entity-arg comment))                      comment-review]
+   [("/comments/" (entity-arg comment) "/edit")              comment-update]
+   [("/comments/" (entity-arg comment) "/delete")            comment-delete]
    ; kitchen sink pages
-   [("/sinks")                                            sink-report]
-   [("/sinks/new")                                        sink-creator]
-   [("/sinks/edit/"            (entity-arg kitchen-sink)) sink-editor]
-   [("/sinks/view/"            (entity-arg kitchen-sink)) sink-review]
-   [("/sinks/view-attrs/"      (entity-arg kitchen-sink)) sink-review/attrs]
-   [("/sinks/view-customized/" (entity-arg kitchen-sink)) sink-review/customized-attrs]
-   [("/sinks/view-compound/"   (entity-arg kitchen-sink)) sink-review/compound-attrs]
-   [("/sinks/view-related/"    (entity-arg kitchen-sink)) sink-review/related-attrs])
+   [("/sinks")                                               sink-report]
+   [("/sinks/new")                                           sink-create]
+   [("/sinks/" (entity-arg kitchen-sink) "/edit")            sink-update]
+   [("/sinks/" (entity-arg kitchen-sink) "/delete")          sink-delete]
+   [("/sinks/" (entity-arg kitchen-sink) "/view")            sink-review]
+   [("/sinks/" (entity-arg kitchen-sink) "/view-attrs")      sink-review/attrs]
+   [("/sinks/" (entity-arg kitchen-sink) "/view-customized") sink-review/customized-attrs]
+   [("/sinks/" (entity-arg kitchen-sink) "/view-compound")   sink-review/compound-attrs]
+   [("/sinks/" (entity-arg kitchen-sink) "/view-related")    sink-review/related-attrs])
   #:requestless? #t)
 
 ; Controllers ------------------------------------
