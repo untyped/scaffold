@@ -17,8 +17,6 @@
   ; (listof attribute)
   (init-field attribute #:accessor)
   
-  (init-field review-controller #f #:accessor)
-  
   (init [id          (string->symbol
                       (format "~a-~a"
                               (entity-name (attribute-entity attribute))
@@ -40,6 +38,8 @@
   ; any -> csv-cell
   (define/public (render-body/csv val)
     (csv:cell val)))
+
+; Default columns --------------------------------
 
 ; attribute -> column
 (define (default-attribute-column attr)
@@ -195,7 +195,7 @@
   (define/public (render-column/csv col struct)
     (if (is-a? col attribute-report-column%)
         (let ([attr (send col get-attribute)])
-          (send col render-body/csv (snooze-struct-ref struct attr)))
+          (send col render-body/csv (snooze-struct-csv-ref struct attr)))
         (error "entity-report.render-column: could not render column" col)))
   
   ; seed string -> xml
