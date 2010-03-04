@@ -31,9 +31,12 @@
     (field pattern-field
       (new text-field% [on-change (callback on-pattern-change)] [size 30] [placeholder "Type and press Enter to search"])
       #:child #:accessor)
-    
+ 
     ; (cell (U snooze-report-column% #f))
     (init-cell sort-col #:accessor #:mutator)
+ 
+    ; boolean
+    (init-field no-cache-headers? #t #:accessor use-no-cache-headers?)
     
     ; report-pager<%>
     (init-field pager-field 
@@ -346,7 +349,9 @@
         (make-header #"Content-Type" #"text/csv"))
       (list* content-disposition-header
              content-type-header
-             no-cache-http-headers))
+             (if (use-no-cache-headers?)
+                 no-cache-http-headers
+                 null)))
     
     ; [(listof column)] -> void
     (define/public (respond/csv [cols (get-csv-columns)])
