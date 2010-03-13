@@ -93,15 +93,15 @@
      (let* ([entity (attribute-entity attr)]
             [type   (attribute-type   attr)])
        (match type
-         [(struct guid-type (_ entity)) (new foreign-key-editor% [attributes (list attr)] [entity entity])]
-         [(? boolean-type?)             (new check-box-editor%   [attributes (list attr)] [show-label? #f])]
-         [(? integer-type?)             (new integer-editor%     [attributes (list attr)])]
-         [(? enum-type?)                (if (< (length (enum-type-values type)) 5)
-                                            (new radio-combo-editor% [attributes (list attr)] [vertical? #f])
-                                            (new combo-box-editor%   [attributes (list attr)]))]
-         [(? real-type?)                (new number-editor%      [attributes (list attr)])]
-         [(? time-utc-type?)            (new (time-utc-editor-mixin date-editor%) [attributes (list attr)])]
-         [(? time-tai-type?)            (new (time-tai-editor-mixin date-editor%) [attributes (list attr)])]
+         [(? guid-type?)     (new foreign-key-editor% [attributes (list attr)] [entity (guid-type-entity type)])]
+         [(? boolean-type?)  (new check-box-editor%   [attributes (list attr)] [show-label? #f])]
+         [(? integer-type?)  (new integer-editor%     [attributes (list attr)])]
+         [(? enum-type?)     (if (< (length (enum-type-values type)) 5)
+                                 (new radio-combo-editor% [attributes (list attr)] [vertical? #f])
+                                 (new combo-box-editor%   [attributes (list attr)]))]
+         [(? real-type?)     (new number-editor%      [attributes (list attr)])]
+         [(? time-utc-type?) (new (time-utc-editor-mixin date-editor%) [attributes (list attr)])]
+         [(? time-tai-type?) (new (time-tai-editor-mixin date-editor%) [attributes (list attr)])]
          [(struct string-type (_ max-length))
           (if max-length
               (new text-field-editor%
