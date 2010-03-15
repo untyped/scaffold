@@ -26,7 +26,7 @@
   (init-field entity #:accessor)
   
   ; (listof attribute)
-  (init [attributes (and entity (entity-data-attributes entity))])
+  (init-field attributes (and entity (entity-data-attributes entity)) #:accessor)
   
   ; (listof editor<%>)
   (init-field editors
@@ -46,11 +46,34 @@
   ; seed -> xml
   (define/override (render seed)
     (xml (table (@ ,(core-html-attributes seed))
-                ,@(for/list ([editor (in-list (get-editors))])
-                    (xml (tr (th (@ [class "attribute-label"])
-                                 ,(send editor render-label seed))
-                             (td (@ [class "attribute-value"])
-                                 ,(send editor render seed))))))))
+                ,@(for/list ([attribute (in-list (get-attributes))]
+                             [editor    (in-list (get-editors))])
+                    (render-attribute-label+editor seed attribute editor)))))
+  
+  ; seed attribute -> xml+quotable
+  (define/public (render-attribute-label seed attribute)
+    (attribute-pretty-name attribute))
+  
+  ; seed attribute [editor%] -> xml
+  (define/public (render-attribute-editor seed attribute [editor (get-attribute-editor attribute)])
+    (send editor render seed))
+  
+  ; seed attribute [editor%] -> xml
+  (define/public (render-attribute-label+editor seed attribute [editor (get-attribute-editor attribute)])
+    (render-label+editor seed 
+                         (render-attribute-label  seed attribute)
+                         (render-attribute-editor seed attribute editor)))
+  
+  ; seed xml+quotable xml -> xml+quotable
+  (define/public (render-label+editor seed label-xml editor-xml)
+    (xml (tr (th (@ [class "attribute-label"]) ,label-xml)
+             (td (@ [class "attribute-value"]) ,editor-xml))))
+  
+  ; attribute -> editor%
+  (define/private (get-attribute-editor attribute)
+    (for/or ([attr (in-list (get-attributes))]
+             [ed   (in-list (get-editors))])
+      (and (equal? attribute attr) ed)))
   
   ; (listof check-result) -> void
   (define/public (set-check-results! results)
