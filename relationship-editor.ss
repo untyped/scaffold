@@ -2,9 +2,15 @@
 
 (require "base.ss")
 
-(require "attribute-editor-internal.ss"
+(require "editor-internal.ss"
+         "check-label.ss"
          "foreign-key-editor.ss"
          "util.ss")
+
+(define complete-editor-mixin
+  (compose check-label-mixin
+           simple-editor-mixin
+           labelled-element-mixin))
 
 ; Components -------------------------------------
 
@@ -19,13 +25,13 @@
 ; entity represents the independent entity: there is only one struct of this entity type.
 ; related-entity represents the type of the related structs, of which there may be zero to many.
 ; relationship-entity represents a type that represents the relationship between entity and related-entity.
-(define-class relationship-selector-editor% (complete-attribute-editor-mixin vanilla-set-selector%) () 
+(define-class relationship-selector-editor% (complete-editor-mixin vanilla-set-selector%) () 
   (inherit get-editor get-value set-value! activate-item)
   
   ; entity field represents the independent entity (only 1 struct of this type)
   ; entity ...
-  (init-field entity          #f #:accessor)
-  (init-field related-entity  #f #:accessor) ; the dependent entity (n structs of this type)
+  (init-field entity              #f #:accessor)
+  (init-field related-entity      #f #:accessor) ; the dependent entity (n structs of this type)
   (init-field relationship-entity #f #:accessor) ; the entity that encapsulates the relationship (may be same as related)
   
   ; SQL details --------------------------------
@@ -42,7 +48,7 @@
   ; Cells --------------------------------------
   
   ; (U snooze-struct #f)
-  (init-cell struct #f #:accessor #:mutator)
+  (init-cell struct #f #:accessor)
   
   ; (listof relationship-struct) ...
   (init-cell updated-relationships null #:accessor #:mutator)
@@ -115,14 +121,10 @@
   ; Methods ------------------------------------
   
   ; snooze-struct -> void
-  (define/override (destructure! struct)
-    (set-struct! struct)
+  (define/public (set-struct! struct)
+    (web-cell-set! struct)
     (set-available-items! (find-relateables))
     (set-value! (map (cut relationship->related <>) (find-relationships/struct struct))))
-  
-  ; snooze-struct -> snooze-struct
-  (define/override (restructure struct)
-    struct)
   
   ; interface methods --------------------------
   
@@ -189,14 +191,17 @@
       (check-problems (apply check-problems (map check-snooze-struct     (get-updated-relationships)))
                       (apply check-problems (map check-old-snooze-struct (get-deleted-relationships))))))
   
-  ; TODO at present this must be overridden to copy the newly saved (get-struct) into each updated relationship
-  (define/public (commit-changes)
+  ; snooze-struct -> void
+  (define/public (commit-changes/struct struct)
+    (web-cell-set! struct-cell struct)
+    (update-cells)
     (call-with-transaction 
-     #:metadata (list "Saving relationships for ~a" (get-struct))
+     #:metadata (list "Saving relationships for ~a" struct)
      (lambda ()
-       (begin0 (map save!   (get-updated-relationships))
-               (map delete! (get-deleted-relationships))
-               (clear-continuation-table!))))))
+       (for-each save!   (get-updated-relationships))
+       (for-each delete! (get-deleted-relationships))
+       (clear-continuation-table!)
+       (void)))))
 
 ; Provides ---------------------------------------
 
