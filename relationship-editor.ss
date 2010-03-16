@@ -122,7 +122,7 @@
   
   ; snooze-struct -> void
   (define/public (set-struct! struct)
-    (web-cell-set! struct)
+    (web-cell-set! struct-cell struct)
     (set-available-items! (find-relateables))
     (set-value! (map (cut relationship->related <>) (find-relationships/struct struct))))
   
@@ -192,7 +192,7 @@
                       (apply check-problems (map check-old-snooze-struct (get-deleted-relationships))))))
   
   ; snooze-struct -> void
-  (define/public (commit-changes/struct struct)
+  (define/public (commit-changes/struct! struct)
     (web-cell-set! struct-cell struct)
     (update-cells)
     (call-with-transaction 

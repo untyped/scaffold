@@ -42,38 +42,49 @@
   (super-new [classes (list* 'smoke-entity-editor 'ui-widget classes)])
   
   ; Methods ------------------------------------
-  
+ 
   ; seed -> xml
   (define/override (render seed)
+    (let ([struct (get-value)])
+      (render-wrapper seed (render-editors seed (get-editors)))))
+  
+  ; seed xml+quotable -> xml
+  (define/public (render-wrapper seed contents)
     (xml (table (@ ,(core-html-attributes seed))
-                ,@(for/list ([attribute (in-list (get-attributes))]
-                             [editor    (in-list (get-editors))])
-                    (render-attribute-label+editor seed attribute editor)))))
+                (tbody ,contents))))
+  
+  ; seed (listof editor<%>) -> xml
+  (define/public (render-editors seed editors)
+    ;,@(for/list ([attribute (in-list (get-attributes))]
+    ;             [editor    (in-list (get-editors))])
+    ;    (render-attribute-label+editor seed attribute editor))
+    (xml ,@(for/list ([editor (in-list editors)])
+             (render-label+editor seed (send editor render-label seed) (send editor render seed)))))
   
   ; seed attribute -> xml+quotable
-  (define/public (render-attribute-label seed attribute)
-    (attribute-pretty-name attribute))
+  ;(define/public (render-attribute-label seed attribute)
+  ;  (attribute-pretty-name attribute))
   
   ; seed attribute [editor%] -> xml
-  (define/public (render-attribute-editor seed attribute [editor (get-attribute-editor attribute)])
-    (send editor render seed))
+  ;(define/public (render-attribute-editor seed attribute [editor (get-attribute-editor attribute)])
+  ;  (send editor render seed))
   
   ; seed attribute [editor%] -> xml
-  (define/public (render-attribute-label+editor seed attribute [editor (get-attribute-editor attribute)])
-    (render-label+editor seed 
-                         (render-attribute-label  seed attribute)
-                         (render-attribute-editor seed attribute editor)))
+  ;(define/public (render-attribute-label+editor seed attribute [editor (get-attribute-editor attribute)])
+  ;  (render-label+editor seed 
+  ;                       (render-attribute-label  seed attribute)
+  ;                       (render-attribute-editor seed attribute editor)))
+  
+  ; attribute -> editor%
+  ;(define/private (get-attribute-editor attribute)
+  ;  (for/or ([attr (in-list (get-attributes))]
+  ;           [ed   (in-list (get-editors))])
+  ;    (and (equal? attribute attr) ed)))
   
   ; seed xml+quotable xml -> xml+quotable
   (define/public (render-label+editor seed label-xml editor-xml)
     (xml (tr (th (@ [class "attribute-label"]) ,label-xml)
              (td (@ [class "attribute-value"]) ,editor-xml))))
-  
-  ; attribute -> editor%
-  (define/private (get-attribute-editor attribute)
-    (for/or ([attr (in-list (get-attributes))]
-             [ed   (in-list (get-editors))])
-      (and (equal? attribute attr) ed)))
   
   ; (listof check-result) -> void
   (define/public (set-check-results! results)

@@ -4,4 +4,5 @@
 
 (require "comment.ss"
          "kitchen-sink.ss"
-         "post.ss")
+         "post.ss"
+         "tag.ss")

@@ -23,6 +23,12 @@
    [("/comments/" (entity-arg comment))                      comment-review]
    [("/comments/" (entity-arg comment) "/edit")              comment-update]
    [("/comments/" (entity-arg comment) "/delete")            comment-delete]
+   ; tag pages
+   [("/tags")                                                tag-report]
+   [("/tags/new")                                            tag-create]
+   [("/tags/" (entity-arg tag))                              tag-review]
+   [("/tags/" (entity-arg tag) "/edit")                      tag-update]
+   [("/tags/" (entity-arg tag) "/delete")                    tag-delete]
    ; kitchen sink pages
    [("/sinks")                                               sink-report]
    [("/sinks/new")                                           sink-create]

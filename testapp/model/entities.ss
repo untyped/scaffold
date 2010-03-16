@@ -38,7 +38,17 @@
   (lambda (comment)
     (comment-content comment)))
 
-;(call-with-connection (lambda () (create-table comment)))
+(define-entity tag
+  ([text string #:allow-null? #f #:max-length 32])
+  #:pretty-formatter
+  (lambda (tg)
+    (tag-text tg)))
+
+(define-entity tagging
+  ([post post #:allow-null? #f]
+   [tag  tag  #:allow-null? #f]))
+
+;(call-with-connection (lambda () (create-table tagging)))
 
 (define-entity kitchen-sink
   ([a-boolean                 boolean]
@@ -73,4 +83,6 @@
 (provide/contract/entities
  [entity post]
  [entity comment]
+ [entity tag]
+ [entity tagging]
  [entity kitchen-sink])
