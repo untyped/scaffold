@@ -195,13 +195,11 @@
   (define/public (commit-changes/struct! struct)
     (web-cell-set! struct-cell struct)
     (update-cells)
-    (call-with-transaction 
-     #:metadata (list "Saving relationships for ~a" struct)
-     (lambda ()
-       (for-each save!   (get-updated-relationships))
-       (for-each delete! (get-deleted-relationships))
-       (clear-continuation-table!)
-       (void)))))
+    (with-transaction #:metadata (list "Saving relationships for ~a" struct)
+      (for-each save!   (get-updated-relationships))
+      (for-each delete! (get-deleted-relationships))
+      (clear-continuation-table!)
+      (void))))
 
 ; Provides ---------------------------------------
 

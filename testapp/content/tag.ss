@@ -71,18 +71,17 @@
     (super set-value! tag)
     (send tagging-editor set-struct! tag))
   
-  ; -> void
+  ; -> tag
   (define/override (commit-changes)
     (let ([val (get-value)])
-      (call-with-transaction 
-       #:metadata (list (if (snooze-struct-saved? val)
-                            (format "Created ~a" (format-snooze-struct val))
-                            (format "Updated ~a" (format-snooze-struct val))))
-       (lambda ()
-         (begin0 (let ([val (save! val)])
-                   (send tagging-editor commit-changes/struct! val)
-                   val)
-                 (clear-continuation-table!))))))
+      (with-transaction 
+          #:metadata (list (if (snooze-struct-saved? val)
+                               (format "Created ~a" (format-snooze-struct val))
+                               (format "Updated ~a" (format-snooze-struct val))))
+        (let ([val (save! val)])
+          (send tagging-editor commit-changes/struct! val)
+          (clear-continuation-table!)
+          val))))
   
   ; These should be eradicated -------------------
   

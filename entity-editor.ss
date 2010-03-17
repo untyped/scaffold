@@ -5,7 +5,8 @@
 (require (unlib-in symbol)
          "attribute-editor.ss"
          "check-label.ss"
-         "editor-internal.ss")
+         "editor-internal.ss"
+         "view-common.ss")
 
 ; Interfaces -------------------------------------
 
@@ -42,7 +43,7 @@
   (super-new [classes (list* 'smoke-entity-editor 'ui-widget classes)])
   
   ; Methods ------------------------------------
- 
+  
   ; seed -> xml
   (define/override (render seed)
     (let ([struct (get-value)])
@@ -55,31 +56,42 @@
   
   ; seed (listof editor<%>) -> xml
   (define/public (render-editors seed editors)
-    ;,@(for/list ([attribute (in-list (get-attributes))]
-    ;             [editor    (in-list (get-editors))])
-    ;    (render-attribute-label+editor seed attribute editor))
     (xml ,@(for/list ([editor (in-list editors)])
-             (render-label+editor seed (send editor render-label seed) (send editor render seed)))))
+             (render-editor seed editor))))
+  
+  ; seed (listof attribute) -> xml
+  (define/public (render-attributes seed attrs)
+    (xml ,@(for/list ([attribute (in-list attrs)])
+             (render-attribute-label+editor seed attribute))))
+  
+  ; seed editor -> xml
+  (define/public (render-editor seed editor)
+    (render-label+editor seed (send editor render-label seed) (send editor render seed)))
   
   ; seed attribute -> xml+quotable
-  ;(define/public (render-attribute-label seed attribute)
-  ;  (attribute-pretty-name attribute))
+  (define/public (render-attribute-label seed attribute)
+    (attribute-label-xml attribute))
   
   ; seed attribute [editor%] -> xml
-  ;(define/public (render-attribute-editor seed attribute [editor (get-attribute-editor attribute)])
-  ;  (send editor render seed))
+  (define/public (render-attribute-editor seed attribute [editor (get-attribute-editor attribute)])
+    (send editor render seed))
   
   ; seed attribute [editor%] -> xml
-  ;(define/public (render-attribute-label+editor seed attribute [editor (get-attribute-editor attribute)])
-  ;  (render-label+editor seed 
-  ;                       (render-attribute-label  seed attribute)
-  ;                       (render-attribute-editor seed attribute editor)))
+  (define/public (render-attribute-label+editor seed attribute [editor (get-attribute-editor attribute)])
+    (render-label+editor seed 
+                         (render-attribute-label  seed attribute)
+                         (render-attribute-editor seed attribute editor)))
   
   ; attribute -> editor%
   ;(define/private (get-attribute-editor attribute)
   ;  (for/or ([attr (in-list (get-attributes))]
   ;           [ed   (in-list (get-editors))])
   ;    (and (equal? attribute attr) ed)))
+  
+  ; attribute -> editor%
+  (define/private (get-attribute-editor attribute)
+    (for/or ([ed (in-list (get-editors))])
+      (and (equal? (list attribute) (send ed get-attributes)) ed)))
   
   ; seed xml+quotable xml -> xml+quotable
   (define/public (render-label+editor seed label-xml editor-xml)
@@ -124,13 +136,12 @@
   ; -> void
   (define/public (commit-changes)
     (let ([val (get-value)])
-      (call-with-transaction 
-       #:metadata (list (if (snooze-struct-saved? val)
-                            (format "Created ~a" (format-snooze-struct val))
-                            (format "Updated ~a" (format-snooze-struct val))))
-       (lambda ()
-         (begin0 (save! val)
-                 (clear-continuation-table!)))))))
+      (with-transaction 
+          #:metadata (list (if (snooze-struct-saved? val)
+                               (format "Created ~a" (format-snooze-struct val))
+                               (format "Updated ~a" (format-snooze-struct val))))
+        (begin0 (save! val)
+                (clear-continuation-table!))))))
 
 ; Classes ----------------------------------------
 

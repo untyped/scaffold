@@ -28,16 +28,7 @@
   
   (super-new [id          id]
              [string-name string-name]
-             [order       order])
-  
-  ; seed xml -> xml
-  ; val is the raw attribute value - the report has to do all the destructuring.
-  (define/public (render-body seed val)
-    (xml (td ,val)))
-  
-  ; any -> csv-cell
-  (define/public (render-body/csv val)
-    (csv:cell val)))
+             [order       order]))
 
 ; Default columns --------------------------------
 
@@ -170,8 +161,7 @@
   ; seed column snooze-struct -> xml
   (define/public (render-column seed col struct)
     (if (is-a? col attribute-report-column%)
-        (let ([attr (send col get-attribute)])
-          (send col render-body seed (snooze-struct-xml-ref struct attr)))
+        (xml (td ,(snooze-struct-xml-ref struct (send col get-attribute))))
         (error "entity-report.render-column: could not render column" col)))
   
   ; entity -> string
@@ -194,8 +184,7 @@
   ; column snooze-struct -> csv-cell
   (define/public (render-column/csv col struct)
     (if (is-a? col attribute-report-column%)
-        (let ([attr (send col get-attribute)])
-          (send col render-body/csv (snooze-struct-csv-ref struct attr)))
+        (csv:cell (snooze-struct-csv-ref struct (send col get-attribute)))
         (error "entity-report.render-column: could not render column" col)))
   
   ; seed string -> xml

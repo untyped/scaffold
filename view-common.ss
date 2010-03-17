@@ -2,7 +2,8 @@
 
 (require "base.ss")
 
-(require "controller-internal.ss")
+(require (only-in (unlib-in string) string-sentencecase)
+         "controller-internal.ss")
 
 ; Procedures -------------------------------------
 
@@ -16,6 +17,17 @@
 (define (attribute-xml attr val)
   ((attribute-xml-defaults) attr val))
 
+
+; (parameter (attribute -> xml))
+(define attribute-label-xml-defaults
+  (make-parameter
+   (lambda (attr)
+     (string-sentencecase (attribute-pretty-name attr)))))
+
+; attribute -> xml
+(define (attribute-label-xml attr)
+  ((attribute-label-xml-defaults) attr))
+
 ; (parameter (snooze-struct attribute -> xml))
 (define snooze-struct-xml-ref-defaults
   (make-parameter
@@ -23,9 +35,9 @@
      (let ([type (attribute-type attr)]
            [val  (snooze-struct-ref struct attr)])
        (cond [(snooze-struct? val)
-              (format-snooze-struct/link val)]
+              (snooze-struct-link val)]
              [(guid? val)
-              (format-snooze-struct/link (find-by-guid val))]
+              (snooze-struct-link (find-by-guid val))]
              [(and (enum-type? type)
                    (let ([enum (enum-type-enum type)])
                      (and (enum-value? enum val) enum)))
@@ -56,28 +68,32 @@
 (define (snooze-struct-csv-ref struct attr)
   ((snooze-struct-csv-ref-defaults) struct attr))
 
+; seed (listof snooze-struct) [snooze-struct -> xml] -> xml
+(define (render-related-structs seed relateds [render-related snooze-struct-link])
+  (xml (ul (@ [class "relationship-view"])
+           ,@(for/list ([related (in-list relateds)])
+               (xml (li ,(render-related related)))))))
+
 ; Helpers ----------------------------------------
 
 ; snooze-struct -> xml+quotable
-(define (format-snooze-struct/link val)
-  (cond [(review-controller-set? val)
+(define (snooze-struct-link val)
+  (cond [(and (review-controller-set? val) (controller-access? (review-controller-ref val) val))
          (xml (a (@ [href ,(review-controller-url val)])
                  ,(format-snooze-struct val)))]
         [else (format-snooze-struct val)]))
-
-; seed (listof snooze-struct) -> xml
-(define (render-related-structs seed relateds)
-  (xml (ul (@ [class "relationship-view"])
-           ,@(for/list ([related (in-list relateds)])
-               (xml (li ,(format-snooze-struct/link related)))))))
 
 ; Provides ---------------------------------------
 
 (provide/contract 
  [attribute-xml-defaults         (parameter/c (-> attribute? any/c xml+quotable?))]
  [attribute-xml                  (-> attribute? any/c xml+quotable?)]
+ [attribute-label-xml-defaults   (parameter/c (-> attribute? xml+quotable?))]
+ [attribute-label-xml            (-> attribute? xml+quotable?)]
  [snooze-struct-xml-ref-defaults (parameter/c (-> snooze-struct? attribute? xml+quotable?))]
  [snooze-struct-xml-ref          (-> snooze-struct? attribute? xml+quotable?)]
  [snooze-struct-csv-ref-defaults (parameter/c (-> snooze-struct? attribute? string?))]
  [snooze-struct-csv-ref          (-> snooze-struct? attribute? string?)]
- [render-related-structs         (-> seed? (listof snooze-struct?) xml?)])
+ [render-related-structs         (->* (seed? (listof snooze-struct?))
+                                      ((-> snooze-struct? xml?))
+                                      xml?)])

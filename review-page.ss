@@ -3,6 +3,7 @@
 (require "base.ss")
 
 (require (unlib-in symbol)
+         "controller-internal.ss"
          "entity-view.ss"
          "page-internal.ss")
 
@@ -21,6 +22,9 @@
   (inherit get-id)
   
   ; Fields ----------------------------
+  
+  ; (U controller #f)
+  (init-field update-controller #f #:accessor)
   
   (super-new)
   
@@ -66,7 +70,17 @@
   
   ; seed -> xml
   (define/augment (render seed)
-    (send view render seed)))
+    (let ([struct (get-value)])
+      (xml ,(cond [(and (get-update-controller) (controller-access? (get-update-controller) struct))
+                   (xml (a (@ [href  ,(controller-url (get-update-controller) struct)]
+                              [class "update-link"])
+                           "edit"))]
+                  [(and (update-controller-set? struct) (controller-access? (update-controller-ref struct) struct))
+                   (xml (a (@ [href  ,(update-controller-url struct)]
+                              [class "update-link"])
+                           "edit"))]
+                  [else (xml)])
+           ,(send view render seed)))))
 
 ; Procedures -------------------------------------
 

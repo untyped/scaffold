@@ -36,7 +36,7 @@
   ; (listof (U string symbol))
   (init [classes null])
   
-  (super-new [classes (list* 'entity-view 'ui-widget classes)])
+  (super-new [classes (list* 'smoke-entity-view 'ui-widget classes)])
   
   ; Methods ------------------------------------
   
@@ -58,13 +58,13 @@
   ; seed snooze-struct attribute -> xml
   (define/public (render-attribute seed struct attribute)
     (render-label+value seed
-                        (attribute-pretty-name attribute)
+                        (attribute-label-xml attribute)
                         (snooze-struct-xml-ref struct attribute)))
   
   ; seed xml+quotable xml+quotable -> xml
   (define/public (render-label+value seed label value)
-    (xml (tr (th ,label)
-             (td ,value)))))
+    (xml (tr (th (@ [class "attribute-label"]) ,label)
+             (td (@ [class "attribute-value"]) ,value)))))
 
 
 (define entity-view%
