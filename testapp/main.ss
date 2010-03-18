@@ -24,4 +24,5 @@
 
 ; void
 (case mode
-  [(runapp) (run-application)])
+  [(runapp) (run-application)]
+  [(initdb) (call-with-connection (lambda () (recreate-tables)))])

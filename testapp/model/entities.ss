@@ -2,7 +2,8 @@
 
 (require "../base.ss")
 
-(require "db.ss")
+(require srfi/19
+         "db.ss")
 
 ; Enumerations -----------------------------------
 
@@ -24,15 +25,27 @@
 
 ; Entities ---------------------------------------
 
+(define-entity user
+  ([username  string #:allow-null? #f #:max-length 32]
+   [surname   string #:allow-null? #f #:max-length 128]
+   [forenames string #:allow-null? #f #:max-length 128]
+   [email     string #:allow-null? #f #:max-length 1024]
+   [created   time-utc #:allow-null? #f #:default-proc (cut current-time time-utc)])
+  #:pretty-formatter 
+  (lambda (usr)
+    (format "~a ~a" (user-forenames usr) (user-surname usr))))
+
 (define-entity post
-  ([subject string #:allow-null? #f #:max-length 128]
+  ([user    user   #:allow-null? #f]
+   [subject string #:allow-null? #f #:max-length 128]
    [content string])
   #:pretty-formatter
   (lambda (post)
     (post-subject post)))
 
 (define-entity comment
-  ([post    post #:allow-null? #f]
+  ([user    user #:allow-null? #f]
+   [post    post #:allow-null? #f]
    [content string])
   #:pretty-formatter
   (lambda (comment)
@@ -47,8 +60,6 @@
 (define-entity tagging
   ([post post #:allow-null? #f]
    [tag  tag  #:allow-null? #f]))
-
-;(call-with-connection (lambda () (create-table tagging)))
 
 (define-entity kitchen-sink
   ([a-boolean                 boolean]
@@ -75,14 +86,22 @@
    [a-required-long-enum      enum      #:allow-null? #f #:values long-enum]
    [a-required-post           post      #:allow-null? #f]))
 
+; -> void
+(define (recreate-tables)
+  (let ([tables (list user post comment tag tagging kitchen-sink)])
+    (for-each drop-table (reverse tables))
+    (for-each create-table tables)))
+
 ; Provides ---------------------------------------
 
 (provide short-enum
          long-enum)
 
 (provide/contract/entities
+ [entity user]
  [entity post]
  [entity comment]
  [entity tag]
  [entity tagging]
- [entity kitchen-sink])
+ [entity kitchen-sink]
+ [recreate-tables (-> void?)])

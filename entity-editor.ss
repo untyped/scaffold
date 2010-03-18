@@ -19,7 +19,7 @@
 
 (define-mixin entity-editor-mixin (html-element<%>) (entity-editor<%>)
   
-  (inherit core-html-attributes)
+  (inherit core-html-attributes get-child-components)
   
   ; Fields -------------------------------------
   
@@ -30,7 +30,7 @@
   (init-field attributes (and entity (entity-data-attributes entity)) #:accessor)
   
   ; (listof editor<%>)
-  (init-field editors
+  (init-field attribute-editors
     (or (and attributes (map default-attribute-editor attributes))
         (error "entity-editor constructor: insufficient arguments"))
     #:accessor #:children)
@@ -43,6 +43,11 @@
   (super-new [classes (list* 'smoke-entity-editor 'ui-widget classes)])
   
   ; Methods ------------------------------------
+  
+  ; -> (listof editor<%>)
+  (define/public (get-editors)
+    (filter (cut is-a? <> editor<%>)
+            (get-child-components)))
   
   ; seed -> xml
   (define/override (render seed)
@@ -83,14 +88,8 @@
                          (render-attribute-editor seed attribute editor)))
   
   ; attribute -> editor%
-  ;(define/private (get-attribute-editor attribute)
-  ;  (for/or ([attr (in-list (get-attributes))]
-  ;           [ed   (in-list (get-editors))])
-  ;    (and (equal? attribute attr) ed)))
-  
-  ; attribute -> editor%
   (define/private (get-attribute-editor attribute)
-    (for/or ([ed (in-list (get-editors))])
+    (for/or ([ed (in-list (get-attribute-editors))])
       (and (equal? (list attribute) (send ed get-attributes)) ed)))
   
   ; seed xml+quotable xml -> xml+quotable
@@ -108,7 +107,7 @@
     (let ([init (get-initial-value)])
       (if (snooze-struct? init)
           (for/fold ([val init])
-                    ([editor (in-list (get-editors))])
+                    ([editor (in-list (get-attribute-editors))])
                     (send editor restructure val))
           (raise-type-error 'entity-editor.get-value "snooze-struct" #f))))
   
@@ -117,7 +116,7 @@
     (unless (snooze-struct? val)
       (raise-type-error 'entity-editor.set-value! "snooze-struct" val))
     (web-cell-set! initial-value-cell val)
-    (for ([editor (in-list (get-editors))])
+    (for ([editor (in-list (get-attribute-editors))])
       (send editor destructure! val)))
   
   ; -> boolean

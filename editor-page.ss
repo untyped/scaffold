@@ -78,14 +78,14 @@
   (init [attributes (and entity (entity-data-attributes entity))])
   
   ; (listof attribute-editor<%>)
-  (init [editors (and attributes (map default-attribute-editor attributes))])
+  (init [attribute-editors (and attributes (map default-attribute-editor attributes))])
   
   ; entity-editor%
   (init [editor (or (and entity
-                         editors
+                         attribute-editors
                          (new entity-editor%
-                              [entity  entity]
-                              [editors editors]))
+                              [entity            entity]
+                              [attribute-editors attribute-editors]))
                     (error "entity-editor-page constructor: insufficient arguments"))])
   
   (super-new [editor editor])

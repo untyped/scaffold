@@ -35,10 +35,28 @@
    [("/sinks/" (entity-arg kitchen-sink) "/edit")            sink-update]
    [("/sinks/" (entity-arg kitchen-sink) "/delete")          sink-delete]
    [("/sinks/" (entity-arg kitchen-sink) "/view")            sink-review]
+   ; Customised kitchen-sink views
+   [("/sinks/" (entity-arg kitchen-sink) "/view-vanilla")    sink-review/vanilla]
    [("/sinks/" (entity-arg kitchen-sink) "/view-attrs")      sink-review/attrs]
    [("/sinks/" (entity-arg kitchen-sink) "/view-customized") sink-review/customized-attrs]
    [("/sinks/" (entity-arg kitchen-sink) "/view-compound")   sink-review/compound-attrs]
-   [("/sinks/" (entity-arg kitchen-sink) "/view-related")    sink-review/related-attrs])
+   [("/sinks/" (entity-arg kitchen-sink) "/view-related")    sink-review/related-attrs]
+   ; Customised kitchen-sink editors
+   [("/sinks/" (entity-arg kitchen-sink) "/edit-vanilla")    sink-update/vanilla]
+   [("/sinks/" (entity-arg kitchen-sink) "/edit-attrs")      sink-update/attrs]
+   [("/sinks/" (entity-arg kitchen-sink) "/edit-customized") sink-update/customized-attrs]
+   [("/sinks/" (entity-arg kitchen-sink) "/edit-compound")   sink-update/compound-attrs]
+   [("/sinks/" (entity-arg kitchen-sink) "/edit-compound2")  sink-update/compound-attrs2]
+   [("/sinks/" (entity-arg kitchen-sink) "/edit-compound3")  sink-update/compound-attrs3]
+   [("/sinks/" (entity-arg kitchen-sink) "/edit-related")    sink-update/related-attrs]
+   ; Customised kitchen-sink editors (creating)
+   [("/sinks/new-vanilla")                                   sink-create/vanilla]
+   [("/sinks/new-attrs")                                     sink-create/attrs]
+   [("/sinks/new-customized")                                sink-create/customized-attrs]
+   [("/sinks/new-compound")                                  sink-create/compound-attrs]
+   [("/sinks/new-compound2")                                 sink-create/compound-attrs2]
+   [("/sinks/new-compound3")                                 sink-create/compound-attrs3]
+   [("/sinks/new-related")                                   sink-create/related-attrs])
   #:requestless? #t)
 
 ; Controllers ------------------------------------

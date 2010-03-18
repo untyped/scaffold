@@ -159,6 +159,7 @@
          date-editor%
          file-editor%
          integer-editor%
+         number-editor%
          password-editor%
          radio-combo-editor%
          regexp-editor%
