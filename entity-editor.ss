@@ -52,7 +52,7 @@
   ; seed -> xml
   (define/override (render seed)
     (let ([struct (get-value)])
-      (render-wrapper seed (render-editors seed (get-editors)))))
+      (render-wrapper seed (render-editors seed (get-attribute-editors)))))
   
   ; seed xml+quotable -> xml
   (define/public (render-wrapper seed contents)
