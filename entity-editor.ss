@@ -79,15 +79,15 @@
   
   ; seed attribute [editor%] -> xml
   (define/public (render-attribute-editor seed attribute [editor (get-attribute-editor attribute)])
-    (send editor render seed))
+    (opt-xml editor ,(send editor render seed)))
   
   ; seed attribute [editor%] -> xml
   (define/public (render-attribute-label+editor seed attribute [editor (get-attribute-editor attribute)])
     (render-label+editor seed 
                          (render-attribute-label  seed attribute)
-                         (render-attribute-editor seed attribute editor)))
+                         (opt-xml editor ,(render-attribute-editor seed attribute editor))))
   
-  ; attribute -> editor%
+  ; attribute -> (U editor% #f)
   (define/private (get-attribute-editor attribute)
     (for/or ([ed (in-list (get-attribute-editors))])
       (and (equal? (list attribute) (send ed get-attributes)) ed)))
