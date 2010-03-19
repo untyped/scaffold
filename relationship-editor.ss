@@ -5,12 +5,8 @@
 (require "editor-internal.ss"
          "check-label.ss"
          "foreign-key-editor.ss"
+         "labelled-editor.ss"
          "util.ss")
-
-(define complete-editor-mixin
-  (compose check-label-mixin
-           simple-editor-mixin
-           labelled-element-mixin))
 
 ; Components -------------------------------------
 
@@ -91,8 +87,6 @@
   ; (U string snooze-struct) -> any
   (define/override (raw->item raw)
     (and raw
-         ; for some reason, select-item passes in an integer, while deselect-item prefers a string.
-         ; FIXME, later...
          (cond [(number? raw) (find-by-id (get-related-entity) raw)]
                [(string? raw) (find-by-id (get-related-entity) (string->number raw))])))
   

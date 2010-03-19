@@ -6,7 +6,8 @@
          "editor-controller.ss"
          "editor-internal.ss"
          "editor-page.ss"
-         "entity-editor.ss")
+         "entity-editor.ss"
+         "labelled-editor.ss")
 
 ; Provide statements -----------------------------
 
@@ -14,4 +15,5 @@
                        "editor-controller.ss"
                        "editor-internal.ss"
                        "editor-page.ss"
-                       "entity-editor.ss"))
+                       "entity-editor.ss"
+                       "labelled-editor.ss"))

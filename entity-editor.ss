@@ -4,6 +4,7 @@
 
 (require (unlib-in symbol)
          "attribute-editor.ss"
+         "checkable.ss"
          "check-label.ss"
          "editor-internal.ss"
          "view-common.ss")
@@ -100,7 +101,7 @@
   ; (listof check-result) -> void
   (define/public (set-check-results! results)
     (for-each (cut send <> set-check-results! results)
-              (get-editors)))
+              (filter (cut is-a? <> checkable<%>) (get-child-components))))
   
   ; -> snooze-struct
   (define/public (get-value)
