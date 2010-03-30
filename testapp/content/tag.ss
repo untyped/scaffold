@@ -26,7 +26,7 @@
 (define-object tag-review-page (entity-review-page-mixin html-page%) ()
   (super-new [view tag-view]))
 
-(define-class tagging-editor% relationship-selector-editor% ()
+(define-class tagging-editor% relationship-editor% ()
   (super-new [entity              tag]
              [related-entity      post]
              [relationship-entity tagging])

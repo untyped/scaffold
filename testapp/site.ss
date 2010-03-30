@@ -12,6 +12,12 @@
 (define-site test-site
   ([("")                                                     home]
    ; post pages
+   [("/users")                                               user-report]
+   [("/users/new")                                           user-create]
+   [("/users/" (entity-arg user))                            user-review]
+   [("/users/" (entity-arg user) "/edit")                    user-update]
+   [("/users/" (entity-arg user) "/delete")                  user-delete]
+   ; post pages
    [("/posts")                                               post-report]
    [("/posts/new")                                           post-create]
    [("/posts/" (entity-arg post))                            post-review]
@@ -46,16 +52,12 @@
    [("/sinks/" (entity-arg kitchen-sink) "/edit-attrs")      sink-update/attrs]
    [("/sinks/" (entity-arg kitchen-sink) "/edit-customized") sink-update/customized-attrs]
    [("/sinks/" (entity-arg kitchen-sink) "/edit-compound")   sink-update/compound-attrs]
-   [("/sinks/" (entity-arg kitchen-sink) "/edit-compound2")  sink-update/compound-attrs2]
-   [("/sinks/" (entity-arg kitchen-sink) "/edit-compound3")  sink-update/compound-attrs3]
    [("/sinks/" (entity-arg kitchen-sink) "/edit-related")    sink-update/related-attrs]
    ; Customised kitchen-sink editors (creating)
    [("/sinks/new-vanilla")                                   sink-create/vanilla]
    [("/sinks/new-attrs")                                     sink-create/attrs]
    [("/sinks/new-customized")                                sink-create/customized-attrs]
    [("/sinks/new-compound")                                  sink-create/compound-attrs]
-   [("/sinks/new-compound2")                                 sink-create/compound-attrs2]
-   [("/sinks/new-compound3")                                 sink-create/compound-attrs3]
    [("/sinks/new-related")                                   sink-create/related-attrs])
   #:requestless? #t)
 

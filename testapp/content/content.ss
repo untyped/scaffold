@@ -5,4 +5,5 @@
 (require "comment.ss"
          "kitchen-sink.ss"
          "post.ss"
-         "tag.ss")
+         "tag.ss"
+         "user.ss")
