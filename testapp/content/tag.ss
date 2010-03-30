@@ -7,7 +7,7 @@
 ; Pages ------------------------------------------
 
 (define-object tag-view entity-view% ()
-  (inherit get-attributes get-value render-wrapper render-attributes render-label+value)
+  (inherit get-auto-attributes get-value render-wrapper render-attributes render-label+value)
   (super-new [entity tag])
   
   ; seed -> xml
@@ -15,7 +15,7 @@
     (let ([struct (get-value)])
       (render-wrapper
        seed
-       (xml ,(render-attributes seed struct (get-attributes))
+       (xml ,(render-attributes seed struct (get-auto-attributes))
             ,(render-label+value seed "All posts" 
                                  (render-related-structs seed 
                                                          (select-all #:what  post
@@ -62,8 +62,8 @@
   (super-new [entity tag])
   
   ; seed -> xml
-  (define/override (render-editors seed editors)
-    (xml ,(super render-editors seed editors)
+  (define/override (render-attributes seed attrs)
+    (xml ,(super render-attributes seed attrs)
          ,(render-label+editor seed "Posts" (send tagging-editor render seed))))
   
   ; tag -> void

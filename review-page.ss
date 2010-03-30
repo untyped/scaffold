@@ -32,16 +32,16 @@
   (init [entity #f])
   
   ; (listof attribute)
-  (init [attributes (and entity (entity-data-attributes entity))])
+  (init [auto-attributes (and entity (entity-data-attributes entity))])
   
   ; entity-view%
   (init-field view
     (or (and entity
-             attributes
+             auto-attributes
              (new entity-view%
-                  [id         (symbol-append (get-id) '-view)]
-                  [entity     entity]
-                  [attributes attributes]))
+                  [id              (symbol-append (get-id) '-view)]
+                  [entity          entity]
+                  [auto-attributes auto-attributes]))
         (string-append "entity-review-page constructor: insufficient arguments"))
     #:child)
   

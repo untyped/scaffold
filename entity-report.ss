@@ -57,7 +57,7 @@
   (init-field entity #:accessor)
   
   ; (listof attribute)
-  (init [attributes (and entity (entity-data-attributes entity))])
+  (init [auto-attributes (and entity (entity-data-attributes entity))])
   
   ; (cell boolean)
   (init-cell controller-cell? #t
@@ -66,7 +66,7 @@
   
   ; (listof editor<%>)
   (init-field columns
-    (or (and attributes (map default-attribute-column attributes))
+    (or (and auto-attributes (map default-attribute-column auto-attributes))
         (error "entity-report constructor: insufficient arguments"))
     #:accessor)
   

@@ -16,14 +16,14 @@
 (define-object sink-review-page/attrs (entity-review-page-mixin html-page%) ()
   (super-new [title      "An entity-view with custom attributes"]
              [entity     kitchen-sink]
-             [attributes (attr-list kitchen-sink a-boolean a-real a-integer)]))
+             [auto-attributes (attr-list kitchen-sink a-boolean a-real a-integer)]))
 
 ; == [3] Single attribute view modified; rest unchanged ==
 
 (define-object sink-view/attrs-customized entity-view% ()
   (inherit render-label+value)
-  (super-new [entity     kitchen-sink]
-             [attributes (attr-list kitchen-sink a-boolean a-real a-integer)])
+  (super-new [entity          kitchen-sink]
+             [auto-attributes (attr-list kitchen-sink a-boolean a-real a-integer)])
   (define/override (render-attribute seed struct attribute)
     (if (eq? attribute (attr kitchen-sink a-real))
         (render-label+value seed "A real, customized" (xml (b ,(snooze-struct-xml-ref struct attribute))))
@@ -39,7 +39,7 @@
 (define-object sink-view/compound-attrs entity-view% ()
   (inherit render-label+value)
   (super-new [entity     kitchen-sink]
-             [attributes (attr-list kitchen-sink a-boolean a-real a-integer a-string a-symbol)])
+             [auto-attributes (attr-list kitchen-sink a-boolean a-real a-integer a-string a-symbol)])
   ; seed snooze-struct -> xml
   (define/override (render-attributes seed struct attributes)
     (xml ,(super render-attributes seed struct (attr-list kitchen-sink a-boolean a-real))

@@ -2,10 +2,8 @@
 
 (require "base.ss")
 
-(require "editor-internal.ss"
-         "check-label.ss"
-         "foreign-key-editor.ss"
-         "labelled-editor.ss"
+(require "foreign-key-editor.ss"
+         "editor-internal.ss"
          "util.ss")
 
 ; Components -------------------------------------
@@ -21,7 +19,7 @@
 ; entity represents the independent entity: there is only one struct of this entity type.
 ; related-entity represents the type of the related structs, of which there may be zero to many.
 ; relationship-entity represents a type that represents the relationship between entity and related-entity.
-(define-class relationship-selector-editor% (complete-editor-mixin vanilla-set-selector%) () 
+(define-class relationship-selector-editor% (simple-editor-mixin vanilla-set-selector%) () 
   (inherit get-editor get-value set-value! activate-item)
   
   ; entity field represents the independent entity (only 1 struct of this type)
@@ -118,7 +116,10 @@
   (define/public (set-struct! struct)
     (web-cell-set! struct-cell struct)
     (set-available-items! (find-relateables))
-    (set-value! (map (cut relationship->related <>) (find-relationships/struct struct))))
+    (set-value! (map (cut relationship->related <>) 
+                     (if (snooze-struct-saved? struct)
+                         (find-relationships/struct struct)
+                         null))))
   
   ; interface methods --------------------------
   
@@ -146,12 +147,15 @@
   (define/public (relationship->related relationship)
     (error "relationship->related must be overridden"))
   
+  ; -> void
   (define/private (update-cells)
     (let* ([struct                 (get-struct)]
            ; related-structs currently selected in the set-selector
            [chosen-related-structs (get-value)]
            ; relationship-structs that are currently saved
-           [saved-relationship-structs (find-relationships/relateds struct chosen-related-structs)]
+           [saved-relationship-structs (if (snooze-struct-saved? struct)
+                                           (find-relationships/relateds struct chosen-related-structs)
+                                           null)]
            ; a list of relationship-structs that are either saved (from above) or newly created
            [saved+new-relationships    
             (reverse 
@@ -166,11 +170,10 @@
            [deleted-relationships      (filter (lambda (rel) 
                                                  (not (member (snooze-struct-id rel)
                                                               (map snooze-struct-id saved+new-relationships))))
-                                               (find-relationships/struct struct))])
+                                               (if (snooze-struct-saved? struct)
+                                                   (find-relationships/struct struct)
+                                                   null))])
       (set-updated-relationships! saved+new-relationships)
-      (for ([rel (in-list saved+new-relationships)])
-        (for ([attr (in-list (entity-data-attributes (get-relationship-entity)))])
-          (snooze-struct-ref rel attr)))
       (set-deleted-relationships! deleted-relationships)))
   
   ; Nothing to parse - no user entry, only choice of preselected options

@@ -2,9 +2,9 @@
 
 (require "base.ss")
 
-(require "check-label.ss"
-         "editor-internal.ss"
-         "entity-editor.ss")
+(require "editor-internal.ss"
+         "entity-editor.ss"
+         "util.ss")
 
 ; Interfaces -------------------------------------
 

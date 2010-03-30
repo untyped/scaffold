@@ -26,11 +26,11 @@
   (init [entity #f])
   
   ; (listof attribute)
-  (init [attributes (and entity (entity-data-attributes entity))])
+  (init [auto-attributes (and entity (entity-data-attributes entity))])
   
   ; snooze-report%
   (init-field report
-    (or (and entity (new (default-scaffolded-report-superclass) [entity entity] [attributes attributes]))
+    (or (and entity (new (default-scaffolded-report-superclass) [entity entity] [auto-attributes auto-attributes]))
         (string-append "entity-report-page constructor: insufficient arguments"))
     #:child)
   
@@ -51,11 +51,11 @@
 
 ; Procedures -------------------------------------
 
-; entity [(subclassof html-page%)] [#:attributes (listof attribute)] -> html-page%
+; entity [(subclassof html-page%)] [#:auto-attributes (listof attribute)] -> html-page%
 (define (scaffold-report-page entity 
                               [page% (default-scaffolded-page-superclass)]
-                              #:attributes [attributes (entity-data-attributes entity)])
-  (new (entity-report-page-mixin page%) [entity entity] [attributes attributes]))
+                              #:auto-attributes [auto-attributes (entity-data-attributes entity)])
+  (new (entity-report-page-mixin page%) [entity entity] [auto-attributes auto-attributes]))
 
 ; Provide statements -----------------------------
 
@@ -65,5 +65,5 @@
  [default-scaffolded-report-superclass (parameter/c (subclass?/c entity-report%))]
  [scaffold-report-page                 (->* (entity?)
                                             ((subclass?/c html-page%)
-                                             #:attributes (listof attribute?))
+                                             #:auto-attributes (listof attribute?))
                                             (is-a?/c html-page%))])

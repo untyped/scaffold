@@ -3,28 +3,23 @@
 (require "base.ss")
 
 (require (unlib-in symbol)
-         "attribute-editor-internal.ss"
-         "check-label.ss"
          "editor-internal.ss")
 
 ; Classes ----------------------------------------
 
-(define-class foreign-key-editor% (complete-attribute-editor-mixin vanilla-combo-box%) ()
+(define-class foreign-key-editor% vanilla-combo-box% ()
   
   ; Constructor --------------------------------
   
-  ; (listof attribute)
-  (init [attributes null])
-  
-  (super-new [attributes attributes])
+  ; attribute
+  (init [attribute #f])
   
   ; Fields -------------------------------------
   
   ; (U entity #f)
   (init-field entity
-    (and (pair? attributes)
-         (guid-type? (attribute-type (car attributes)))
-         (guid-type-entity (attribute-type (car attributes))))
+    (and (guid-type?       (attribute-type attribute))
+         (guid-type-entity (attribute-type attribute)))
     #:accessor)
   
   ; (cell (U sql-expr (-> sql-expr) #f))

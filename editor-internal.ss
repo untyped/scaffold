@@ -2,17 +2,15 @@
 
 (require "base.ss")
 
-(require "checkable.ss"
-         "util.ss")
+(require "util.ss")
 
 ; Interfaces -------------------------------------
 
 (define editor<%>
-  (interface (checkable<%>)
-    get-editors          ; -> (listof editor<%>)
-    value-changed?       ; -> boolean
-    parse                ; -> (listof check-result)
-    validate))           ; -> (listof check-result)
+  (interface ()
+    value-changed? ; -> boolean
+    parse          ; -> (listof check-result)
+    validate))     ; -> (listof check-result)
 
 ; Mixins -----------------------------------------
 

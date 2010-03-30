@@ -75,17 +75,17 @@
   (init [entity #f])
   
   ; (listof attribute)
-  (init [attributes (and entity (entity-data-attributes entity))])
+  (init [auto-attributes (and entity (entity-data-attributes entity))])
   
   ; (listof attribute-editor<%>)
-  (init [attribute-editors (and attributes (map default-attribute-editor attributes))])
+  (init [auto-editors    (and auto-attributes (map default-attribute-editor auto-attributes))])
   
   ; entity-editor%
   (init [editor (or (and entity
-                         attribute-editors
+                         auto-editors
                          (new entity-editor%
-                              [entity            entity]
-                              [attribute-editors attribute-editors]))
+                              [entity       entity]
+                              [auto-editors auto-editors]))
                     (error "entity-editor-page constructor: insufficient arguments"))])
   
   (super-new [editor editor])

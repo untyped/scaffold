@@ -35,14 +35,14 @@
   (init entity)
   
   ; (listof attribute)
-  (init [attributes (and entity (entity-data-attributes entity))])
+  (init [auto-attributes (and entity (entity-data-attributes entity))])
   
   ; entity-view%
   (init-field view
     (new entity-view%
-         [id         (symbol-append (get-id) '-view)]
-         [entity     entity]
-         [attributes attributes])
+         [id              (symbol-append (get-id) '-view)]
+         [entity          entity]
+         [auto-attributes auto-attributes])
     #:child)
   
   ; Methods ---------------------------

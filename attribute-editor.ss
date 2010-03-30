@@ -3,38 +3,25 @@
 (require "base.ss")
 
 (require (unlib-in symbol)
-         "attribute-editor-internal.ss"
-         "check-label.ss"
          "editor-internal.ss"
          "foreign-key-editor.ss"
          "relationship-editor.ss")
 
 ; Helper mixins ----------------------------------
 
-(define-mixin text-field-editor-mixin (text-input<%> editor<%>) ()
-  (init [attributes null]
-        [max-length (or (and (pair? attributes)
-                             (character-type? (attribute-type (car attributes)))
-                             (character-type-max-length (attribute-type (car attributes))))
-                        25)]
-        [size       (default-text-field-size max-length)])
-  (super-new [attributes attributes]
-             [max-length max-length]
-             [size       size]))
-
-(define-mixin time-utc-editor-mixin (date-field<%> editor<%>) ()
+(define-mixin time-utc-field-mixin (date-field<%>) ()
   (inherit get-time-utc)
   ; -> (U time-utc #f)
   (define/override (get-value)
     (get-time-utc)))
 
-(define-mixin time-tai-editor-mixin (date-field<%> editor<%>) ()
+(define-mixin time-tai-field-mixin (date-field<%>) ()
   (inherit get-time-tai)
   ; -> (U time-tai #f)
   (define/override (get-value)
     (get-time-tai)))
 
-(define-mixin symbol-editor-mixin (form-element<%> editor<%>) ()
+(define-mixin symbol-editor-mixin (form-element<%>) ()
   ; -> (U symbol #f)
   (define/override (get-value)
     (let ([str (super get-value)])
@@ -43,78 +30,55 @@
   (define/override (set-value! sym)
     (super set-value! (and sym (symbol->string sym)))))
 
-(define-mixin enum-editor-mixin (attribute-editor<%>) ()
+
+(define-mixin enum-field-mixin (form-element<%>) ()
   
-  (init attributes
+  (init attribute
         [null-label (if (is-a? this radio-combo%)
                         "None"
                         "-- No selection --")]
-        [options    (let* ([type (and (pair? attributes) (attribute-type (car attributes)))])
+        [options    (let* ([type (attribute-type attribute)])
                       (if (enum-type? type)
                           (enum-type-options type null-label)
                           (raise-exn exn:fail:contract
                             (format "enum-combo-box-editor% constructor: ~a: ~s"
-                                    "options must be specified for non-enum attributes"
-                                    attributes))))])
+                                    "options must be specified for non-enum attribute"
+                                    attribute))))])
   
-  (super-new [attributes attributes] [options options]))
-
-; Classes ----------------------------------------
-
-(define autocomplete-editor%              (complete-attribute-editor-mixin autocomplete-field%))
-(define check-box-editor%                 (attribute-editor-mixin (check-label-mixin (simple-editor-mixin check-box%))))
-(define combo-box-editor%                 (enum-editor-mixin (complete-attribute-editor-mixin combo-box%)))
-(define vanilla-combo-box-editor%         (complete-attribute-editor-mixin vanilla-combo-box%))
-(define date-editor%                      (complete-attribute-editor-mixin date-field%))
-(define file-editor%                      (complete-attribute-editor-mixin file-field%))
-(define integer-editor%                   (complete-attribute-editor-mixin integer-field%))
-(define number-editor%                    (complete-attribute-editor-mixin number-field%))
-(define password-editor%                  (complete-attribute-editor-mixin password-field%))
-(define radio-combo-editor%               (enum-editor-mixin (complete-attribute-editor-mixin radio-combo%)))
-(define regexp-editor%                    (complete-attribute-editor-mixin regexp-field%))
-(define set-selector-combo-box-editor%    (complete-attribute-editor-mixin set-selector-combo-box%))
-(define set-selector-autocomplete-editor% (complete-attribute-editor-mixin set-selector-autocomplete%))
-(define text-field-editor%                (text-field-editor-mixin (complete-attribute-editor-mixin text-field%)))
-(define text-area-editor%                 (complete-attribute-editor-mixin text-area%))
-(define time-editor%                      (complete-attribute-editor-mixin time-field%))
-(define tiny-mce-editor%                  (complete-attribute-editor-mixin tiny-mce%))
+  (super-new [options options]))
 
 ; Procedures -------------------------------------
 
-; (parameter (attribute -> attribute-editor<%>))
+; (parameter (attribute -> form-element<%>))
 (define attribute-editor-defaults
   (make-parameter
    (lambda (attr)
      (let* ([entity (attribute-entity attr)]
             [type   (attribute-type   attr)])
        (match type
-         [(? guid-type?)     (new foreign-key-editor% [attributes (list attr)] [entity (guid-type-entity type)])]
-         [(? boolean-type?)  (new check-box-editor%   [attributes (list attr)] [show-label? #f])]
-         [(? integer-type?)  (new integer-editor%     [attributes (list attr)])]
+         [(? guid-type?)     (new foreign-key-editor% [attribute attr] [entity (guid-type-entity type)])]
+         [(? boolean-type?)  (new check-box% [show-label? #f])]
+         [(? integer-type?)  (new integer-field%)]
          [(? enum-type?)     (if (< (length (enum-type-values type)) 5)
-                                 (new radio-combo-editor% [attributes (list attr)] [vertical? #f])
-                                 (new combo-box-editor%   [attributes (list attr)]))]
-         [(? real-type?)     (new number-editor%      [attributes (list attr)])]
-         [(? time-utc-type?) (new (time-utc-editor-mixin date-editor%) [attributes (list attr)])]
-         [(? time-tai-type?) (new (time-tai-editor-mixin date-editor%) [attributes (list attr)])]
+                                 (new (enum-field-mixin radio-combo%) [attribute attr] [vertical? #f])
+                                 (new (enum-field-mixin combo-box%)   [attribute attr]))]
+         [(? real-type?)     (new number-field%)]
+         [(? time-utc-type?) (new (time-utc-field-mixin date-field%))]
+         [(? time-tai-type?) (new (time-tai-field-mixin date-field%))]
          [(struct string-type (_ max-length))
           (if max-length
-              (new text-field-editor%
-                   [attributes (list attr)]
-                   [size (default-text-field-size max-length)]
+              (new text-field%
+                   [size       (default-text-field-size max-length)]
                    [max-length max-length])
-              (new text-area-editor%
-                   [attributes (list attr)]
+              (new text-area%
                    [cols 50]
                    [rows 5]))]
          [(struct symbol-type (_ max-length))
           (if max-length
-              (new (symbol-editor-mixin text-field-editor%)
-                   [attributes (list attr)]
-                   [size (default-text-field-size max-length)]
+              (new (symbol-editor-mixin text-field%)
+                   [size       (default-text-field-size max-length)]
                    [max-length max-length])
-              (new (symbol-editor-mixin text-area-editor%)
-                   [attributes (list attr)]
+              (new (symbol-editor-mixin text-area%)
                    [cols 50]
                    [rows 5]))]
          [(? binary-type?)
@@ -145,31 +109,9 @@
 
 ; Provide statements -----------------------------
 
-(provide (all-from-out "attribute-editor-internal.ss"
-                       "foreign-key-editor.ss"
-                       "relationship-editor.ss")
-         time-utc-editor-mixin
-         time-tai-editor-mixin
-         symbol-editor-mixin
-         enum-editor-mixin
-         autocomplete-editor%
-         check-box-editor%
-         combo-box-editor%
-         vanilla-combo-box-editor%
-         date-editor%
-         file-editor%
-         integer-editor%
-         number-editor%
-         password-editor%
-         radio-combo-editor%
-         regexp-editor%
-         set-selector-combo-box-editor%
-         set-selector-autocomplete-editor%
-         text-field-editor%
-         text-area-editor%
-         time-editor%
-         tiny-mce-editor%)
+(provide (all-from-out "foreign-key-editor.ss"
+                       "relationship-editor.ss"))
 
 (provide/contract
  [attribute-editor-defaults (parameter/c procedure?)]
- [default-attribute-editor  (-> attribute? (is-a?/c attribute-editor<%>))])
+ [default-attribute-editor  (-> attribute? (is-a?/c form-element<%>))])

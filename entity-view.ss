@@ -3,7 +3,6 @@
 (require "base.ss")
 
 (require (unlib-in symbol)
-         "check-label.ss"
          "controller-internal.ss"
          "view-common.ss")
 
@@ -12,7 +11,7 @@
 (define entity-view<%>
   (interface ()
     get-entity     ; -> entity
-    get-attributes ; -> (listof attribute)
+    get-auto-attributes ; -> (listof attribute)
     get-value      ; -> any
     set-value!))   ; any -> void
 
@@ -28,7 +27,7 @@
   (init-field entity #:accessor)
   
   ; (listof attribute)
-  (init-field attributes (and entity (entity-data-attributes entity)) #:accessor)
+  (init-field auto-attributes (and entity (entity-data-attributes entity)) #:accessor)
   
   ; (cellof (U snooze-struct #f))
   (init-cell value #f #:accessor #:mutator)
@@ -43,7 +42,7 @@
   ; seed -> xml
   (define/override (render seed)
     (let ([struct (get-value)])
-      (render-wrapper seed (render-attributes seed struct (get-attributes)))))
+      (render-wrapper seed (render-attributes seed struct (get-auto-attributes)))))
   
   ; seed xml+quotable -> xml
   (define/public (render-wrapper seed contents)
@@ -66,7 +65,7 @@
     (xml (tr (th (@ [class "attribute-label"]) ,label)
              (td (@ [class "attribute-value"]) ,value)))))
 
-
+; html-element%
 (define entity-view%
   (entity-view-mixin html-element%))
 
