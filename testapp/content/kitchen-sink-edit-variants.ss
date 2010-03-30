@@ -80,13 +80,13 @@
     #:child)
   
   (super-new [entity          kitchen-sink]
-             [auto-attributes (attr-list kitchen-sink a-boolean a-real a-integer a-string a-symbol)])
+             [auto-attributes (attr-list kitchen-sink a-boolean a-real a-symbol)])
   
   ; seed snooze-struct -> xml
   (define/override (render-attributes seed attrs)
-    (xml ,(render-attributes seed (attr-list kitchen-sink a-boolean a-real))
-         ,(render-label+editor seed a-integer+a-string-editor)
-         ,(render-attributes seed (attr-list kitchen-sink a-symbol))))
+    (xml ,(super render-attributes seed (attr-list kitchen-sink a-boolean a-real))
+         ,(render-label+editor seed "Integer+String" (send a-integer+a-string-editor render seed))
+         ,(super render-attributes seed (attr-list kitchen-sink a-symbol))))
   
   ; kitchen-sink -> void
   (define/override (set-value! sink)
@@ -101,45 +101,6 @@
 (define-object sink-update-page/compound-attrs (entity-editor-page-mixin html-page%) ()
   (super-new [title  "An entity-editor with compound attributes"]
              [editor sink-editor/compound-attrs]))
-
-
-; == [4ii] Multiple-attribute editor, rest unchanged ==
-
-(define-object sink-editor/compound-attrs2 entity-editor% ()
-  (super-new [entity     kitchen-sink]
-             [auto-editors `(,@(map default-attribute-editor (attr-list kitchen-sink a-boolean a-real))
-                             ,(new integer+string-editor%)
-                             ,(default-attribute-editor (attr kitchen-sink a-symbol)))]))
-
-(define-object sink-update-page/compound-attrs2 (entity-editor-page-mixin html-page%) ()
-  (super-new [title  "An entity-editor with compound attributes2 - the short way"]
-             [editor sink-editor/compound-attrs2]))
-
-; == [4iii] Multiple-attribute editor, rest unchanged ==
-(define-object sink-update-page/compound-attrs3 (entity-editor-page-mixin html-page%) ()
-  (super-new [title  "An entity-editor with compound attributes3 - the really short way"]
-             [entity     kitchen-sink]
-             [auto-editors `(,@(map default-attribute-editor (attr-list kitchen-sink a-boolean a-real))
-                             ,(new integer+string-editor%)
-                             ,(default-attribute-editor (attr kitchen-sink a-symbol)))]))
-
-; [5] == View extended with a relationship (i.e. a non-attribute editor) ==
-
-(define-object sink-editor/related-attrs entity-editor% ()
-  (inherit get-value render-wrapper render-attributes)
-  (super-new [entity kitchen-sink])
-  
-  (define/override (render seed)
-    (let ([struct (get-value)])
-      (render-wrapper
-       seed
-       (xml ,(render-attributes seed struct (attr-list kitchen-sink a-boolean a-real))
-            ;,(render-label+value seed "All posts" (render-related-structs seed (find-posts)))
-            ,(render-attributes seed struct (attr-list kitchen-sink a-integer a-string a-symbol)))))))
-
-(define-object sink-update-page/related-attrs (entity-editor-page-mixin html-page%) ()
-  (super-new [title  "An entity-editor with relations"]
-             [editor sink-editor/related-attrs]))
 
 ; Update controllers -----------------------------
 
@@ -167,24 +128,6 @@
      [set-value! sink]
      [respond])))
 
-(define-controller (sink-update/compound-attrs2 sink)
-  (sink-review/compound-attrs
-   (send* sink-update-page/compound-attrs2
-     [set-value! sink]
-     [respond])))
-
-(define-controller (sink-update/compound-attrs3 sink)
-  (sink-review/compound-attrs
-   (send* sink-update-page/compound-attrs3
-     [set-value! sink]
-     [respond])))
-
-(define-controller (sink-update/related-attrs sink)
-  (sink-review/related-attrs
-   (send* sink-update-page/related-attrs
-     [set-value! sink]
-     [respond])))
-
 ; Create controllers -----------------------------
 
 (define-controller (sink-create/vanilla)
@@ -208,23 +151,5 @@
 (define-controller (sink-create/compound-attrs)
   (sink-review/compound-attrs
    (send* sink-update-page/compound-attrs
-     [set-value! (make-kitchen-sink/defaults)]
-     [respond])))
-
-(define-controller (sink-create/compound-attrs2)
-  (sink-review/compound-attrs
-   (send* sink-update-page/compound-attrs2
-     [set-value! (make-kitchen-sink/defaults)]
-     [respond])))
-
-(define-controller (sink-create/compound-attrs3)
-  (sink-review/compound-attrs
-   (send* sink-update-page/compound-attrs3
-     [set-value! (make-kitchen-sink/defaults)]
-     [respond])))
-
-(define-controller (sink-create/related-attrs)
-  (sink-review/related-attrs
-   (send* sink-update-page/related-attrs
      [set-value! (make-kitchen-sink/defaults)]
      [respond])))

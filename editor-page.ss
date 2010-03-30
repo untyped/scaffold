@@ -78,7 +78,9 @@
   (init [auto-attributes (and entity (entity-data-attributes entity))])
   
   ; (listof attribute-editor<%>)
-  (init [auto-editors    (and auto-attributes (map default-attribute-editor auto-attributes))])
+  (init [auto-editors    (and auto-attributes (map (lambda (attribute)
+                                                     (cons attribute (default-attribute-editor attribute)))
+                                                   auto-attributes))])
   
   ; entity-editor%
   (init [editor (or (and entity
