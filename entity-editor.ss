@@ -105,7 +105,8 @@
   
   ; seed attribute -> xml+quotable
   (define/public (render-attribute-label seed attribute)
-    (xml ,(attribute-label-xml attribute) ,(default-required-label)))
+    (xml ,(attribute-label-xml attribute) 
+         ,(opt-xml (not (type-allows-null? (attribute-type attribute))) ,(default-required-label))))
   
   ; seed attribute [editor%] -> xml
   (define/public (render-attribute-editor seed attribute [editor (get-attribute-editor attribute)])
