@@ -29,11 +29,11 @@
   
   ; -> boolean
   (define/public (value-changed?)
-    (ormap (cut send <> value-changed) (get-sub-editors)))
+    (ormap (cut send <> value-changed?) (get-sub-editors)))
   
   ; -> boolean
   (define/public (value-valid?)
-    (andmap (cut send <> value-changed) (get-sub-editors)))
+    (andmap (cut send <> value-valid?) (get-sub-editors)))
   
   ; -> (U string #f)
   (define/public (get-value-error)
