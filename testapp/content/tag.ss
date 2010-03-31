@@ -64,7 +64,7 @@
   ; seed -> xml
   (define/override (render-attributes seed attrs)
     (xml ,(super render-attributes seed attrs)
-         ,(render-label+editor seed "Posts" (send tagging-editor render seed))))
+         ,(render-label+editor seed "Posts" tagging-editor)))
   
   ; tag -> void
   (define/override (set-value! tag)

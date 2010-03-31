@@ -77,7 +77,7 @@
   ; seed snooze-struct -> xml
   (define/override (render-attributes seed attrs)
     (xml ,(super render-attributes seed (attr-list kitchen-sink a-boolean a-real))
-         ,(render-label+editor seed "Integer+String" (send a-integer+a-string-editor render seed))
+         ,(render-label+editor seed "Integer+String" a-integer+a-string-editor)
          ,(super render-attributes seed (attr-list kitchen-sink a-symbol))))
   
   ; kitchen-sink -> void

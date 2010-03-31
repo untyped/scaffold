@@ -13,7 +13,9 @@
 (define entity-editor<%>
   (interface (editor<%>)
     get-entity
-    get-initial-value))
+    get-initial-value
+    set-check-results!
+    get-check-results))
 
 ; Mixins -----------------------------------------
 
@@ -96,14 +98,18 @@
   
   ; seed attribute [editor%] -> xml
   (define/public (render-attribute-editor seed attribute [editor (get-attribute-editor attribute)])
-    (opt-xml editor ,(send editor render seed)))
+    (unless editor
+      (error (format "entity-editor.render-attribute-editor: No editor specified for attribute: ~a" attribute)))
+    (send editor render seed))
   
   ; seed attribute [editor%] -> xml
   (define/public (render-attribute-label+editor seed attribute [editor (get-attribute-editor attribute)])
+    (unless editor
+      (error (format "entity-editor.render-attribute-editor: No editor specified for attribute: ~a" attribute)))
     (render-label+editor+results
      seed 
      (render-attribute-label  seed attribute)
-     (opt-xml editor ,(render-attribute-editor seed attribute editor))
+     editor
      (filter-check-results (get-check-results) attribute editor)))
   
   ; attribute -> (U editor% #f)
@@ -111,16 +117,18 @@
     (let ([attr+editor (assoc attribute (get-auto-editors))])
       (and attr+editor (cdr attr+editor))))
   
-  ; seed xml+quotable xml -> xml+quotable
-  (define/public (render-label+editor seed label-xml editor-xml)
-    (render-label+editor+results seed label-xml editor-xml null))
+  ; seed xml+quotable html-component<%> -> xml
+  (define/public (render-label+editor seed label-xml editor)
+    (render-label+editor+results seed label-xml editor null))
   
-  ; seed xml+quotable xml (listof check-result) -> xml+quotable
-  (define/public (render-label+editor+results seed label-xml editor-xml results)
+  ; seed xml+quotable html-component<%> (listof check-result) -> xml
+  (define/public (render-label+editor+results seed label-xml editor results)
+    (render-label+value seed label-xml (xml ,(send editor render seed) ,(render-check-label seed results))))
+  
+  ; seed xml+quotable xml -> xml
+  (define/public (render-label+value seed label-xml value-xml)
     (xml (tr (th (@ [class "attribute-label"]) ,label-xml)
-             (td (@ [class "attribute-value"]) 
-                 ,editor-xml
-                 ,(render-check-label seed results)))))
+             (td (@ [class "attribute-value"]) ,value-xml))))
   
   
   ; seed (listof check-result) [boolean] -> xml
