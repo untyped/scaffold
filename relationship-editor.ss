@@ -19,7 +19,7 @@
 ; entity represents the independent entity: there is only one struct of this entity type.
 ; related-entity represents the type of the related structs, of which there may be zero to many.
 ; relationship-entity represents a type that represents the relationship between entity and related-entity.
-(define-class relationship-editor% (simple-editor-mixin vanilla-set-selector%) () 
+(define-class relationship-editor% vanilla-set-selector% () 
   (inherit get-editor get-value set-value! activate-item)
   
   ; entity field represents the independent entity (only 1 struct of this type)
@@ -178,11 +178,11 @@
   
   ; Nothing to parse - no user entry, only choice of preselected options
   ; -> (listof check-result)
-  (define/override (parse)
+  (define/public (parse)
     null)
   
   ; -> (listof check-result)
-  (define/override (validate)
+  (define/public (validate)
     (update-cells)
     (check/annotate ([ann:form-elements (list this)])
       (check-problems (apply check-problems (map check-snooze-struct     (get-updated-relationships)))

@@ -89,6 +89,10 @@
 (define (default-attribute-editor attr)
   ((attribute-editor-defaults) attr))
 
+; (parameter xml+quotable)
+(define default-required-label
+  (make-parameter " (required)"))
+
 ; Helper procedures ------------------------------
 
 ; natural -> natural
@@ -114,4 +118,5 @@
 
 (provide/contract
  [attribute-editor-defaults (parameter/c procedure?)]
- [default-attribute-editor  (-> attribute? (is-a?/c form-element<%>))])
+ [default-attribute-editor  (-> attribute? (is-a?/c form-element<%>))]
+ [default-required-label    (parameter/c string?)])

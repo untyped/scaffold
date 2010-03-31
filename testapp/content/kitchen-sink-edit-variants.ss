@@ -36,30 +36,22 @@
 
 ; == [4] Multiple-attribute editor, rest unchanged ==
 
-(define-class integer+string-editor% html-element% (form-element<%>)
+(define-class integer+string-editor% compound-editor% ()
+  
+  ; Fields ---------------------------------------
   ; editor% ...
   (field integer-editor (default-attribute-editor (attr kitchen-sink a-integer)) #:child)
   (field string-editor  (default-attribute-editor (attr kitchen-sink a-string))  #:child)
   
+  ; Constructor ----------------------------------
+  
+  (super-new [sub-editors (list integer-editor string-editor)])
+  
+  ; Methods --------------------------------------
+  
   ; seed -> xml
   (define/override (render seed)
     (xml "Str " ,(send string-editor render seed) " >> Integer " ,(send integer-editor render seed)))
-  
-  ; -> boolean
-  (define/public (set-enabled?! enabled?)
-    (ormap (cut send <> set-enabled?! enabled?) (list integer-editor string-editor)))
-  
-  ; -> boolean
-  (define/public (get-enabled?)
-    (andmap (cut send <> get-enabled?) (list integer-editor string-editor)))
-  
-  ; -> boolean
-  (define/public (value-changed?)
-    (ormap (cut send <> value-changed?) (list integer-editor string-editor)))
-  
-  ; -> boolean
-  (define/public (value-valid?)
-    (andmap (cut send <> value-valid?) (list integer-editor string-editor)))
   
   ; (listof integer string) -> void
   (define/public (set-value! int+str)

@@ -5,7 +5,8 @@
          "editor.ss"
          "page-internal.ss"
          "report.ss"
-         "view.ss")
+         "view.ss"
+         "util.ss")
 
 ; Provide statements -----------------------------
 
@@ -14,4 +15,5 @@
                        "editor.ss"
                        "page-internal.ss"
                        "report.ss"
-                       "view.ss"))
+                       "view.ss"
+                       "util.ss"))

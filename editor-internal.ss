@@ -12,89 +12,57 @@
     parse          ; -> (listof check-result)
     validate))     ; -> (listof check-result)
 
+(define compound-editor<%>
+  (interface (form-element<%>)
+    get-sub-editors))  ; -> (listof form-element<%>)
+
 ; Mixins -----------------------------------------
 
-(define-mixin simple-editor-mixin/html-element (html-element<%>) (editor<%>)
+(define-mixin compound-editor-mixin () (compound-editor<%>)
   
-  ; Fields ------------------------------
+  ; Fields ---------------------------------------
   
-  (super-new)
+  ; (cellof (listof form-element<%>))
+  (init-cell sub-editors #:accessor #:mutator)
   
-  ; (listof editor<%>)
-  (init-field editors null #:accessor #:children)
-  
-  ; Methods -----------------------------
-  
-  ; (listof check-result) -> void
-  (define/public (set-check-results! results)
-    (for-each (cut send <> set-check-results! results)
-              (get-editors)))
-  
-  ; -> (listof check-result)
-  (define/public (parse)
-    (apply check-problems (map (cut send <> parse) (get-editors))))
-  
-  ; -> (listof check-result)
-  (define/public (validate)
-    (apply check-problems
-           (map (cut send <> validate)
-                (get-editors))))
+  ; Methods --------------------------------------
   
   ; -> boolean
   (define/public (value-changed?)
-    (or (ormap (cut send <> value-changed?)
-               (get-editors)))))
-
-(define-mixin simple-editor-mixin/form-element (form-element<%>) (editor<%>)
-  
-  (inherit get-value)
-  
-  ; Fields ------------------------------
-  
-  (super-new)
-  
-  ; (listof editor<%>)
-  (init-field editors null #:accessor #:children)
-  
-  ; Methods -----------------------------
-  
-  ; (listof check-result) -> void
-  (define/public (set-check-results! results)
-    (for-each (cut send <> set-check-results! results)
-              (get-editors)))
-  
-  ; -> (listof check-result)
-  (define/public (parse)
-    (apply check-problems
-           (check/annotate ([ann:form-elements (list this)])
-             (with-handlers ([exn:smoke:form? (lambda (exn) (check-fail (exn-message exn)))])
-               (get-value)
-               (check-pass)))
-           (map (cut send <> parse) (get-editors))))
-  
-  ; -> (listof check-result)
-  (define/public (validate)
-    (apply check-problems (map (cut send <> validate) (get-editors))))
+    (ormap (cut send <> value-changed) (get-sub-editors)))
   
   ; -> boolean
-  (define/override (value-changed?)
-    (or (super value-changed?)
-        (ormap (cut send <> value-changed?)
-               (get-editors)))))
-
-; html-element<%> -> editor<%>
-(define (simple-editor-mixin class)
-  (if (implementation? class form-element<%>)
-      (simple-editor-mixin/form-element class)
-      (simple-editor-mixin/html-element class)))
+  (define/public (value-valid?)
+    (andmap (cut send <> value-changed) (get-sub-editors)))
+  
+  ; -> (U string #f)
+  (define/public (get-value-error)
+    (ormap (cut send <> get-value-error) (get-sub-editors)))
+  
+  ; boolean -> void
+  (define/public (set-enabled?! enabled?)
+    (for-each (cut send <> set-enabled?! enabled?) (get-sub-editors)))
+  
+  ; -> boolean
+  (define/public (get-enabled?)
+    (ormap (cut send <> get-enabled?) (get-sub-editors)))
+  
+  ; -> any
+  (define/public (get-value)
+    (error "compound-editor.get-value must be overridden."))
+  
+  ; any -> void
+  (define/public (set-value! val)
+    (error "compound-editor.set-value! must be overridden.")))
 
 ; Classes ----------------------------------------
 
-(define simple-editor%
-  (simple-editor-mixin html-element%))
+(define compound-editor%
+  (compound-editor-mixin html-element%))
 
 ; Provide statements -----------------------------
 
 (provide editor<%>
-         simple-editor-mixin
-         simple-editor%)
+         compound-editor<%>
+         compound-editor-mixin
+         compound-editor%)
