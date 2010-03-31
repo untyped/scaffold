@@ -90,7 +90,18 @@
   ; seed (listof attribute) -> xml
   (define/public (render-attributes seed attrs)
     (xml ,@(for/list ([attribute (in-list attrs)])
-             (render-attribute-label+editor seed attribute))))
+             (render-attribute seed attribute))))
+  
+  ; seed attribute [editor%] -> xml
+  (define/public (render-attribute seed
+                                   attribute
+                                   #:label  [label  (render-attribute-label seed attribute)]
+                                   #:editor [editor (get-attribute-editor attribute)])
+    (unless label
+      (error (format "entity-editor.render-attribute-editor: No label specified for attribute: ~a" attribute)))
+    (unless editor
+      (error (format "entity-editor.render-attribute-editor: No editor specified for attribute: ~a" attribute)))
+    (render-label+editor+results seed label editor (get-attribute-results attribute)))
   
   ; seed attribute -> xml+quotable
   (define/public (render-attribute-label seed attribute)
@@ -102,24 +113,38 @@
       (error (format "entity-editor.render-attribute-editor: No editor specified for attribute: ~a" attribute)))
     (send editor render seed))
   
-  ; seed attribute [editor%] -> xml
-  (define/public (render-attribute-label+editor seed attribute [editor (get-attribute-editor attribute)])
-    (unless editor
-      (error (format "entity-editor.render-attribute-editor: No editor specified for attribute: ~a" attribute)))
-    (render-label+editor+results
-     seed 
-     (render-attribute-label  seed attribute)
-     editor
-     (filter-check-results (get-check-results) attribute editor)))
+  ; seed attribute [(listof check-result)] -> xml
+  (define/public (render-attribute-results seed attribute [results (get-attribute-results attribute)])
+    (unless results
+      (error (format "entity-editor.render-attribute-results: No results specified for attribute: ~a" attribute)))
+    (render-check-label seed results))
+  
+  ; seed (listof attribute) [(listof check-result)] -> xml
+  (define/public (render-attributes-results seed attributes [results (get-attributes-results attributes)])
+    (unless results
+      (error (format "entity-editor.render-attributes-results: No results specified for attributes: ~a" attributes)))
+    (render-check-label seed results))
   
   ; attribute -> (U editor% #f)
-  (define/private (get-attribute-editor attribute)
+  (define/public (get-attribute-editor attribute)
     (let ([attr+editor (assoc attribute (get-auto-editors))])
       (and attr+editor (cdr attr+editor))))
   
+  ; attribute -> (listof check-result)
+  (define/public (get-attribute-results attribute [editor (get-attribute-editor attribute)])
+    (filter-results (get-check-results) (list attribute) editor))
+  
+  ; (listof attribute) -> (listof check-result)
+  (define/public (get-attributes-results attributes [editor (get-attribute-editor attributes)])
+    (filter-results (get-check-results) attributes editor))
+  
+  ; form-element<%> -> (listof check-result)
+  (define/public (get-editor-results editor)
+    (filter-results/editor (get-check-results) editor))
+  
   ; seed xml+quotable html-component<%> -> xml
   (define/public (render-label+editor seed label-xml editor)
-    (render-label+editor+results seed label-xml editor null))
+    (render-label+editor+results seed label-xml editor (get-editor-results)))
   
   ; seed xml+quotable html-component<%> (listof check-result) -> xml
   (define/public (render-label+editor+results seed label-xml editor results)
@@ -130,17 +155,6 @@
     (xml (tr (th (@ [class "attribute-label"]) ,label-xml)
              (td (@ [class "attribute-value"]) ,value-xml))))
   
-  
-  ; seed (listof check-result) [boolean] -> xml
-  (define/public (render-check-results seed results [tooltip? #t])
-    (xml (ul (@ [class ,(if tooltip? 
-                            "check-results tooltip"
-                            "check-results")])
-             ,@(for/list ([result results])
-                 (define class (check-result->class result))
-                 (xml (li (@ [class ,class])
-                          ,(check-result-message result)))))))
-  
   ; seed [boolean] -> xml
   (define/public (render-check-label seed reportable-results [tooltip? #t])
     ; (U 'check-success 'check-warning 'check-failure 'check-exn)
@@ -150,6 +164,16 @@
                ,(opt-xml (not (eq? class 'check-success))
                   ,(check-result-icon class)
                   ,(render-check-results seed reportable-results tooltip?)))))
+  
+  ; seed (listof check-result) [boolean] -> xml
+  (define/private (render-check-results seed results [tooltip? #t])
+    (xml (ul (@ [class ,(if tooltip? 
+                            "check-results tooltip"
+                            "check-results")])
+             ,@(for/list ([result results])
+                 (define class (check-result->class result))
+                 (xml (li (@ [class ,class])
+                          ,(check-result-message result)))))))
   
   ; Value processing -----------------------------
   
@@ -206,21 +230,54 @@
 
 ; Helpers ----------------------------------------
 
-; attribute (U form-element<%> #f) -> (check-result -> boolean)
-(define (make-check-result-filter/attribute+editor attribute editor)
-  (if editor
-      (lambda (result)
-        (or (memq editor (check-result-annotation result ann:form-elements))
-            (check-result-has-attribute? result attribute)))
-      (lambda (result)
-        (check-result-has-attribute? result attribute))))
+; (listof attribute) (U form-element<%> #f) -> (check-result -> boolean)
+(define (make-check-result-filter/attributes+editor attributes editor)
+  (cond [(and (and attributes (pair? attributes)) editor)
+         (lambda (result)
+           (or (memq editor (check-result-annotation result ann:form-elements))
+               (ormap (cut check-result-has-attribute? result <>) attributes)))]
+        [(and attributes (pair? attributes))
+         (lambda (result)
+           (ormap (cut check-result-has-attribute? result <>) attributes))]
+        [editor
+         (lambda (result)
+           (memq editor (check-result-annotation result ann:form-elements)))]
+        [else (error "filter-results: Either attribute or editor must be specified.")]))
 
-; (listof check-result) attribute (U form-element% #f) -> (listof check-result)
-(define (filter-check-results results attribute editor)
-  (filter (make-check-result-filter/attribute+editor attribute editor) results))
+; (listof check-result) (listof attribute) (U form-element% #f) -> (listof check-result)
+(define (filter-results results attributes editor)
+  (filter (make-check-result-filter/attributes+editor attributes editor) results))
+
+; (listof check-result) attribute -> (listof check-result)
+(define (filter-results/attribute results attribute)
+  (filter-results results (list attribute) #f))
+
+; (listof check-result) (listof attribute) -> (listof check-result)
+(define (filter-results/attributes results attributes)
+  (filter-results results attributes #f))
+
+; (listof check-result) form-element% -> (listof check-result)
+(define (filter-results/editor results editor)
+  (filter-results results null editor))
 
 ; Provide statements -----------------------------
 
 (provide entity-editor<%>
          entity-editor-mixin
          entity-editor%)
+
+(provide/contract 
+ [filter-results            (-> (listof check-result?) 
+                                (listof attribute?)
+                                (or/c (is-a?/c form-element<%>) #f)
+                                (listof check-result?))]
+ [filter-results/attribute  (-> (listof check-result?) 
+                                attribute?
+                                (listof check-result?))]
+ 
+ [filter-results/attributes (-> (listof check-result?) 
+                                (listof attribute?)
+                                (listof check-result?))]
+ [filter-results/editor     (-> (listof check-result?) 
+                                (is-a?/c form-element<%>)
+                                (listof check-result?))])
