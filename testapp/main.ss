@@ -9,7 +9,8 @@
 ; -> void
 (define (run-application)
   (serve/smoke (lambda ()
-                 (with-connection (site-dispatch test-site (current-request))))
+                 (with-connection
+                   (site-dispatch test-site (current-request))))
                #:htdocs-paths (list testapp-htdocs-path)))
 
 ; Main program body ------------------------------
@@ -25,4 +26,4 @@
 ; void
 (case mode
   [(runapp) (run-application)]
-  [(initdb) (call-with-connection (lambda () (recreate-tables)))])
+  [(initdb) (with-connection (recreate-tables))])

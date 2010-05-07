@@ -15,6 +15,8 @@
 (dev? #t)
 
 (serve/smoke/delirium
- (cut site-dispatch test-site (current-request))
+  (lambda ()
+    (with-connection
+      (site-dispatch test-site (current-request))))
  all-testapp-tests
  #:htdocs-paths (list testapp-htdocs-path))

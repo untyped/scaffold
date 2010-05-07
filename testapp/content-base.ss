@@ -10,7 +10,9 @@
 
 (default-controller-wrapper
   (lambda (controller . args)
-    (init-smoke (cut apply plain-controller-wrapper controller args))))
+    (init-smoke
+     (lambda ()
+       (apply plain-controller-wrapper controller args)))))
 
 ; Provide statements -----------------------------
 

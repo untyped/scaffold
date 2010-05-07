@@ -5,7 +5,11 @@
 
 ; Configuration ----------------------------------
 
-(current-snooze (make-snooze (make-postgresql8-database #:database "scaffoldtest" #:username "scaffoldtest")))
+(current-snooze
+ (make-snooze
+  (make-postgresql8-database
+   #:database "scaffoldtest"
+   #:username "scaffoldtest")))
 
 ; Provides ---------------------------------------
 
