@@ -54,13 +54,13 @@
     (xml "Str " ,(send string-editor render seed) " >> Integer " ,(send integer-editor render seed)))
   
   ; (listof integer string) -> void
-  (define/public (set-value! int+str)
+  (define/override (set-value! int+str)
     (match-let ([(list int str) int+str])
       (send integer-editor set-value! int)
       (send string-editor  set-value! str)))
   
   ; -> (listof integer string)
-  (define/public (get-value)
+  (define/override (get-value)
     (list (send integer-editor get-value)
           (send string-editor  get-value))))
 
