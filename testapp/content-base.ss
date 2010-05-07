@@ -14,7 +14,7 @@
 
 ; Provide statements -----------------------------
 
-(provide (all-from-out "base.ss"
-                       "site.ss"
-                       "model/db.ss"
-                       "model/entities.ss"))
+(provide (all-from-out "base.ss"))
+(provide (all-from-out "site.ss"))
+(provide (all-from-out "model/db.ss"))
+(provide (all-from-out "model/entities.ss"))

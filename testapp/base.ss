@@ -1,7 +1,6 @@
-#lang scheme/base
+#lang scheme
 
-(require (for-syntax scheme/base)
-         scheme/runtime-path
+(require scheme/runtime-path
          "../base.ss"
          "../main.ss")
 
@@ -11,8 +10,8 @@
 
 ; Provide statements -----------------------------
 
-(provide (all-from-out "../base.ss"
-                       "../main.ss"))
+(provide (all-from-out "../base.ss"))
+(provide (all-from-out "../main.ss"))
 
 (provide/contract
  [testapp-htdocs-path path?])
