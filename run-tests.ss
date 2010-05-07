@@ -6,6 +6,7 @@
          (smoke-in)
          "testapp/content-base.ss"
          "testapp/content/content.ss"
+         "testapp/main.ss"
          "testapp/all-tests.ss")
 
 ; Main program body ----------------------------
