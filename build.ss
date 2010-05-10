@@ -41,21 +41,16 @@ ENDSCRIPT
   (autoplanet)
   (system "mzc main.ss"))
 
-(define (run)
-  (compile)
-  (system "mzscheme main.ss"))
-
 (define (test-compile)
   (autoplanet)
-  (system "mzc main.ss"))
+  (system "mzc run-tests.ss"))
 
 (define (test)
   (test-compile)
-  (system "mzscheme test-main.ss -m"))
+  (system "mzscheme run-tests.ss"))
 
 (match (vector-ref (current-command-line-arguments) 0)
   ["envvars"      (envvars)]
   ["compile"      (compile)]
-  ["run"          (run)]
   ["test-compile" (test-compile)]
   ["test"         (test)])
