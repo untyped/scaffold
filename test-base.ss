@@ -20,11 +20,15 @@
 
 ; time-utc -> string
 (define (ts-utc time)
-  (date->string (time-utc->date time 0) "~Y-~m-~d ~H:~M"))
+  (date->string (time-utc->date time) "~Y-~m-~d ~H:~M"))
 
 ; time-tai -> string
 (define (ts-tai time)
-  (date->string (time-tai->date time 0) "~Y-~m-~d ~H:~M"))
+  (date->string (time-tai->date time) "~Y-~m-~d ~H:~M"))
+
+; xml_quotable -> string
+(define (xml+quotable->string val)
+  (xml->string (xml-quote val)))
 
 ; Provide statements -----------------------------
 
@@ -37,4 +41,5 @@
  [st-utc (-> string? time-utc?)]
  [st-tai (-> string? time-tai?)]
  [ts-utc (-> time-utc? string?)]
- [ts-tai (-> time-tai? string?)])
+ [ts-tai (-> time-tai? string?)]
+ [xml+quotable->string (-> xml+quotable? string?)])

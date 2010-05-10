@@ -1,8 +1,10 @@
 #lang scheme/base
 
+(require "../../test-base.ss")
+
 (require srfi/13
-         (planet untyped/unlib:3/symbol)
-         "../../test-base.ss"
+         srfi/19
+         (unlib-in string symbol time)
          "../content-base.ss")
 
 ; Helpers ----------------------------------------
@@ -11,6 +13,19 @@
 (define test-post1 #f)
 (define test-post2 #f)
 (define test-sink #f)
+
+; snooze-struct attribute natural [string] -> void
+(define-check (check-review-attr struct attr row-num)
+  (let* ([expected-key (xml+quotable->string (attribute-label-xml attr))]
+         [expected-val (xml+quotable->string (snooze-struct-xml-ref struct attr))]
+         [actual-key   (inner-html-ref (node/cell/xy 0 row-num (node/tag "table")))]
+         [actual-val   (inner-html-ref (node/cell/xy 1 row-num (node/tag "table")))])
+    (with-check-info (['actual-key actual-key]
+                      ['actual-val actual-val]
+                      ['expected-key expected-key]
+                      ['expected-val expected-val])
+      (check-equal? actual-key expected-key)
+      (check-equal? actual-val expected-val))))
 
 ; Tests ------------------------------------------
 
@@ -63,4 +78,28 @@
     (open/wait (controller-url sink-review test-sink))
     (check-equal? (title-ref) (format-snooze-struct test-sink) "default title")
     (open/wait (controller-url sink-review/vanilla test-sink))
-    (check-equal? (title-ref) "A vanilla entity-view" "custom title")))
+    (check-equal? (title-ref) "A vanilla entity-view" "custom title"))
+  
+  (test-case "uncustomized page displays all attributes"
+    (open/wait (controller-url sink-review test-sink))
+    (for ([i    (in-naturals)]
+          [attr (in-list (entity-data-attributes kitchen-sink))])
+      (check-review-attr test-sink attr i)))
+  
+  (test-case "vanilla page displays all attributes"
+    (open/wait (controller-url sink-review/vanilla test-sink))
+    (for ([i    (in-naturals)]
+          [attr (in-list (entity-data-attributes kitchen-sink))])
+      (check-review-attr test-sink attr i)))
+  
+  (test-case "sink-review-page/vanilla displays all attributes"
+    (open/wait (controller-url sink-review/vanilla test-sink))
+    (for ([i    (in-naturals)]
+          [attr (in-list (entity-data-attributes kitchen-sink))])
+      (check-review-attr test-sink attr i)))
+  
+  (test-case "sink-review-page/attrs displays correct attributes"
+    (open/wait (controller-url sink-review/attrs test-sink))
+    (for ([i    (in-naturals)]
+          [attr (in-list (attr-list kitchen-sink a-boolean a-real a-integer))])
+      (check-review-attr test-sink attr i))))
