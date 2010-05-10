@@ -15,11 +15,15 @@
 (define test-sink #f)
 
 ; snooze-struct attribute natural [string] -> void
-(define-check (check-review-attr struct attr row-num)
+(define-check (check-standard-attr struct attr row-num)
   (let* ([expected-key (xml+quotable->string (attribute-label-xml attr))]
-         [expected-val (xml+quotable->string (snooze-struct-xml-ref struct attr))]
-         [actual-key   (inner-html-ref (node/cell/xy 0 row-num (node/tag "table")))]
-         [actual-val   (inner-html-ref (node/cell/xy 1 row-num (node/tag "table")))])
+         [expected-val (xml+quotable->string (snooze-struct-xml-ref struct attr))])
+    (check-attr struct attr row-num expected-key expected-val)))
+
+; snooze-struct attribute natural [string] -> void
+(define-check (check-attr struct attr row-num expected-key expected-val)
+  (let* ([actual-key (inner-html-ref (node/cell/xy 0 row-num (node/tag "table")))]
+         [actual-val (inner-html-ref (node/cell/xy 1 row-num (node/tag "table")))])
     (with-check-info (['actual-key actual-key]
                       ['actual-val actual-val]
                       ['expected-key expected-key]
@@ -84,22 +88,28 @@
     (open/wait (controller-url sink-review test-sink))
     (for ([i    (in-naturals)]
           [attr (in-list (entity-data-attributes kitchen-sink))])
-      (check-review-attr test-sink attr i)))
-  
-  (test-case "vanilla page displays all attributes"
-    (open/wait (controller-url sink-review/vanilla test-sink))
-    (for ([i    (in-naturals)]
-          [attr (in-list (entity-data-attributes kitchen-sink))])
-      (check-review-attr test-sink attr i)))
+      (check-standard-attr test-sink attr i))
+    (check-equal? (node-count (node/jquery "table tr"))
+                  (length (entity-data-attributes kitchen-sink))))
   
   (test-case "sink-review-page/vanilla displays all attributes"
     (open/wait (controller-url sink-review/vanilla test-sink))
     (for ([i    (in-naturals)]
           [attr (in-list (entity-data-attributes kitchen-sink))])
-      (check-review-attr test-sink attr i)))
+      (check-standard-attr test-sink attr i))
+    (check-equal? (node-count (node/jquery "table tr"))
+                  (length (entity-data-attributes kitchen-sink))))
   
   (test-case "sink-review-page/attrs displays correct attributes"
     (open/wait (controller-url sink-review/attrs test-sink))
     (for ([i    (in-naturals)]
           [attr (in-list (attr-list kitchen-sink a-boolean a-real a-integer))])
-      (check-review-attr test-sink attr i))))
+      (check-standard-attr test-sink attr i))
+    (check-equal? (node-count (node/jquery "table tr")) 3))
+  
+  (test-case "sink-review-page/customized displays correct attributes"
+    (open/wait (controller-url sink-review/customized-attrs test-sink))
+    (check-attr test-sink (attr kitchen-sink a-boolean) 0 "A boolean" "yes")
+    (check-attr test-sink (attr kitchen-sink a-real) 1 "A real, customized" "<b>4.56</b>")
+    (check-attr test-sink (attr kitchen-sink a-integer) 2 "A integer" "123")
+    (check-equal? (node-count (node/jquery "table tr")) 3)))
