@@ -1,0 +1,32 @@
+[.]
+scm = svn
+
+[planetdev/unlib]
+path = planetdev/unlib
+repository = http://svn.untyped.com/unlib/trunk/src
+scm = svn
+
+[planetdev/mirrors]
+path = planetdev/mirrors
+repository = http://svn.untyped.com/mirrors/trunk/src
+scm = svn
+
+[planetdev/delirium]
+path = planetdev/delirium
+repository = http://svn.untyped.com/delirium/trunk/src
+scm = svn
+
+[planetdev/dispatch]
+path = planetdev/dispatch
+repository = http://svn.untyped.com/dispatch/branches/bridge/src
+scm = svn
+
+[planetdev/smoke]
+path = planetdev/smoke
+repository = http://svn.untyped.com/smoke/branches/bridge/src
+scm = svn
+
+[planetdev/snooze]
+path = planetdev/snooze
+repository = http://svn.untyped.com/snooze/branches/guid2/src
+scm = svn
