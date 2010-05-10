@@ -116,14 +116,26 @@
   
   (test-case "sink-review-page/compound-attrs"
     (open/wait (controller-url sink-review/compound-attrs test-sink))
-    (check-attr test-sink (attr kitchen-sink a-boolean) 0 "A boolean" "yes")
-    (check-attr test-sink (attr kitchen-sink a-real) 1 "A real, customized" "4.56")
+    (check-attr/defaults test-sink (attr kitchen-sink a-boolean) 0)
+    (check-attr/defaults test-sink (attr kitchen-sink a-real) 1)
     (check-equal? (inner-html-ref (node/cell/xy 0 2 (node/tag "table")))
                   "A-integer+a-string")
     (check-equal? (inner-html-ref (node/cell/xy 1 2 (node/tag "table")))
                   (xml->string (xml (span "123 >> abc"))))
-    (check-attr test-sink (attr kitchen-sink a-real) 3 "A symbol" "def")
+    (check-attr/defaults test-sink (attr kitchen-sink a-symbol) 3)
     (check-equal? (node-count (node/jquery "table tr")) 4))
   
-  #;(test-case "pause"
-    (read-line)))
+  (test-case "sink-review-page/related-attrs"
+    (open/wait (controller-url sink-review/related-attrs test-sink))
+    (check-attr/defaults test-sink (attr kitchen-sink a-boolean) 0)
+    (check-attr/defaults test-sink (attr kitchen-sink a-real) 1)
+    (check-equal? (inner-html-ref (node/cell/xy 0 2 (node/tag "table")))
+                  "All posts")
+    (check-equal? (inner-html-ref (node/cell/xy 1 2 (node/tag "table")))
+                  (xml->string (xml (ul (@ [class "relationship-view"])
+                                        (li ,(snooze-struct-xml-ref test-sink (attr kitchen-sink a-post)))
+                                        (li ,(snooze-struct-xml-ref test-sink (attr kitchen-sink a-required-post)))))))
+    (check-attr/defaults test-sink (attr kitchen-sink a-integer) 3)
+    (check-attr/defaults test-sink (attr kitchen-sink a-string) 4)
+    (check-attr/defaults test-sink (attr kitchen-sink a-symbol) 5)
+    (check-equal? (node-count (node/jquery "table tr")) 6)))
