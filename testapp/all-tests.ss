@@ -2,9 +2,11 @@
 
 (require "../test-base.ss")
 
-(require "tests/editor-tests.ss")
+(require "tests/review-tests.ss"
+         "tests/update-tests.ss")
 
 ; Tests ------------------------------------------
 
 (define/provide-test-suite all-testapp-tests
-  editor-tests)
+  review-tests
+  update-tests)
