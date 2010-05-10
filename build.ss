@@ -39,11 +39,11 @@ ENDSCRIPT
 
 (define (compile)
   (autoplanet)
-  (system "mzc main.ss"))
+  (system "mzc -v main.ss"))
 
 (define (test-compile)
   (autoplanet)
-  (system "mzc run-tests.ss"))
+  (system "mzc -v run-tests.ss"))
 
 (define (test)
   (test-compile)
