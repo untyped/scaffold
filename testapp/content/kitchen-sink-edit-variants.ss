@@ -14,8 +14,8 @@
 ; == [2] Default scaffolded page with a subset of attributes ==
 
 (define-object sink-update-page/attrs (entity-editor-page-mixin html-page%) ()
-  (super-new [title      "An entity-editor with custom attributes"]
-             [entity     kitchen-sink]
+  (super-new [title           "An entity-editor with custom attributes"]
+             [entity          kitchen-sink]
              [auto-attributes (attr-list kitchen-sink a-boolean a-real a-integer)]))
 
 ; == [3] Single attribute editor modified; rest unchanged ==
