@@ -83,7 +83,7 @@
 
 (define/provide-test-suite update-tests
   #:before (cut recreate-tables)
-  #:after  (cut recreate-tables)
+  ;#:after  (cut recreate-tables)
   
   (test-suite "kitchen sink update page 1 (entity-data-attributes)"
     (let* ([user  (save! (make-dave))]
@@ -104,7 +104,36 @@
                           (string-append (xml+quotable->string (attribute-label-xml attr))
                                          (if (type-allows-null? (attribute-type attr))
                                              ""
-                                             " (required)"))))))
+                                             " (required)"))))
+          (let* ([mkrow   (cut node/cell/xy 1 <> table)]
+                 [fmt     (cut format "~a" <>)]
+                 [ts-utc  (cut ts-utc <> "~d/~m/~Y ~H:~M")]
+                 [ts-tai  (cut ts-tai <> "~d/~m/~Y ~H:~M")]
+                 [row-val (lambda (row sel) (js-ref (!dot ($ ,(node/jquery sel (mkrow row))) (val))))])
+            ; check attribute populated values, one at a time
+            (check-equal? (node-count (node/jquery ":checked" (mkrow 0))) 0)
+            (check-equal? (row-val 1  "input")          (fmt (kitchen-sink-a-integer        sink)))
+            (check-equal? (row-val 2  "input")          (fmt (kitchen-sink-a-real           sink)))
+            (check-equal? (row-val 3  "textarea")       (fmt (kitchen-sink-a-string         sink)))
+            (check-equal? (row-val 4  "textarea")       (fmt (kitchen-sink-a-symbol         sink)))
+            (check-equal? (row-val 5  "input")          (fmt (kitchen-sink-a-10-char-string sink)))
+            (check-equal? (row-val 6  "input")          (fmt (kitchen-sink-a-10-char-symbol sink)))
+            (check-equal? (row-val 7  "input")          (ts-utc (kitchen-sink-a-time-utc sink)))
+            (check-equal? (row-val 8  "input")          (ts-tai (kitchen-sink-a-time-tai sink)))
+            (check-equal? (row-val 9  ":radio:checked") (fmt (kitchen-sink-a-short-enum sink)))
+            (check-equal? (row-val 10 "select")         (fmt (kitchen-sink-a-long-enum sink)))
+            (check-equal? (row-val 11 "select")         "") ; no post selected, so #f == ""
+            (check-equal? (row-val 12 "input")          (fmt (kitchen-sink-a-required-integer        sink)))
+            (check-equal? (row-val 13 "input")          (fmt (kitchen-sink-a-required-real           sink)))
+            (check-equal? (row-val 14 "textarea")       (fmt (kitchen-sink-a-required-string         sink)))
+            (check-equal? (row-val 15 "textarea")       (fmt (kitchen-sink-a-required-symbol         sink)))
+            (check-equal? (row-val 16 "input")          (fmt (kitchen-sink-a-required-10-char-string sink)))
+            (check-equal? (row-val 17 "input")          (fmt (kitchen-sink-a-required-10-char-symbol sink)))
+            (check-equal? (row-val 18 "input")          (ts-utc (kitchen-sink-a-required-time-utc sink)))
+            (check-equal? (row-val 19 "input")          (ts-tai (kitchen-sink-a-required-time-tai sink)))
+            (check-equal? (row-val 20 ":radio:checked") (fmt (kitchen-sink-a-required-short-enum sink)))
+            (check-equal? (row-val 21 "select")         (fmt (kitchen-sink-a-required-long-enum sink)))
+            (check-equal? (row-val 22 "select")         (fmt (snooze-struct-id (kitchen-sink-a-required-post sink)))))))
       
       (test-case "make updates and check correct values"
         (open/wait (format "/sinks/~a/edit" (snooze-struct-id sink)))
@@ -112,34 +141,35 @@
         (let* ([table (node/tag 'table)])
           (check-true (node-exists? table))
           (check-equal? (node-count (node/tag 'tr table)) (length (entity-data-attributes kitchen-sink)))
-          (let ([mkrow  (cut node/cell/xy 1 <> table)]
-                [fmt    (cut format "~a" <>)]
-                [ts-utc (cut ts-utc <> "~d/~m/~Y ~H:~M")]
-                [ts-tai (cut ts-tai <> "~d/~m/~Y ~H:~M")])
+          (let* ([mkrow  (cut node/cell/xy 1 <> table)]
+                 [fmt    (cut format "~a" <>)]
+                 [ts-utc (cut ts-utc <> "~d/~m/~Y ~H:~M")]
+                 [ts-tai (cut ts-tai <> "~d/~m/~Y ~H:~M")]
+                 [field  (lambda (row sel) (node/jquery sel (mkrow row)))])
             ; update attributes, one at a time
-            (click      (node/jquery ":checkbox" (mkrow 0))) ; check "a boolean"
-            (enter-text (node/jquery "input"     (mkrow 1)) (fmt (kitchen-sink-a-integer        sink2)))
-            (enter-text (node/jquery "input"     (mkrow 2)) (fmt (kitchen-sink-a-real           sink2)))
-            (enter-text (node/jquery "textarea"  (mkrow 3)) (fmt (kitchen-sink-a-string         sink2)))
-            (enter-text (node/jquery "textarea"  (mkrow 4)) (fmt (kitchen-sink-a-symbol         sink2)))
-            (enter-text (node/jquery "input"     (mkrow 5)) (fmt (kitchen-sink-a-10-char-string sink2)))
-            (enter-text (node/jquery "input"     (mkrow 6)) (fmt (kitchen-sink-a-10-char-symbol sink2)))
-            (enter-text (node/jquery "input"     (mkrow 7)) (ts-utc (kitchen-sink-a-time-utc sink2)))
-            (enter-text (node/jquery "input"     (mkrow 8)) (ts-tai (kitchen-sink-a-time-tai sink2)))
-            (click      (node/jquery (format ":radio[value='~a']" (kitchen-sink-a-short-enum sink2)) (mkrow 9)))
-            (select     (node/jquery "select"    (mkrow 10)) (kitchen-sink-a-long-enum sink2))
-            (select     (node/jquery "select"    (mkrow 11)) (fmt (snooze-struct-id (kitchen-sink-a-post sink2))))
-            (enter-text (node/jquery "input"     (mkrow 12)) (fmt (kitchen-sink-a-required-integer        sink2)))
-            (enter-text (node/jquery "input"     (mkrow 13)) (fmt (kitchen-sink-a-required-real           sink2)))
-            (enter-text (node/jquery "textarea"  (mkrow 14)) (fmt (kitchen-sink-a-required-string         sink2)))
-            (enter-text (node/jquery "textarea"  (mkrow 15)) (fmt (kitchen-sink-a-required-symbol         sink2)))
-            (enter-text (node/jquery "input"     (mkrow 16)) (fmt (kitchen-sink-a-required-10-char-string sink2)))
-            (enter-text (node/jquery "input"     (mkrow 17)) (fmt (kitchen-sink-a-required-10-char-symbol sink2)))
-            (enter-text (node/jquery "input"     (mkrow 18)) (ts-utc (kitchen-sink-a-required-time-utc sink2)))
-            (enter-text (node/jquery "input"     (mkrow 19)) (ts-tai (kitchen-sink-a-required-time-tai sink2)))
-            (click      (node/jquery (format ":radio[value='~a']" (kitchen-sink-a-required-short-enum sink2)) (mkrow 20)))
-            (select     (node/jquery "select"    (mkrow 21)) (kitchen-sink-a-required-long-enum sink2))
-            (select     (node/jquery "select"    (mkrow 22)) (fmt (snooze-struct-id (kitchen-sink-a-required-post sink2))))
+            (click      (field 0  ":checkbox")) ; check "a boolean"
+            (enter-text (field 1  "input")    (fmt (kitchen-sink-a-integer        sink2)))
+            (enter-text (field 2  "input")    (fmt (kitchen-sink-a-real           sink2)))
+            (enter-text (field 3  "textarea") (fmt (kitchen-sink-a-string         sink2)))
+            (enter-text (field 4  "textarea") (fmt (kitchen-sink-a-symbol         sink2)))
+            (enter-text (field 5  "input")    (fmt (kitchen-sink-a-10-char-string sink2)))
+            (enter-text (field 6  "input")    (fmt (kitchen-sink-a-10-char-symbol sink2)))
+            (enter-text (field 7  "input")    (ts-utc (kitchen-sink-a-time-utc    sink2)))
+            (enter-text (field 8  "input")    (ts-tai (kitchen-sink-a-time-tai    sink2)))
+            (click      (field 9  (format ":radio[value='~a']" (kitchen-sink-a-short-enum sink2))))
+            (select     (field 10 "select")   (kitchen-sink-a-long-enum sink2))
+            (select     (field 11 "select")   (fmt (snooze-struct-id (kitchen-sink-a-post  sink2))))
+            (enter-text (field 12 "input")    (fmt (kitchen-sink-a-required-integer        sink2)))
+            (enter-text (field 13 "input")    (fmt (kitchen-sink-a-required-real           sink2)))
+            (enter-text (field 14 "textarea") (fmt (kitchen-sink-a-required-string         sink2)))
+            (enter-text (field 15 "textarea") (fmt (kitchen-sink-a-required-symbol         sink2)))
+            (enter-text (field 16 "input")    (fmt (kitchen-sink-a-required-10-char-string sink2)))
+            (enter-text (field 17 "input")    (fmt (kitchen-sink-a-required-10-char-symbol sink2)))
+            (enter-text (field 18 "input")    (ts-utc (kitchen-sink-a-required-time-utc    sink2)))
+            (enter-text (field 19 "input")    (ts-tai (kitchen-sink-a-required-time-tai    sink2)))
+            (click      (field 20 (format ":radio[value='~a']" (kitchen-sink-a-required-short-enum sink2))))
+            (select     (field 21 "select")   (kitchen-sink-a-required-long-enum sink2))
+            (select     (field 22 "select")   (fmt (snooze-struct-id (kitchen-sink-a-required-post sink2))))
             ; submit the data
             (click/wait (node/jquery ":submit"))
             (let ([new-sink (find-by-id kitchen-sink (snooze-struct-id sink))])
