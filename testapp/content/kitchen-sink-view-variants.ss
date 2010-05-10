@@ -34,7 +34,7 @@
              [view  sink-view/attrs-customized]))
 
 
-; == [4] Multiple-attribute view, rest unchanged ==
+; == [4] Compound view, rest unchanged ==
 
 (define-object sink-view/compound-attrs entity-view% ()
   (inherit render-label+value)
