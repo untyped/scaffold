@@ -20,31 +20,36 @@
   (make-post/defaults #:user    user
                       #:subject "my first post"))
 
+; person -> post
+(define (make-second-post user)
+  (make-post/defaults #:user    user
+                      #:subject "my second post"))
+
 ; -> kitchen-sink
 (define (make-sink post)  
   (make-kitchen-sink/defaults
    #:a-boolean                 #f
    #:a-integer                 1
    #:a-real                    1.1
-   #:a-string                  "one"
-   #:a-symbol                  'one
-   #:a-10-char-string          "oneoneone1"
-   #:a-10-char-symbol          'oneoneone1
+   #:a-string                  "onestr"
+   #:a-symbol                  'onesym
+   #:a-10-char-string          "onestrone1"
+   #:a-10-char-symbol          'onesymone1
    #:a-time-utc                (date->time-utc (make-date 1 1 1 1 1 1 2001 1))
-   #:a-time-tai                (date->time-tai (make-date 1 1 1 1 1 1 2001 1))
+   #:a-time-tai                (date->time-tai (make-date 11 11 11 11 11 11 2011 1))
    #:a-short-enum              (short-enum a)
-   #:a-long-enum               (long-enum a)
+   #:a-long-enum               (long-enum b)
    #:a-post                    #f
    #:a-required-integer        2
    #:a-required-real           2.2
-   #:a-required-string         "two"
-   #:a-required-symbol         'two
-   #:a-required-10-char-string "twotwotwo2"
-   #:a-required-10-char-symbol 'twotwotwo2
+   #:a-required-string         "twostr"
+   #:a-required-symbol         'twosym
+   #:a-required-10-char-string "twostrtwo2"
+   #:a-required-10-char-symbol 'twosymtwo2
    #:a-required-time-utc       (date->time-utc (make-date 2 2 2 2 2 2 2002 2))
-   #:a-required-time-tai       (date->time-tai (make-date 2 2 2 2 2 2 2002 2))
-   #:a-required-short-enum     (short-enum b)
-   #:a-required-long-enum      (long-enum b)
+   #:a-required-time-tai       (date->time-tai (make-date 22 22 22 22 22 2 2022 2))
+   #:a-required-short-enum     (short-enum c)
+   #:a-required-long-enum      (long-enum d)
    #:a-required-post           post))
 
 ; Tests ------------------------------------------
@@ -63,6 +68,7 @@
         (let ([table (node/tag 'table)])
           (check-true (node-exists? table))
           (check-equal? (node-count (node/tag 'tr table)) (length (entity-data-attributes kitchen-sink)))
+          ; check attribute labels
           (for ([attr (in-list (entity-data-attributes kitchen-sink))]
                 [row  (in-naturals)])
             (check-equal? (inner-html-ref (node/cell/xy 0 row table))
