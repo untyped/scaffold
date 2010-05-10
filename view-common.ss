@@ -3,6 +3,7 @@
 (require "base.ss")
 
 (require (only-in (unlib-in string) string-sentencecase)
+         (only-in (mirrors-in plain/render) quotable-value?)
          "controller-internal.ss")
 
 ; Procedures -------------------------------------
@@ -92,8 +93,8 @@
  [attribute-label-xml            (-> attribute? xml+quotable?)]
  [snooze-struct-xml-ref-defaults (parameter/c (-> snooze-struct? attribute? xml+quotable?))]
  [snooze-struct-xml-ref          (-> snooze-struct? attribute? xml+quotable?)]
- [snooze-struct-csv-ref-defaults (parameter/c (-> snooze-struct? attribute? string?))]
- [snooze-struct-csv-ref          (-> snooze-struct? attribute? string?)]
+ [snooze-struct-csv-ref-defaults (parameter/c (-> snooze-struct? attribute? quotable-value?))]
+ [snooze-struct-csv-ref          (-> snooze-struct? attribute? quotable-value?)]
  [render-related-structs         (->* (seed? (listof snooze-struct?))
                                       ((-> snooze-struct? xml?))
                                       xml?)])
