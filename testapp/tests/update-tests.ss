@@ -1,8 +1,10 @@
 #lang scheme/base
 
 (require srfi/13
+         srfi/19
          (planet untyped/unlib:3/symbol)
-         "../../test-base.ss")
+         "../../test-base.ss"
+         "../content-base.ss")
 
 ; Helpers ----------------------------------------
 
@@ -48,19 +50,15 @@
 ; Tests ------------------------------------------
 
 (define/provide-test-suite update-tests
-  #:before (cut recreate-database)
-  #:after  (cut recreate-database)
+  #:before (cut recreate-tables)
+  #:after  (cut recreate-tables)
   
   (test-suite "kitchen sink update page 1 (entity-data-attributes)"
-    
-    (define dave (save! (make-dave)))
-    (define post (save! (make-first-post dave)))
-    (define sink (save! (make-sink post)))
-    
-    (test-case "update page displays"
-      (open/wait (format "/sinks/~a" (snooze-struct-id sink)))
-      (check-equal? (title-ref) "Editor")
-      (check-equal? (inner-html-ref (node/id 'total-commits)) "0")))
+    (let ([sink (save! (make-sink (save! (make-first-post (save! (make-dave))))))])
+      (test-case "update page displays"
+        (open/wait (format "/sinks/~a/edit" (snooze-struct-id sink)))
+        (check-equal? (title-ref) "Editor")
+        (check-equal? (inner-html-ref (node/id 'total-commits)) "0"))))
   
   #;(test-case "correct values allow form submission"
       (enter-text (node/id 'larger-field) "2")
