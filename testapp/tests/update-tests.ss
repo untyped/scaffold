@@ -55,10 +55,20 @@
   
   (test-suite "kitchen sink update page 1 (entity-data-attributes)"
     (let ([sink (save! (make-sink (save! (make-first-post (save! (make-dave))))))])
-      (test-case "update page displays"
+      (test-case "update page displays with correct attributes"
         (open/wait (format "/sinks/~a/edit" (snooze-struct-id sink)))
-        (check-equal? (title-ref) "Editor")
-        (check-equal? (inner-html-ref (node/id 'total-commits)) "0"))))
+        (check-equal? (title-ref) (format "Edit kitchen sink: #(struct:kitchen-sink ~a ~a)"
+                                          (snooze-struct-id       sink)
+                                          (snooze-struct-revision sink)))
+        (let ([table (node/tag 'table)])
+          (check-true (node-exists? table))
+          (check-equal? (node-count (node/tag 'tr table)) (length (entity-data-attributes kitchen-sink)))))
+      
+      (test-case "make updates and check correct values"
+        (open/wait (format "/sinks/~a/edit" (snooze-struct-id sink)))
+        (check-equal? (title-ref) (format "Edit kitchen sink: #(struct:kitchen-sink ~a ~a)"
+                                          (snooze-struct-id       sink)
+                                          (snooze-struct-revision sink))))))
   
   #;(test-case "correct values allow form submission"
       (enter-text (node/id 'larger-field) "2")

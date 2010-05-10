@@ -11,7 +11,7 @@
   (super-new [title  "A vanilla entity-editor"]
              [entity kitchen-sink]))
 
-; == [2] Default scaffolded page with a subset of h ==
+; == [2] Default scaffolded page with a subset of attributes ==
 
 (define-object sink-update-page/attrs (entity-editor-page-mixin html-page%) ()
   (super-new [title      "An entity-editor with custom attributes"]
