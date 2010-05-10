@@ -62,7 +62,14 @@
                                           (snooze-struct-revision sink)))
         (let ([table (node/tag 'table)])
           (check-true (node-exists? table))
-          (check-equal? (node-count (node/tag 'tr table)) (length (entity-data-attributes kitchen-sink)))))
+          (check-equal? (node-count (node/tag 'tr table)) (length (entity-data-attributes kitchen-sink)))
+          (for ([attr (in-list (entity-data-attributes kitchen-sink))]
+                [row  (in-naturals)])
+            (check-equal? (inner-html-ref (node/cell/xy 0 row table))
+                          (string-append (xml+quotable->string (attribute-label-xml attr))
+                                         (if (type-allows-null? (attribute-type attr))
+                                             ""
+                                             " (required)"))))))
       
       (test-case "make updates and check correct values"
         (open/wait (format "/sinks/~a/edit" (snooze-struct-id sink)))
