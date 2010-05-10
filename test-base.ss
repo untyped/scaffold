@@ -10,21 +10,21 @@
 
 ; Procedures -------------------------------------
 
-; string -> time-utc
-(define (st-utc str)
-  (date->time-utc (string->date str "~Y-~m-~d ~H:~M")))
+; string [string] -> time-utc
+(define (st-utc str [format-str "~Y-~m-~d ~H:~M"])
+  (date->time-utc (string->date str format-str)))
 
-; string -> time-tai
-(define (st-tai str)
-  (date->time-tai (string->date str "~Y-~m-~d ~H:~M")))
+; string [string] -> time-tai
+(define (st-tai str [format-str "~Y-~m-~d ~H:~M"])
+  (date->time-tai (string->date str format-str)))
 
-; time-utc -> string
-(define (ts-utc time)
-  (date->string (time-utc->date time) "~Y-~m-~d ~H:~M"))
+; time-utc [string] -> string
+(define (ts-utc time [format-str "~Y-~m-~d ~H:~M"])
+  (date->string (time-utc->date time) format-str))
 
-; time-tai -> string
-(define (ts-tai time)
-  (date->string (time-tai->date time) "~Y-~m-~d ~H:~M"))
+; time-tai [string] -> string
+(define (ts-tai time [format-str "~Y-~m-~d ~H:~M"])
+  (date->string (time-tai->date time) format-str))
 
 ; xml_quotable -> string
 (define (xml+quotable->string val)
@@ -32,14 +32,14 @@
 
 ; Provide statements -----------------------------
 
-(provide (delirium-out)
-         (schemeunit-out main util)
-         (all-from-out "base.ss"
-                       "testapp/site.ss"))
+(provide (delirium-out))
+(provide (schemeunit-out main util))
+(provide (all-from-out "base.ss"))
+(provide (all-from-out "testapp/site.ss"))
 
 (provide/contract
- [st-utc (-> string? time-utc?)]
- [st-tai (-> string? time-tai?)]
- [ts-utc (-> time-utc? string?)]
- [ts-tai (-> time-tai? string?)]
+ [st-utc (->* (string?)   (string?) time-utc?)]
+ [st-tai (->* (string?)   (string?) time-tai?)]
+ [ts-utc (->* (time-utc?) (string?) string?)]
+ [ts-tai (->* (time-tai?) (string?) string?)]
  [xml+quotable->string (-> xml+quotable? string?)])

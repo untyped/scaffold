@@ -35,8 +35,8 @@
    #:a-symbol                  'onesym
    #:a-10-char-string          "onestrone1"
    #:a-10-char-symbol          'onesymone1
-   #:a-time-utc                (date->time-utc (make-date 1 1 1 1 1 1 2001 1))
-   #:a-time-tai                (date->time-tai (make-date 11 11 11 11 11 11 2011 1))
+   #:a-time-utc                (date->time-utc (make-date 0 0 1 1 1 1 2001 0))
+   #:a-time-tai                (date->time-tai (make-date 0 0 11 11 11 11 2011 0))
    #:a-short-enum              (short-enum a)
    #:a-long-enum               (long-enum b)
    #:a-post                    #f
@@ -46,8 +46,8 @@
    #:a-required-symbol         'twosym
    #:a-required-10-char-string "twostrtwo2"
    #:a-required-10-char-symbol 'twosymtwo2
-   #:a-required-time-utc       (date->time-utc (make-date 2 2 2 2 2 2 2002 2))
-   #:a-required-time-tai       (date->time-tai (make-date 22 22 22 22 22 2 2022 2))
+   #:a-required-time-utc       (date->time-utc (make-date 0 0 2 2 2 2 2002 0))
+   #:a-required-time-tai       (date->time-tai (make-date 0 0 22 22 22 2 2022 0))
    #:a-required-short-enum     (short-enum c)
    #:a-required-long-enum      (long-enum d)
    #:a-required-post           post))
@@ -62,8 +62,8 @@
    #:a-symbol                  'thrsym
    #:a-10-char-string          "thrstrthr3"
    #:a-10-char-symbol          'thrsymthr3
-   #:a-time-utc                (date->time-utc (make-date 0 3 3 3 3 3 2003 3))
-   #:a-time-tai                (date->time-tai (make-date 0 33 33 3 3 3 2033 3))
+   #:a-time-utc                (date->time-utc (make-date 0 0 3 3 3 3 2003 0))
+   #:a-time-tai                (date->time-tai (make-date 0 0 33 3 3 3 2033 0))
    #:a-short-enum              (short-enum c)
    #:a-long-enum               (long-enum d)
    #:a-post                    post
@@ -73,8 +73,8 @@
    #:a-required-symbol         'frsym
    #:a-required-10-char-string "foustrfou4"
    #:a-required-10-char-symbol 'fousymfou4
-   #:a-required-time-utc       (date->time-utc (make-date 0 4 4 4 4 4 2004 4))
-   #:a-required-time-tai       (date->time-tai (make-date 0 44 44 4 4 4 2044 4))
+   #:a-required-time-utc       (date->time-utc (make-date 0 0 4 4 4 4 2004 0))
+   #:a-required-time-tai       (date->time-tai (make-date 0 0 44 4 4 4 2044 0))
    #:a-required-short-enum     (short-enum a)
    #:a-required-long-enum      (long-enum b)
    #:a-required-post           post))
@@ -86,8 +86,9 @@
   #:after  (cut recreate-tables)
   
   (test-suite "kitchen sink update page 1 (entity-data-attributes)"
-    (let ([sink  (save! (make-sink (save! (make-first-post (save! (make-dave))))))]
-          [sink2 (make-sink-2 (make-second-post (make-dave)))]) ; for comparison after update
+    (let* ([user  (save! (make-dave))]
+           [sink  (save! (make-sink (save! (make-first-post user))))]
+           [sink2 (make-sink-2 (save! (make-second-post user)))]) ; for comparison after update
       (test-case "update page displays with correct attributes"
         (open/wait (format "/sinks/~a/edit" (snooze-struct-id sink)))
         (check-equal? (title-ref) (format "Edit kitchen sink: #(struct:kitchen-sink ~a ~a)"
@@ -108,13 +109,44 @@
       (test-case "make updates and check correct values"
         (open/wait (format "/sinks/~a/edit" (snooze-struct-id sink)))
         
-        (let ([table (node/tag 'table)])
+        (let* ([table (node/tag 'table)])
           (check-true (node-exists? table))
           (check-equal? (node-count (node/tag 'tr table)) (length (entity-data-attributes kitchen-sink)))
-          ; update attributes, one at a time
-          (click (node/jquery ":checkbox" (node/cell/xy 1 0 table)))
-          (for ([test-attr (in-list (entity-data-attributes kitchen-sink))])
-            (check-equal? (snooze-struct-ref sink test-attr) (snooze-struct-ref sink2 test-attr)))))))
+          (let ([mkrow  (cut node/cell/xy 1 <> table)]
+                [fmt    (cut format "~a" <>)]
+                [ts-utc (cut ts-utc <> "~d/~m/~Y ~H:~M")]
+                [ts-tai (cut ts-tai <> "~d/~m/~Y ~H:~M")])
+            ; update attributes, one at a time
+            (click      (node/jquery ":checkbox" (mkrow 0))) ; check "a boolean"
+            (enter-text (node/jquery "input"     (mkrow 1)) (fmt (kitchen-sink-a-integer        sink2)))
+            (enter-text (node/jquery "input"     (mkrow 2)) (fmt (kitchen-sink-a-real           sink2)))
+            (enter-text (node/jquery "textarea"  (mkrow 3)) (fmt (kitchen-sink-a-string         sink2)))
+            (enter-text (node/jquery "textarea"  (mkrow 4)) (fmt (kitchen-sink-a-symbol         sink2)))
+            (enter-text (node/jquery "input"     (mkrow 5)) (fmt (kitchen-sink-a-10-char-string sink2)))
+            (enter-text (node/jquery "input"     (mkrow 6)) (fmt (kitchen-sink-a-10-char-symbol sink2)))
+            (enter-text (node/jquery "input"     (mkrow 7)) (ts-utc (kitchen-sink-a-time-utc sink2)))
+            (enter-text (node/jquery "input"     (mkrow 8)) (ts-tai (kitchen-sink-a-time-tai sink2)))
+            (click      (node/jquery (format ":radio[value='~a']" (kitchen-sink-a-short-enum sink2)) (mkrow 9)))
+            (select     (node/jquery "select"    (mkrow 10)) (kitchen-sink-a-long-enum sink2))
+            (select     (node/jquery "select"    (mkrow 11)) (fmt (snooze-struct-id (kitchen-sink-a-post sink2))))
+            (enter-text (node/jquery "input"     (mkrow 12)) (fmt (kitchen-sink-a-required-integer        sink2)))
+            (enter-text (node/jquery "input"     (mkrow 13)) (fmt (kitchen-sink-a-required-real           sink2)))
+            (enter-text (node/jquery "textarea"  (mkrow 14)) (fmt (kitchen-sink-a-required-string         sink2)))
+            (enter-text (node/jquery "textarea"  (mkrow 15)) (fmt (kitchen-sink-a-required-symbol         sink2)))
+            (enter-text (node/jquery "input"     (mkrow 16)) (fmt (kitchen-sink-a-required-10-char-string sink2)))
+            (enter-text (node/jquery "input"     (mkrow 17)) (fmt (kitchen-sink-a-required-10-char-symbol sink2)))
+            (enter-text (node/jquery "input"     (mkrow 18)) (ts-utc (kitchen-sink-a-required-time-utc sink2)))
+            (enter-text (node/jquery "input"     (mkrow 19)) (ts-tai (kitchen-sink-a-required-time-tai sink2)))
+            (click      (node/jquery (format ":radio[value='~a']" (kitchen-sink-a-required-short-enum sink2)) (mkrow 20)))
+            (select     (node/jquery "select"    (mkrow 21)) (kitchen-sink-a-required-long-enum sink2))
+            (select     (node/jquery "select"    (mkrow 22)) (fmt (snooze-struct-id (kitchen-sink-a-required-post sink2))))
+            ; submit the data
+            (click/wait (node/jquery ":submit"))
+            (let ([new-sink (find-by-id kitchen-sink (snooze-struct-id sink))])
+              (for ([test-attr (in-list (entity-data-attributes kitchen-sink))])
+                (check-equal? (snooze-struct-ref new-sink test-attr) 
+                              (snooze-struct-ref sink2    test-attr)
+                              (format "Attribute does not match ~a" (attribute-name test-attr))))))))))
   
   #;(test-case "correct values allow form submission"
       (enter-text (node/id 'larger-field) "2")
