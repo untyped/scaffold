@@ -84,7 +84,12 @@
    [a-required-time-tai       time-tai  #:allow-null? #f]
    [a-required-short-enum     enum      #:allow-null? #f #:values short-enum]
    [a-required-long-enum      enum      #:allow-null? #f #:values long-enum]
-   [a-required-post           post      #:allow-null? #f]))
+   [a-required-post           post      #:allow-null? #f])
+  #:pretty-formatter
+  (lambda (sink)
+    (format "#(struct:kitchen-sink ~a ~a)"
+            (kitchen-sink-id sink)
+            (kitchen-sink-revision sink))))
 
 ; -> void
 (define (recreate-tables)
