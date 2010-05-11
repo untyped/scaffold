@@ -3,6 +3,7 @@
 (require "base.ss")
 
 (require "attribute-editor.ss"
+         "compound-editor.ss"
          "editor-controller.ss"
          "editor-internal.ss"
          "editor-page.ss"
@@ -11,6 +12,7 @@
 ; Provide statements -----------------------------
 
 (provide (all-from-out "attribute-editor.ss"
+                       "compound-editor.ss"
                        "editor-controller.ss"
                        "editor-internal.ss"
                        "editor-page.ss"
