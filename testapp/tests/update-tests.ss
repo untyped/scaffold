@@ -14,7 +14,7 @@
 (define tai->str (cut ts-tai <> "~d/~m/~Y ~H:~M"))
 
 ; any -> string
-(define fmt    (cut format "~a" <>))
+(define fmt (cut format "~a" <>))
 
 ; -> person
 (define (make-dave)
@@ -23,18 +23,12 @@
                       #:forenames "david james"
                       #:email     "djb@example.com"))
 
-; person -> post
-(define (make-first-post user)
-  (make-post/defaults #:user    user
-                      #:subject "my first post"))
-
-; person -> post
-(define (make-second-post user)
-  (make-post/defaults #:user    user
-                      #:subject "my second post"))
+; person string -> post
+(define (make-test-post user subject) 
+  (make-post/defaults #:user user #:subject subject))
 
 ; -> kitchen-sink
-(define (make-sink post)  
+(define (make-sink-1 post)  
   (make-kitchen-sink/defaults
    #:a-boolean                 #f
    #:a-integer                 1
@@ -90,13 +84,12 @@
 ; Tests ------------------------------------------
 
 (define/provide-test-suite update-tests
-  ;#:after  (cut recreate-tables)
   
   (test-suite "kitchen sink update page 1 (entity-data-attributes)"
     #:before (cut recreate-tables)
     (let* ([user  (save! (make-dave))]
-           [sink  (save! (make-sink (save! (make-first-post user))))]
-           [sink2 (make-sink-2 (save! (make-second-post user)))]) ; for comparison after update
+           [sink  (save! (make-sink-1 (save! (make-test-post user "my first post"))))]
+           [sink2 (make-sink-2 (save! (make-test-post user "my second post")))]) ; for comparison after update
       (test-case "update page displays with correct attributes"
         (open/wait (controller-url sink-update/vanilla sink))
         (check-equal? (title-ref) "A vanilla entity-editor")
@@ -108,12 +101,10 @@
                 [row  (in-naturals)])
             (check-equal? (inner-html-ref (node/cell/xy 0 row table))
                           (string-append (xml+quotable->string (attribute-label-xml attr))
-                                         (if (type-allows-null? (attribute-type attr))
-                                             ""
-                                             " (required)"))))
+                                         (if (type-allows-null? (attribute-type attr)) "" " (required)"))))
+          ; check attribute populated values, one at a time
           (let* ([mkrow   (cut node/cell/xy 1 <> table)]
                  [row-val (lambda (row sel) (js-ref (!dot ($ ,(node/jquery sel (mkrow row))) (val))))])
-            ; check attribute populated values, one at a time
             (check-equal? (node-count (node/jquery ":checked" (mkrow 0))) 0)
             (check-equal? (row-val 1  "input")          (fmt (kitchen-sink-a-integer        sink)))
             (check-equal? (row-val 2  "input")          (fmt (kitchen-sink-a-real           sink)))
@@ -121,10 +112,10 @@
             (check-equal? (row-val 4  "textarea")       (fmt (kitchen-sink-a-symbol         sink)))
             (check-equal? (row-val 5  "input")          (fmt (kitchen-sink-a-10-char-string sink)))
             (check-equal? (row-val 6  "input")          (fmt (kitchen-sink-a-10-char-symbol sink)))
-            (check-equal? (row-val 7  "input")          (utc->str (kitchen-sink-a-time-utc sink)))
-            (check-equal? (row-val 8  "input")          (tai->str (kitchen-sink-a-time-tai sink)))
-            (check-equal? (row-val 9  ":radio:checked") (fmt (kitchen-sink-a-short-enum sink)))
-            (check-equal? (row-val 10 "select")         (fmt (kitchen-sink-a-long-enum sink)))
+            (check-equal? (row-val 7  "input")          (utc->str (kitchen-sink-a-time-utc  sink)))
+            (check-equal? (row-val 8  "input")          (tai->str (kitchen-sink-a-time-tai  sink)))
+            (check-equal? (row-val 9  ":radio:checked") (fmt (kitchen-sink-a-short-enum     sink)))
+            (check-equal? (row-val 10 "select")         (fmt (kitchen-sink-a-long-enum      sink)))
             (check-equal? (row-val 11 "select")         "") ; no post selected, so #f == ""
             (check-equal? (row-val 12 "input")          (fmt (kitchen-sink-a-required-integer        sink)))
             (check-equal? (row-val 13 "input")          (fmt (kitchen-sink-a-required-real           sink)))
@@ -132,10 +123,10 @@
             (check-equal? (row-val 15 "textarea")       (fmt (kitchen-sink-a-required-symbol         sink)))
             (check-equal? (row-val 16 "input")          (fmt (kitchen-sink-a-required-10-char-string sink)))
             (check-equal? (row-val 17 "input")          (fmt (kitchen-sink-a-required-10-char-symbol sink)))
-            (check-equal? (row-val 18 "input")          (utc->str (kitchen-sink-a-required-time-utc sink)))
-            (check-equal? (row-val 19 "input")          (tai->str (kitchen-sink-a-required-time-tai sink)))
-            (check-equal? (row-val 20 ":radio:checked") (fmt (kitchen-sink-a-required-short-enum sink)))
-            (check-equal? (row-val 21 "select")         (fmt (kitchen-sink-a-required-long-enum sink)))
+            (check-equal? (row-val 18 "input")          (utc->str (kitchen-sink-a-required-time-utc  sink)))
+            (check-equal? (row-val 19 "input")          (tai->str (kitchen-sink-a-required-time-tai  sink)))
+            (check-equal? (row-val 20 ":radio:checked") (fmt (kitchen-sink-a-required-short-enum     sink)))
+            (check-equal? (row-val 21 "select")         (fmt (kitchen-sink-a-required-long-enum      sink)))
             (check-equal? (row-val 22 "select")         (fmt (snooze-struct-id (kitchen-sink-a-required-post sink)))))))
       
       (test-case "make updates and check correct values"
@@ -175,13 +166,13 @@
               (for ([test-attr (in-list (entity-data-attributes kitchen-sink))])
                 (check-equal? (snooze-struct-ref new-sink test-attr) 
                               (snooze-struct-ref sink2    test-attr)
-                              (format "Attribute does not match ~a" (attribute-name test-attr))))))))))
+                              (format "Attribute should have been updated ~a" (attribute-name test-attr))))))))))
   
   (test-suite "kitchen sink update page 2 (subset of data attributes)"
     #:before (cut recreate-tables)
     (let* ([user  (save! (make-dave))]
-           [sink  (save! (make-sink (save! (make-first-post user))))]
-           [sink2 (make-sink-2 (save! (make-second-post user)))]) ; for comparison after update
+           [sink  (save! (make-sink-1 (save! (make-test-post user "my first post"))))]
+           [sink2 (make-sink-2 (save! (make-test-post user "my second post")))]) ; for comparison after update
       (test-case "update page displays with correct attributes"
         (open/wait (controller-url sink-update/attrs sink))
         (check-equal? (title-ref) "An entity-editor with custom attributes")
@@ -192,13 +183,10 @@
           (for ([attr (in-list (attr-list kitchen-sink a-boolean a-real a-integer))]
                 [row  (in-naturals)])
             (check-equal? (inner-html-ref (node/cell/xy 0 row table))
-                          (string-append (xml+quotable->string (attribute-label-xml attr))
-                                         (if (type-allows-null? (attribute-type attr))
-                                             ""
-                                             " (required)"))))
+                          (xml+quotable->string (attribute-label-xml attr))))
+          ; check attribute populated values, one at a time
           (let* ([mkrow   (cut node/cell/xy 1 <> table)]
                  [row-val (lambda (row sel) (js-ref (!dot ($ ,(node/jquery sel (mkrow row))) (val))))])
-            ; check attribute populated values, one at a time
             (check-equal? (node-count (node/jquery ":checked" (mkrow 0))) 0)
             (check-equal? (row-val 1 "input") (fmt (kitchen-sink-a-real    sink)))
             (check-equal? (row-val 2 "input") (fmt (kitchen-sink-a-integer sink))))))
@@ -222,7 +210,7 @@
               (for ([test-attr (in-list (attr-list kitchen-sink a-boolean a-real a-integer))])
                 (check-equal? (snooze-struct-ref new-sink test-attr) 
                               (snooze-struct-ref sink2    test-attr)
-                              (format "Attribute does not match ~a" (attribute-name test-attr))))
+                              (format "Attribute should have been updated ~a" (attribute-name test-attr))))
               ; ... but that none of the other attributes have been changed
               (for ([test-attr (in-list (filter (lambda (att)
                                                   (not (memq att (attr-list kitchen-sink a-boolean a-real a-integer))))
@@ -231,46 +219,72 @@
                               (snooze-struct-ref sink     test-attr)
                               (format "Attribute should not have changed ~a" (attribute-name test-attr))))))))))
   
-  #;(test-case "correct values allow form submission"
-      (enter-text (node/id 'larger-field) "2")
-      (enter-text (node/id 'smaller-field) "1")
-      (for ([i (in-range 1 4)])
-        (click/wait (node/id 'submit-button))
-        (check-equal? (title-ref) "Editor")
-        (check-equal? (inner-html-ref (node/id 'total-commits)) (number->string i))))
+  (test-suite "kitchen sink attribute fields non-required? page 1 (entity-data-attributes)"
+    #:before (cut recreate-tables)
+    (let* ([user  (save! (make-dave))]
+           [sink  (save! (make-sink-1 (save! (make-test-post user "my first post"))))]
+           [sink2 (make-sink-2 (save! (make-test-post user "my second post")))]) ; for comparison after update
+      
+      (test-case "for non-required attributes, allow empty datum submissions"
+        (open/wait (controller-url sink-update/vanilla sink))
+        (let* ([table (node/tag 'table)])
+          (check-true (node-exists? table))
+          (check-equal? (node-count (node/tag 'tr table)) (length (entity-data-attributes kitchen-sink)))
+          (let* ([mkrow  (cut node/cell/xy 1 <> table)]
+                 [field  (lambda (row sel) (node/jquery sel (mkrow row)))])
+            ; update attributes, one at a time
+            (enter-text (field 1  "input")    "")
+            (enter-text (field 2  "input")    "")
+            (enter-text (field 3  "textarea") "")
+            (enter-text (field 4  "textarea") "")
+            (enter-text (field 5  "input")    "")
+            (enter-text (field 6  "input")    "")
+            (enter-text (field 7  "input")    "")
+            (enter-text (field 8  "input")    "")
+            (click      (field 9  (format ":radio[value='~a']" radio-combo-false)))
+            (select     (field 10 "select")   combo-box-false)
+            (select     (field 11 "select")   combo-box-false)
+            ; submit the data
+            (click/wait (node/jquery ":submit"))
+            (let ([new-sink (find-by-id kitchen-sink (snooze-struct-id sink))])
+              (for ([test-attr (in-list (attr-list kitchen-sink
+                                                   a-integer a-real 
+                                                   a-string a-symbol
+                                                   a-10-char-string a-10-char-symbol
+                                                   a-time-utc a-time-tai
+                                                   a-short-enum a-long-enum
+                                                   a-post))])
+                (check-false (snooze-struct-ref new-sink test-attr) 
+                             (format "Attribute should accept null values ~a" (attribute-name test-attr))))))))))
   
-  #;(test-case "failures prevent form submission"
-      (enter-text (node/id 'larger-field) "1")
-      (enter-text (node/id 'smaller-field) "2")
-      (for ([i (in-range 1 4)])
-        (click/wait (node/id 'submit-button))
-        (check-equal? (title-ref) "Editor")
-        (check-true (node-exists? (node/jquery "#larger-field-wrapper img.check-failure")))
-        (check-true (node-exists? (node/jquery "#smaller-field-wrapper img.check-failure")))
-        (check-equal? (inner-html-ref (node/id 'total-commits)) "3")))
   
-  #;(test-case "warnings require confirmation"
-      (for ([i (in-range 3 6)])
-        (enter-text (node/id 'larger-field) (number->string i))
-        (enter-text (node/id 'smaller-field) (number->string i))
-        (click/wait (node/id 'submit-button))
-        (check-equal? (title-ref) "Editor")
-        (check-true (node-exists? (node/jquery "#larger-field-wrapper img.check-warning")))
-        (check-true (node-exists? (node/jquery "#smaller-field-wrapper img.check-warning")))
-        (check-equal? (inner-html-ref (node/id 'total-commits)) (number->string i))
-        (click/wait (node/id 'submit-button))
-        (check-equal? (title-ref) "Editor")
-        (check-true (node-exists? (node/jquery "#larger-field-wrapper img.check-warning")))
-        (check-true (node-exists? (node/jquery "#smaller-field-wrapper img.check-warning")))
-        (check-equal? (inner-html-ref (node/id 'total-commits)) (number->string (add1 i)))))
-  
-  #;(test-case "changing field values without removing warnings never allows submission"
-      (for ([i (in-range 6 10)])
-        (enter-text (node/id 'larger-field) (number->string i))
-        (enter-text (node/id 'smaller-field) (number->string i))
-        (click/wait (node/id 'submit-button))
-        (check-equal? (title-ref) "Editor")
-        (check-true (node-exists? (node/jquery "#larger-field-wrapper img.check-warning")))
-        (check-true (node-exists? (node/jquery "#smaller-field-wrapper img.check-warning")))
-        (check-equal? (inner-html-ref (node/id 'total-commits)) "6"))))
+  (test-suite "kitchen sink attribute fields required? page 1 (entity-data-attributes)"
+    #:before (cut recreate-tables)
+    (let* ([user  (save! (make-dave))]
+           [sink  (save! (make-sink-1 (save! (make-test-post user "my first post"))))]
+           [sink2 (make-sink-2 (save! (make-test-post user "my second post")))]) ; for comparison after update
+      (test-case "for required attributes, empty datum submissions cause warnings"
+        (let* ([table (node/tag 'table)]
+               [mkrow (cut node/cell/xy 1 <> table)]
+               [field (lambda (row sel) (node/jquery sel (mkrow row)))])
+          (for ([update-command (in-list (list (lambda () (enter-text (field 12 "input")    ""))
+                                               (lambda () (enter-text (field 13 "input")    ""))
+                                               (lambda () (enter-text (field 14 "textarea") ""))
+                                               (lambda () (enter-text (field 15 "textarea") ""))
+                                               (lambda () (enter-text (field 16 "input")    ""))
+                                               (lambda () (enter-text (field 17 "input")    ""))
+                                               (lambda () (enter-text (field 18 "input")    ""))
+                                               (lambda () (enter-text (field 19 "input")    ""))))])
+            (open/wait (controller-url sink-update/vanilla sink))
+            (let* ([table (node/tag 'table)])
+              (check-true (node-exists? table))
+              (update-command)
+              ; submit the data and verify that the change has not been made
+              (click/wait (node/jquery ":submit"))
+              (check-equal? (title-ref) "A vanilla entity-editor")
+              (let ([new-sink (find-by-id kitchen-sink (snooze-struct-id sink))])
+                (for ([test-attr (in-list (entity-data-attributes kitchen-sink))])
+                  (check-equal? (snooze-struct-ref new-sink test-attr) 
+                                (snooze-struct-ref sink     test-attr)
+                                (format "Attribute should not have been updated ~a" (attribute-name test-attr))))))))))))
 
