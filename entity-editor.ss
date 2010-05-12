@@ -249,14 +249,14 @@
 (define (make-check-result-filter/attributes+editor attributes editor)
   (cond [(and (and attributes (pair? attributes)) editor)
          (lambda (result)
-           (or (debug* "memq1" memq editor (debug* "cra1" check-result-annotation result ann:form-elements))
+           (or (memq editor (check-result-annotation result ann:form-elements))
                (ormap (cut check-result-has-attribute? result <>) attributes)))]
         [(and attributes (pair? attributes))
          (lambda (result)
            (ormap (cut check-result-has-attribute? result <>) attributes))]
         [editor
          (lambda (result)
-           (debug* "memq2" memq editor (debug* "cra2" check-result-annotation result ann:form-elements)))]
+           (memq editor (check-result-annotation result ann:form-elements)))]
         [else (error "filter-results: Either attribute or editor must be specified.")]))
 
 ; (listof check-result) (listof attribute) (U form-element% #f) -> (listof check-result)
