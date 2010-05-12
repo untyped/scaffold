@@ -4,6 +4,7 @@
 
 (require (unlib-in symbol)
          "attribute-editor.ss"
+         "compound-editor.ss"
          "editor-internal.ss"
          "util.ss"
          "view-common.ss")
@@ -11,7 +12,7 @@
 ; Interfaces -------------------------------------
 
 (define entity-editor<%>
-  (interface (editor<%>)
+  (interface (editor<%> form-element<%>)
     get-entity
     get-initial-value
     set-check-results!
@@ -161,16 +162,14 @@
     ; (U 'check-success 'check-warning 'check-failure 'check-exn)
     (define class (check-results->class reportable-results))
     ; xml
-    (xml (span (@ [class ,(if tooltip? "check-label tooltip-anchor" "check-label")])
+    (xml (span (@ [class ,(string-append "check-label" (if tooltip? " tooltip-anchor" ""))])
                ,(opt-xml (not (eq? class 'check-success))
                   ,(check-result-icon class)
                   ,(render-check-results seed reportable-results tooltip?)))))
   
   ; seed (listof check-result) [boolean] -> xml
   (define/private (render-check-results seed results [tooltip? #t])
-    (xml (ul (@ [class ,(if tooltip? 
-                            "check-results tooltip"
-                            "check-results")])
+    (xml (ul (@ [class ,(string-append "check-results" (if tooltip? " tooltip" ""))])
              ,@(for/list ([result results])
                  (define class (check-result->class result))
                  (xml (li (@ [class ,class])
@@ -199,15 +198,30 @@
   
   ; -> boolean
   (define/public (value-changed?)
-    (ormap (cut send <> value-changed?)
-           (get-form-elements)))
+    (ormap (cut send <> value-changed?) (get-form-elements)))
+  
+  ; -> boolean
+  (define/public (value-valid?)
+    (andmap (cut send <> value-valid?) (get-form-elements)))
+  
+  ; -> (U string #f)
+  (define/public (get-value-error)
+    (ormap (cut send <> get-value-error) (get-form-elements)))
+  
+  ; boolean -> void
+  (define/public (set-enabled?! enabled?)
+    (for-each (cut send <> set-enabled?! enabled?) (get-form-elements)))
+  
+  ; -> boolean
+  (define/public (get-enabled?)
+    (ormap (cut send <> get-enabled?) (get-form-elements)))
   
   ; -> (listof check-result)
   (define/public (parse)
     (for/append ([form-element (in-list (get-form-elements))])
       (if (send form-element value-valid?)
           null
-          (check/annotate ([ann:form-elements form-element])
+          (check/annotate ([ann:form-elements (list form-element)])
             (send form-element get-value-error)))))
   
   ; -> (listof check-result)
@@ -235,14 +249,14 @@
 (define (make-check-result-filter/attributes+editor attributes editor)
   (cond [(and (and attributes (pair? attributes)) editor)
          (lambda (result)
-           (or (memq editor (check-result-annotation result ann:form-elements))
+           (or (debug* "memq1" memq editor (debug* "cra1" check-result-annotation result ann:form-elements))
                (ormap (cut check-result-has-attribute? result <>) attributes)))]
         [(and attributes (pair? attributes))
          (lambda (result)
            (ormap (cut check-result-has-attribute? result <>) attributes))]
         [editor
          (lambda (result)
-           (memq editor (check-result-annotation result ann:form-elements)))]
+           (debug* "memq2" memq editor (debug* "cra2" check-result-annotation result ann:form-elements)))]
         [else (error "filter-results: Either attribute or editor must be specified.")]))
 
 ; (listof check-result) (listof attribute) (U form-element% #f) -> (listof check-result)
