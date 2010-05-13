@@ -26,7 +26,7 @@
   
   ; -> boolean
   (define/public (value-valid?)
-    (andmap (cut send <> value-valid?) (get-sub-editors)))
+    (not (get-value-error)))
   
   ; -> (U string #f)
   (define/public (get-value-error)
