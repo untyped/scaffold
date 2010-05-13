@@ -70,17 +70,18 @@
   
   ; seed -> xml
   (define/augment (render seed)
-    (let ([struct (get-value)])
-      (xml ,(cond [(and (get-update-controller) (controller-access? (get-update-controller) struct))
-                   (xml (a (@ [href  ,(controller-url (get-update-controller) struct)]
-                              [class "update-link"])
-                           "edit"))]
-                  [(and (update-controller-set? struct) (controller-access? (update-controller-ref struct) struct))
-                   (xml (a (@ [href  ,(update-controller-url struct)]
-                              [class "update-link"])
-                           "edit"))]
-                  [else (xml)])
-           ,(send view render seed)))))
+    (xml ,(render-update-link seed)
+         ,(send view render seed)))
+  
+  ; seed -> xml
+  (define/public (render-update-link seed)
+    (let* ([struct            (get-value)]
+           [entity            (and struct (snooze-struct-entity struct))]
+           [update-controller (or (get-update-controller)
+                                  (update-controller-ref struct #f))])
+      (opt-xml (and struct update-controller (controller-access? update-controller struct))
+        (a (@ [href ,(controller-url update-controller struct)] [class "update-link"])
+           ,(format "Edit this ~a" (entity-pretty-name entity)))))))
 
 ; Procedures -------------------------------------
 
