@@ -145,17 +145,12 @@
     (filter-results/editor (get-check-results) editor))
   
   ; seed xml+quotable html-component<%> -> xml
-  (define/public (render-label+editor seed label-xml editor 
-                                      #:editor-wrapper [editor-wrapper (lambda (ed) ed)])
-    (render-label+editor+results seed label-xml editor (get-editor-results editor) #:editor-wrapper editor-wrapper))
+  (define/public (render-label+editor seed label-xml editor)
+    (render-label+editor+results seed label-xml editor (get-editor-results editor)))
   
   ; seed xml+quotable html-component<%> (listof check-result) -> xml
-  (define/public (render-label+editor+results seed label-xml editor results 
-                                              #:editor-wrapper [editor-wrapper (lambda (ed) ed)])
-    (render-label+value seed
-                        label-xml 
-                        (xml ,(editor-wrapper (send editor render seed))
-                             ,(render-check-label seed results))))
+  (define/public (render-label+editor+results seed label-xml editor results)
+    (render-label+value seed label-xml (xml ,(send editor render seed) ,(render-check-label seed results))))
   
   ; seed xml+quotable xml -> xml
   (define/public (render-label+value seed label-xml value-xml)
