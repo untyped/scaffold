@@ -222,7 +222,7 @@
       (if (send form-element value-valid?)
           null
           (check/annotate ([ann:form-elements (list form-element)])
-            (send form-element get-value-error)))))
+            (check-fail (send form-element get-value-error))))))
   
   ; -> (listof check-result)
   (define/public (validate)
