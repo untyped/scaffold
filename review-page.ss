@@ -71,7 +71,7 @@
   ; seed -> xml
   (define/augment (render seed)
     (xml ,(render-update-link seed)
-         ,(send view render seed)))
+         ,(render-view seed)))
   
   ; seed -> xml
   (define/public (render-update-link seed)
@@ -81,7 +81,11 @@
                                   (update-controller-ref struct #f))])
       (opt-xml (and struct update-controller (controller-access? update-controller struct))
         (a (@ [href ,(controller-url update-controller struct)] [class "update-link"])
-           ,(format "Edit this ~a" (entity-pretty-name entity)))))))
+           ,(format "Edit this ~a" (entity-pretty-name entity))))))
+  
+  ; seed -> xml
+  (define/public (render-view seed)
+    (send view render seed)))
 
 ; Procedures -------------------------------------
 
