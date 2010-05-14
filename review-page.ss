@@ -70,11 +70,14 @@
   
   ; seed -> xml
   (define/augment (render seed)
-    (xml ,(render-update-link seed)
+    (xml ,(let ([links-xml (render-links seed)])
+            (opt-xml (not (xml-empty? links-xml))
+              (div (@ [class "review-links"])
+                   ,links-xml)))
          ,(render-view seed)))
   
   ; seed -> xml
-  (define/public (render-update-link seed)
+  (define/public (render-links seed)
     (let* ([struct            (get-value)]
            [entity            (and struct (snooze-struct-entity struct))]
            [update-controller (or (get-update-controller)
