@@ -409,6 +409,10 @@
                                                  (unbind))))))
                       (get-visible-columns)))))
 
+; (U entity #f) -> symbol
+(define (entity-report-id entity)
+  (gensym/interned (symbol-append (if entity (entity-name entity) 'entity) '-report)))
+
 ; Provide statements --------------------------- 
 
 (provide (except-out (all-from-out "report-column.ss"
@@ -418,4 +422,5 @@
          snooze-report%)
 
 (provide/contract
- [default-show-csv-link? (parameter/c boolean?)])
+ [default-show-csv-link? (parameter/c boolean?)]
+ [entity-report-id       (-> (or/c entity? #f) symbol?)])

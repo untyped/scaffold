@@ -56,9 +56,12 @@
   ; entity
   (init-field entity #:accessor)
   
+  ; symbol
+  (init [id (entity-report-id entity)])
+  
   ; (listof attribute)
   (init [auto-attributes (and entity (entity-data-attributes entity))])
-  
+   
   ; (cell boolean)
   (init-cell controller-cell? #t
              #:accessor show-controller-cell?
@@ -74,14 +77,20 @@
   (init-field views 
     (list (make-view 'default "Default" columns))
     #:override-accessor)
-  
+ 
+  ; boolean
   (init [show-pattern-field? #f])
-  (init [sort-col            (car columns)])
-  (init [classes             null])
+  
+  ; column
+  (init [sort-col (car columns)])
+  
+  ; (listof symbol)
+  (init [classes null])
   
   ; Constructor --------------------------------
   
-  (super-new [show-pattern-field? show-pattern-field?]
+  (super-new [id                  id]
+             [show-pattern-field? show-pattern-field?]
              [sort-col            sort-col]
              [classes             (list* 'smoke-entity-report 'ui-widget classes)])
   

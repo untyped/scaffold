@@ -94,7 +94,7 @@
 
 ; entity-report subclass -------------------------
 
-(define-class actionable-entity-report%  entity-report% (actionable-entity-report<%>)
+(define-class actionable-entity-report% entity-report% (actionable-entity-report<%>)
   (inherit do-queries 
            get-entity 
            get-id
@@ -109,19 +109,22 @@
            render-pager
            render-controller-cell
            show-controller-cell?)
-  
-  ; Fields -------------------------------------
+
+  (init entity
+        [id      (entity-report-id entity)]
+        [classes null])
   
   ; (listof report-action)
   (init-field report-actions (error "A list of report-actions must be specified."))
   
-  ; Child-components ---------------------------
-  
   (field report-action-combo 
-    (new report-action-combo-box% [report this])
+    (new report-action-combo-box%
+         [id     (symbol-append id '-action-combo)]
+         [report this])
     #:child #:accessor)
   
   ; Cells --------------------------------------
+  
   ; (cellof (listof any))
   (cell selected-items null #:accessor #:mutator) 
   
@@ -130,8 +133,9 @@
   
   ; Constructor --------------------------------
   
-  (init [classes null])
-  (super-new [classes (list* "actionable-entity-report" classes)])
+  (super-new [entity  entity]
+             [id      id]
+             [classes (list* "actionable-entity-report" classes)])
   
   ; Methods ------------------------------------
   
