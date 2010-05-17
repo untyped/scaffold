@@ -2,7 +2,8 @@
 
 (require "../content-base.ss")
 
-(require (planet untyped/snooze:3))
+(require (planet untyped/snooze:3)
+         "integer-string-editor.ss")
 
 ; Pages ------------------------------------------
 
@@ -35,34 +36,6 @@
 
 
 ; == [4] Multiple-attribute editor, rest unchanged ==
-
-(define-class integer+string-editor% compound-editor% ()
-  
-  ; Fields ---------------------------------------
-  ; editor% ...
-  (field integer-editor (default-attribute-editor (attr kitchen-sink a-integer)) #:child)
-  (field string-editor  (default-attribute-editor (attr kitchen-sink a-string))  #:child)
-  
-  ; Constructor ----------------------------------
-  
-  (super-new [sub-editors (list integer-editor string-editor)])
-  
-  ; Methods --------------------------------------
-  
-  ; seed -> xml
-  (define/override (render seed)
-    (xml "Str " ,(send string-editor render seed) " >> Integer " ,(send integer-editor render seed)))
-  
-  ; (listof integer string) -> void
-  (define/override (set-value! int+str)
-    (match-let ([(list int str) int+str])
-      (send integer-editor set-value! int)
-      (send string-editor  set-value! str)))
-  
-  ; -> (listof integer string)
-  (define/override (get-value)
-    (list (send integer-editor get-value)
-          (send string-editor  get-value))))
 
 (define-object sink-editor/compound-attrs entity-editor% ()
   (inherit render-label+editor)

@@ -49,8 +49,18 @@ ENDSCRIPT
   (test-compile)
   (system "mzscheme run-tests.ss"))
 
+(define (ui-test-compile)
+  (autoplanet)
+  (system "mzc -v run-ui-tests.ss"))
+
+(define (ui-test)
+  (test-compile)
+  (system "mzscheme run-ui-tests.ss"))
+
 (match (vector-ref (current-command-line-arguments) 0)
-  ["envvars"      (envvars)]
-  ["compile"      (compile)]
-  ["test-compile" (test-compile)]
-  ["test"         (test)])
+  ["envvars"         (envvars)]
+  ["compile"         (compile)]
+  ["test-compile"    (test-compile)]
+  ["test"            (test)]
+  ["ui-test-compile" (ui-test-compile)]
+  ["ui-test"         (ui-test)])

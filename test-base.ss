@@ -4,7 +4,7 @@
 
 (require srfi/19
          (delirium-in)
-         (schemeunit-in main util)
+         (schemeunit-in main text-ui util)
          (unlib-in time)
          "testapp/site.ss")
 
@@ -33,7 +33,7 @@
 ; Provide statements -----------------------------
 
 (provide (delirium-out))
-(provide (schemeunit-out main util))
+(provide (schemeunit-out main text-ui util))
 (provide (all-from-out "base.ss"))
 (provide (all-from-out "testapp/site.ss"))
 
