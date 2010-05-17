@@ -9,6 +9,6 @@
 ; Tests ------------------------------------------
 
 (define/provide-test-suite all-testapp-tests
-  review-tests
+  ;review-tests
   update-tests
-  delete-tests)
+  #;delete-tests)

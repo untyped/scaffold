@@ -15,11 +15,17 @@
   (define/override (get-value)
     (get-time-utc)))
 
+(define time-utc-field%
+  (time-utc-field-mixin date-field%))
+
 (define-mixin time-tai-field-mixin (date-field<%>) ()
   (inherit get-time-tai)
   ; -> (U time-tai #f)
   (define/override (get-value)
     (get-time-tai)))
+
+(define time-tai-field%
+  (time-tai-field-mixin date-field%))
 
 (define-mixin symbol-editor-mixin (form-element<%>) ()
   ; -> (U symbol #f)
@@ -30,6 +36,11 @@
   (define/override (set-value! sym)
     (super set-value! (and sym (symbol->string sym)))))
 
+(define symbol-field%
+  (symbol-editor-mixin text-field%))
+
+(define symbol-text-area%
+  (symbol-editor-mixin text-area%))
 
 (define-mixin enum-field-mixin (form-element<%>) ()
   
@@ -47,40 +58,39 @@
   
   (super-new [options options]))
 
+(define enum-radio-combo%
+  (enum-field-mixin radio-combo%))
+
+(define enum-combo-box%
+  (enum-field-mixin combo-box%))
+
 ; Procedures -------------------------------------
 
 ; (parameter (attribute -> form-element<%>))
 (define attribute-editor-defaults
   (make-parameter
    (lambda (attr)
-     (let* ([entity (attribute-entity attr)]
-            [type   (attribute-type   attr)])
+     (let* ([entity       (attribute-entity attr)]
+            [type         (attribute-type attr)]
+            [allow-blank? (type-allows-null? type)])
        (match type
-         [(? guid-type?)     (new foreign-key-editor% [attribute attr] [entity (guid-type-entity type)])]
-         [(? boolean-type?)  (new check-box% [show-label? #f])]
-         [(? integer-type?)  (new integer-field%)]
+         [(? guid-type?)     (new foreign-key-editor% [id (attribute->id attr)] [attribute attr] [entity (guid-type-entity type)])]
+         [(? boolean-type?)  (new check-box%     [id (attribute->id attr)] [show-label? #f])]
+         [(? integer-type?)  (new integer-field% [id (attribute->id attr)] [allow-blank? allow-blank?])]
          [(? enum-type?)     (if (< (length (enum-type-values type)) 5)
-                                 (new (enum-field-mixin radio-combo%) [attribute attr] [vertical? #f])
-                                 (new (enum-field-mixin combo-box%)   [attribute attr]))]
-         [(? real-type?)     (new number-field%)]
-         [(? time-utc-type?) (new (time-utc-field-mixin date-field%))]
-         [(? time-tai-type?) (new (time-tai-field-mixin date-field%))]
+                                 (new enum-radio-combo% [id (attribute->id attr)] [attribute attr] [vertical? #f])
+                                 (new enum-combo-box%   [id (attribute->id attr)] [attribute attr]))]
+         [(? real-type?)     (new number-field%   [id (attribute->id attr)] [allow-blank? allow-blank?])]
+         [(? time-utc-type?) (new time-utc-field% [id (attribute->id attr)] [allow-blank? allow-blank?])]
+         [(? time-tai-type?) (new time-tai-field% [id (attribute->id attr)] [allow-blank? allow-blank?])]
          [(struct string-type (_ max-length))
           (if max-length
-              (new text-field%
-                   [size       (default-text-field-size max-length)]
-                   [max-length max-length])
-              (new text-area%
-                   [cols 50]
-                   [rows 5]))]
+              (new text-field% [id (attribute->id attr)] [allow-blank? allow-blank?] [size (default-text-field-size max-length)] [max-length max-length])
+              (new text-area%  [id (attribute->id attr)] [allow-blank? allow-blank?] [cols 50] [rows 5]))]
          [(struct symbol-type (_ max-length))
           (if max-length
-              (new (symbol-editor-mixin text-field%)
-                   [size       (default-text-field-size max-length)]
-                   [max-length max-length])
-              (new (symbol-editor-mixin text-area%)
-                   [cols 50]
-                   [rows 5]))]
+              (new symbol-field%     [id (attribute->id attr)] [allow-blank? allow-blank?] [size (default-text-field-size max-length)] [max-length max-length])
+              (new symbol-text-area% [id (attribute->id attr)] [allow-blank? allow-blank?] [cols 50] [rows 5]))]
          [(? binary-type?)
           (error "cannot scaffold attribute-editor for binary attribute" attr)]
          [_ (error "unrecognized attribute-type for default-attribute-editor" attr type)])))))
@@ -93,7 +103,14 @@
 (define default-required-label
   (make-parameter " (required)"))
 
-; Helper procedures ------------------------------
+; Helpers ----------------------------------------
+
+; attribute -> symbol
+(define (attribute->id attr)
+  (symbol-append (entity-name (attribute-entity attr))
+                 '-
+                 (attribute-name attr)
+                 '-field))
 
 ; natural -> natural
 (define (default-text-field-size max-length)

@@ -80,8 +80,7 @@
   
   ; seed -> xml
   (define/override (render seed)
-    (let ([struct (get-value)])
-      (render-wrapper seed (render-attributes seed (get-auto-attributes)))))
+    (render-wrapper seed (render-attributes seed (get-auto-attributes))))
   
   ; seed xml+quotable -> xml
   (define/public (render-wrapper seed contents)
@@ -159,20 +158,19 @@
   
   ; seed [boolean] -> xml
   (define/public (render-check-label seed reportable-results [tooltip? #t])
-    ; (U 'check-success 'check-warning 'check-failure 'check-exn)
-    (define class (check-results->class reportable-results))
     ; xml
-    (xml (span (@ [class ,(string-append "check-label" (if tooltip? " tooltip-anchor" ""))])
-               ,(opt-xml (not (eq? class 'check-success))
-                  ,(check-result-icon class)
-                  ,(render-check-results seed reportable-results tooltip?)))))
+    (let (; (U 'check-success 'check-warning 'check-failure 'check-exn)
+          [class (check-results->class reportable-results)])
+      (xml (span (@ [class ,(string-append "check-label" (if tooltip? " tooltip-anchor" ""))])
+                 ,(opt-xml (not (eq? class 'check-success))
+                    ,(check-result-icon class)
+                    ,(render-check-results seed reportable-results tooltip?))))))
   
   ; seed (listof check-result) [boolean] -> xml
   (define/private (render-check-results seed results [tooltip? #t])
     (xml (ul (@ [class ,(string-append "check-results" (if tooltip? " tooltip" ""))])
              ,@(for/list ([result results])
-                 (define class (check-result->class result))
-                 (xml (li (@ [class ,class])
+                 (xml (li (@ [class ,(check-result->class result)])
                           ,(check-result-message result)))))))
   
   ; Value processing -----------------------------
@@ -198,15 +196,17 @@
   
   ; -> boolean
   (define/public (value-changed?)
-    (ormap (cut send <> value-changed?) (get-form-elements)))
+    (ormap (cut send <> value-changed?)
+           (get-form-elements)))
   
   ; -> boolean
   (define/public (value-valid?)
-    (andmap (cut send <> value-valid?) (get-form-elements)))
+    (not (get-value-error)))
   
   ; -> (U string #f)
   (define/public (get-value-error)
-    (ormap (cut send <> get-value-error) (get-form-elements)))
+    (ormap (cut send <> get-value-error)
+           (get-form-elements)))
   
   ; boolean -> void
   (define/public (set-enabled?! enabled?)
@@ -219,10 +219,11 @@
   ; -> (listof check-result)
   (define/public (parse)
     (for/append ([form-element (in-list (get-form-elements))])
-      (if (send form-element value-valid?)
-          null
-          (check/annotate ([ann:form-elements (list form-element)])
-            (check-fail (send form-element get-value-error))))))
+      (let ([err (send form-element get-value-error)])
+        (if err
+            (check/annotate ([ann:form-elements (list form-element)])
+              (check-fail err))
+            null))))
   
   ; -> (listof check-result)
   (define/public (validate)

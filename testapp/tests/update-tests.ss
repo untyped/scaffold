@@ -81,6 +81,10 @@
    #:a-required-long-enum      (long-enum b)
    #:a-required-post           post))
 
+; js -> (U string #f)
+(define (field-value-ref sel)
+  (js-ref (!dot ($ (!index ,sel 0)) (val)))) 
+
 ; Tests ------------------------------------------
 
 (define/provide-test-suite update-tests
@@ -129,44 +133,82 @@
             (check-equal? (row-val 21 "select")         (fmt (kitchen-sink-a-required-long-enum      sink)))
             (check-equal? (row-val 22 "select")         (fmt (snooze-struct-id (kitchen-sink-a-required-post sink)))))))
       
+      (test-case "parse errors"
+        (open/wait (controller-url sink-update/vanilla sink))
+        (let* ([table (node/tag 'table)]
+               [mkrow (cut node/cell/xy 1 <> table)]
+               [field (lambda (row [sel ":input"]) (node/jquery sel (mkrow row)))])
+          ; Edit attributes that can yield parse errors:
+          (enter-text (field 1)  "not an integer")
+          (enter-text (field 2)  "not a real")
+          (enter-text (field 5)  "not a 10 char string")
+          (enter-text (field 6)  "not a 10 char symbol")
+          (enter-text (field 7)  "not a time-utc")
+          (enter-text (field 8)  "not a time-tai")
+          (enter-text (field 12) "not an integer")
+          (enter-text (field 13) "not a real")
+          (enter-text (field 16) "not a 10 char string")
+          (enter-text (field 17) "not a 10 char symbol")
+          (enter-text (field 18) "not a time-utc")
+          (enter-text (field 19) "not a time-tai")
+          ; submit the data
+          (click/wait (node/jquery ":submit"))
+          ; check the right error messages appear:
+          (check-equal? (text-content-ref (field 1 ".check-label")) "This value must be blank or a whole number.")
+          (check-equal? (text-content-ref (field 2 ".check-label")) "This value must be blank or a number.")
+          (check-equal? (field-value-ref (field 5 ":input")) "not a 10 c") ; value will be trimmed by maxlength attribute on input tag
+          (check-equal? (field-value-ref (field 6 ":input")) "not a 10 c") ; value will be trimmed by maxlength attribute on input tag
+          (check-equal? (text-content-ref (field 7 ".check-label")) "Value must be blank or in the format: DD/MM/YYYY HH:MM.")
+          (check-equal? (text-content-ref (field 8 ".check-label")) "Value must be blank or in the format: DD/MM/YYYY HH:MM.")
+          (check-equal? (text-content-ref (field 12 ".check-label")) "This value must be a whole number.")
+          (check-equal? (text-content-ref (field 13 ".check-label")) "This value must be a number.")
+          (check-equal? (field-value-ref (field 16 ":input")) "not a 10 c") ; value will be trimmed by maxlength attribute on input tag
+          (check-equal? (field-value-ref (field 17 ":input")) "not a 10 c") ; value will be trimmed by maxlength attribute on input tag
+          (check-equal? (text-content-ref (field 18 ".check-label")) "Value must be in the format: DD/MM/YYYY HH:MM.")
+          (check-equal? (text-content-ref (field 19 ".check-label")) "Value must be in the format: DD/MM/YYYY HH:MM.")
+          ; check no other error messages appear:
+          (for ([index (in-list (list 0 3 4 9 10 11 14 15 20 21 22))])
+            (with-check-info (['index index])
+              (check-equal? (text-content-ref (field index ".check-label")) "")))))
+      
       (test-case "make updates and check correct values"
         (open/wait (controller-url sink-update/vanilla sink))
-        (let* ([table (node/tag 'table)])
+        (let* ([table (node/tag 'table)]
+               [mkrow (cut node/cell/xy 1 <> table)]
+               [field (lambda (row sel) (node/jquery sel (mkrow row)))])
           (check-true (node-exists? table))
           (check-equal? (node-count (node/tag 'tr table)) (length (entity-data-attributes kitchen-sink)))
-          (let* ([mkrow  (cut node/cell/xy 1 <> table)]
-                 [field  (lambda (row sel) (node/jquery sel (mkrow row)))])
-            ; update attributes, one at a time
-            (click      (field 0  ":checkbox")) ; check "a boolean"
-            (enter-text (field 1  "input")    (fmt (kitchen-sink-a-integer        sink2)))
-            (enter-text (field 2  "input")    (fmt (kitchen-sink-a-real           sink2)))
-            (enter-text (field 3  "textarea") (fmt (kitchen-sink-a-string         sink2)))
-            (enter-text (field 4  "textarea") (fmt (kitchen-sink-a-symbol         sink2)))
-            (enter-text (field 5  "input")    (fmt (kitchen-sink-a-10-char-string sink2)))
-            (enter-text (field 6  "input")    (fmt (kitchen-sink-a-10-char-symbol sink2)))
-            (enter-text (field 7  "input")    (utc->str (kitchen-sink-a-time-utc    sink2)))
-            (enter-text (field 8  "input")    (tai->str (kitchen-sink-a-time-tai    sink2)))
-            (click      (field 9  (format ":radio[value='~a']" (kitchen-sink-a-short-enum sink2))))
-            (select     (field 10 "select")   (kitchen-sink-a-long-enum sink2))
-            (select     (field 11 "select")   (fmt (snooze-struct-id (kitchen-sink-a-post  sink2))))
-            (enter-text (field 12 "input")    (fmt (kitchen-sink-a-required-integer        sink2)))
-            (enter-text (field 13 "input")    (fmt (kitchen-sink-a-required-real           sink2)))
-            (enter-text (field 14 "textarea") (fmt (kitchen-sink-a-required-string         sink2)))
-            (enter-text (field 15 "textarea") (fmt (kitchen-sink-a-required-symbol         sink2)))
-            (enter-text (field 16 "input")    (fmt (kitchen-sink-a-required-10-char-string sink2)))
-            (enter-text (field 17 "input")    (fmt (kitchen-sink-a-required-10-char-symbol sink2)))
-            (enter-text (field 18 "input")    (utc->str (kitchen-sink-a-required-time-utc    sink2)))
-            (enter-text (field 19 "input")    (tai->str (kitchen-sink-a-required-time-tai    sink2)))
-            (click      (field 20 (format ":radio[value='~a']" (kitchen-sink-a-required-short-enum sink2))))
-            (select     (field 21 "select")   (kitchen-sink-a-required-long-enum sink2))
-            (select     (field 22 "select")   (fmt (snooze-struct-id (kitchen-sink-a-required-post sink2))))
-            ; submit the data
-            (click/wait (node/jquery ":submit"))
-            (let ([new-sink (find-by-id kitchen-sink (snooze-struct-id sink))])
-              (for ([test-attr (in-list (entity-data-attributes kitchen-sink))])
-                (check-equal? (snooze-struct-ref new-sink test-attr) 
-                              (snooze-struct-ref sink2    test-attr)
-                              (format "Attribute should have been updated ~a" (attribute-name test-attr))))))))))
+          ; update attributes, one at a time
+          (click      (field 0  ":checkbox")) ; check "a boolean"
+          (enter-text (field 1  "input")    (fmt (kitchen-sink-a-integer        sink2)))
+          (enter-text (field 2  "input")    (fmt (kitchen-sink-a-real           sink2)))
+          (enter-text (field 3  "textarea") (fmt (kitchen-sink-a-string         sink2)))
+          (enter-text (field 4  "textarea") (fmt (kitchen-sink-a-symbol         sink2)))
+          (enter-text (field 5  "input")    (fmt (kitchen-sink-a-10-char-string sink2)))
+          (enter-text (field 6  "input")    (fmt (kitchen-sink-a-10-char-symbol sink2)))
+          (enter-text (field 7  "input")    (utc->str (kitchen-sink-a-time-utc    sink2)))
+          (enter-text (field 8  "input")    (tai->str (kitchen-sink-a-time-tai    sink2)))
+          (click      (field 9  (format ":radio[value='~a']" (kitchen-sink-a-short-enum sink2))))
+          (select     (field 10 "select")   (kitchen-sink-a-long-enum sink2))
+          (select     (field 11 "select")   (fmt (snooze-struct-id (kitchen-sink-a-post  sink2))))
+          (enter-text (field 12 "input")    (fmt (kitchen-sink-a-required-integer        sink2)))
+          (enter-text (field 13 "input")    (fmt (kitchen-sink-a-required-real           sink2)))
+          (enter-text (field 14 "textarea") (fmt (kitchen-sink-a-required-string         sink2)))
+          (enter-text (field 15 "textarea") (fmt (kitchen-sink-a-required-symbol         sink2)))
+          (enter-text (field 16 "input")    (fmt (kitchen-sink-a-required-10-char-string sink2)))
+          (enter-text (field 17 "input")    (fmt (kitchen-sink-a-required-10-char-symbol sink2)))
+          (enter-text (field 18 "input")    (utc->str (kitchen-sink-a-required-time-utc    sink2)))
+          (enter-text (field 19 "input")    (tai->str (kitchen-sink-a-required-time-tai    sink2)))
+          (click      (field 20 (format ":radio[value='~a']" (kitchen-sink-a-required-short-enum sink2))))
+          (select     (field 21 "select")   (kitchen-sink-a-required-long-enum sink2))
+          (select     (field 22 "select")   (fmt (snooze-struct-id (kitchen-sink-a-required-post sink2))))
+          ; submit the data
+          (click/wait (node/jquery ":submit"))
+          (let ([new-sink (find-by-id kitchen-sink (snooze-struct-id sink))])
+            (for ([test-attr (in-list (entity-data-attributes kitchen-sink))])
+              (check-equal? (snooze-struct-ref new-sink test-attr) 
+                            (snooze-struct-ref sink2    test-attr)
+                            (format "Attribute should have been updated ~a" (attribute-name test-attr)))))))))
   
   (test-suite "kitchen sink update page 2 (subset of data attributes)"
     #:before (cut recreate-tables)
@@ -256,7 +298,6 @@
                                                    a-post))])
                 (check-false (snooze-struct-ref new-sink test-attr) 
                              (format "Attribute should accept null values ~a" (attribute-name test-attr))))))))))
-  
   
   (test-suite "kitchen sink attribute fields required? page 1 (entity-data-attributes)"
     #:before (cut recreate-tables)
