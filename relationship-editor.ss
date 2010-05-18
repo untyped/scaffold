@@ -193,8 +193,8 @@
     (web-cell-set! struct-cell struct)
     (update-cells)
     (with-transaction #:metadata (list "Saving relationships for ~a" struct)
-      (for-each save!   (get-updated-relationships))
       (for-each delete! (get-deleted-relationships))
+      (for-each save!   (get-updated-relationships))
       (clear-continuation-table!)
       (void))))
 
