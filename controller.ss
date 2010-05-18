@@ -120,9 +120,9 @@
    complete-stx
    #'scaffold-delete-page
    #'delete-controller-set!
-   (lambda (entity-stx page-stx)
-     (with-syntax ([entity entity-stx] [page page-stx])
-       #'(scaffold-delete-controller-body entity #:page page)))))
+   (lambda (entity-stx page-stx report-stx)
+     (with-syntax ([entity entity-stx] [page page-stx] [report report-stx])
+       #'(scaffold-delete-controller-body entity #:page page #:report report)))))
 
 ; Controller bodies ------------------------------
 
