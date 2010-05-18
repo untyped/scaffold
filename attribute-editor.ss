@@ -71,26 +71,25 @@
   (make-parameter
    (lambda (attr)
      (let* ([entity       (attribute-entity attr)]
-            [type         (attribute-type attr)]
-            [allow-blank? (type-allows-null? type)])
+            [type         (attribute-type attr)])
        (match type
          [(? guid-type?)     (new foreign-key-editor% [id (attribute->id attr)] [attribute attr] [entity (guid-type-entity type)])]
          [(? boolean-type?)  (new check-box%     [id (attribute->id attr)] [show-label? #f])]
-         [(? integer-type?)  (new integer-field% [id (attribute->id attr)] [allow-blank? allow-blank?])]
+         [(? integer-type?)  (new integer-field% [id (attribute->id attr)])]
          [(? enum-type?)     (if (< (length (enum-type-values type)) 5)
                                  (new enum-radio-combo% [id (attribute->id attr)] [attribute attr] [vertical? #f])
                                  (new enum-combo-box%   [id (attribute->id attr)] [attribute attr]))]
-         [(? real-type?)     (new number-field%   [id (attribute->id attr)] [allow-blank? allow-blank?])]
-         [(? time-utc-type?) (new time-utc-field% [id (attribute->id attr)] [allow-blank? allow-blank?])]
-         [(? time-tai-type?) (new time-tai-field% [id (attribute->id attr)] [allow-blank? allow-blank?])]
+         [(? real-type?)     (new number-field%   [id (attribute->id attr)])]
+         [(? time-utc-type?) (new time-utc-field% [id (attribute->id attr)])]
+         [(? time-tai-type?) (new time-tai-field% [id (attribute->id attr)])]
          [(struct string-type (_ max-length))
           (if max-length
-              (new text-field% [id (attribute->id attr)] [allow-blank? allow-blank?] [size (default-text-field-size max-length)] [max-length max-length])
-              (new text-area%  [id (attribute->id attr)] [allow-blank? allow-blank?] [cols 50] [rows 5]))]
+              (new text-field% [id (attribute->id attr)] [size (default-text-field-size max-length)] [max-length max-length])
+              (new text-area%  [id (attribute->id attr)] [cols 50] [rows 5]))]
          [(struct symbol-type (_ max-length))
           (if max-length
-              (new symbol-field%     [id (attribute->id attr)] [allow-blank? allow-blank?] [size (default-text-field-size max-length)] [max-length max-length])
-              (new symbol-text-area% [id (attribute->id attr)] [allow-blank? allow-blank?] [cols 50] [rows 5]))]
+              (new symbol-field%     [id (attribute->id attr)] [size (default-text-field-size max-length)] [max-length max-length])
+              (new symbol-text-area% [id (attribute->id attr)] [cols 50] [rows 5]))]
          [(? binary-type?)
           (error "cannot scaffold attribute-editor for binary attribute" attr)]
          [_ (error "unrecognized attribute-type for default-attribute-editor" attr type)])))))

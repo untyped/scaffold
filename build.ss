@@ -54,7 +54,7 @@ ENDSCRIPT
   (system "mzc -v run-ui-tests.ss"))
 
 (define (ui-test)
-  (test-compile)
+  (ui-test-compile)
   (system "mzscheme run-ui-tests.ss"))
 
 (match (vector-ref (current-command-line-arguments) 0)

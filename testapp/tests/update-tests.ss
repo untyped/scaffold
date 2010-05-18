@@ -154,12 +154,12 @@
           ; submit the data
           (click/wait (node/jquery ":submit"))
           ; check the right error messages appear:
-          (check-equal? (text-content-ref (field 1 ".check-label")) "This value must be blank or a whole number.")
-          (check-equal? (text-content-ref (field 2 ".check-label")) "This value must be blank or a number.")
+          (check-equal? (text-content-ref (field 1 ".check-label")) "This value must be a whole number.")
+          (check-equal? (text-content-ref (field 2 ".check-label")) "This value must be a number.")
           (check-equal? (field-value-ref (field 5 ":input")) "not a 10 c") ; value will be trimmed by maxlength attribute on input tag
           (check-equal? (field-value-ref (field 6 ":input")) "not a 10 c") ; value will be trimmed by maxlength attribute on input tag
-          (check-equal? (text-content-ref (field 7 ".check-label")) "Value must be blank or in the format: DD/MM/YYYY HH:MM.")
-          (check-equal? (text-content-ref (field 8 ".check-label")) "Value must be blank or in the format: DD/MM/YYYY HH:MM.")
+          (check-equal? (text-content-ref (field 7 ".check-label")) "Value must be in the format: DD/MM/YYYY HH:MM.")
+          (check-equal? (text-content-ref (field 8 ".check-label")) "Value must be in the format: DD/MM/YYYY HH:MM.")
           (check-equal? (text-content-ref (field 12 ".check-label")) "This value must be a whole number.")
           (check-equal? (text-content-ref (field 13 ".check-label")) "This value must be a number.")
           (check-equal? (field-value-ref (field 16 ":input")) "not a 10 c") ; value will be trimmed by maxlength attribute on input tag

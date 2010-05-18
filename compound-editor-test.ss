@@ -35,7 +35,7 @@
             (send ed get-value)))
         (check-not-exn
           (lambda ()
-            (check-equal? (send ed get-value-error) "This value must be blank or a whole number.")))
+            (check-equal? (send ed get-value-error) "This value must be a whole number.")))
         (check-not-exn
           (lambda ()
             (check-equal? (send ed value-valid?) #f)))))))
