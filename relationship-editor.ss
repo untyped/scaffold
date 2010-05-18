@@ -178,15 +178,16 @@
   
   ; Nothing to parse - no user entry, only choice of preselected options
   ; -> (listof check-result)
-  (define/public (parse)
-    null)
+  (define/pubment (parse)
+    (inner null parse))
   
   ; -> (listof check-result)
-  (define/public (validate)
+  (define/pubment (validate)
     (update-cells)
-    (check/annotate ([ann:form-elements (list this)])
-      (check-problems (apply check-problems (map check-snooze-struct     (get-updated-relationships)))
-                      (apply check-problems (map check-old-snooze-struct (get-deleted-relationships))))))
+    (inner (check/annotate ([ann:form-elements (list this)])
+             (check-problems (apply check-problems (map check-snooze-struct     (get-updated-relationships)))
+                             (apply check-problems (map check-old-snooze-struct (get-deleted-relationships)))))
+           validate))
   
   ; snooze-struct -> void
   (define/public (commit-changes/struct! struct)
