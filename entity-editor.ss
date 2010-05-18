@@ -101,7 +101,7 @@
       (error (format "entity-editor.render-attribute-editor: No label specified for attribute: ~a" attribute)))
     (unless editor
       (error (format "entity-editor.render-attribute-editor: No editor specified for attribute: ~a" attribute)))
-    (render-label+editor+results seed label editor (get-attribute-results attribute)))
+    (render-label+editor+results seed label editor (get-attribute-results attribute editor)))
   
   ; seed attribute -> xml+quotable
   (define/public (render-attribute-label seed attribute)
