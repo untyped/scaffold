@@ -35,6 +35,7 @@
     (xml "The data you submitted has raised warnings. Hover over the "
          (span (@ [class "tooltip-anchor"])
                ,warning-icon
+               " "
                (div (@ [class "tooltip"])
                     (ul ,@(for/list ([result (in-list results)])
                             (xml (li ,(check-result-message result)))))))
@@ -45,6 +46,7 @@
     (xml "The data you submitted contains mistakes. Hover over the "
          (span (@ [class "tooltip-anchor"])
                ,failure-icon
+               " "
                (div (@ [class "tooltip"])
                     (ul ,@(for/list ([result (in-list results)])
                             (xml (li ,(check-result-message result)))))))

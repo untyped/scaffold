@@ -149,7 +149,7 @@
   
   ; seed xml+quotable html-component<%> (listof check-result) -> xml
   (define/public (render-label+editor+results seed label-xml editor results)
-    (render-label+value seed label-xml (xml ,(send editor render seed) ,(render-check-label seed results))))
+    (render-label+value seed label-xml (xml ,(send editor render seed) " " ,(render-check-label seed results))))
   
   ; seed xml+quotable xml -> xml
   (define/public (render-label+value seed label-xml value-xml)
