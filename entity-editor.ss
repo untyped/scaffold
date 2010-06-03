@@ -101,7 +101,12 @@
       (error (format "entity-editor.render-attribute-editor: No label specified for attribute: ~a" attribute)))
     (unless editor
       (error (format "entity-editor.render-attribute-editor: No editor specified for attribute: ~a" attribute)))
-    (render-label+editor+results seed label editor (get-attribute-results attribute editor)))
+    (render-label+editor+results
+     seed
+     label
+     editor
+     (get-attribute-results attribute editor)
+     #:check-label-id (attribute->id attribute "-results")))
   
   ; seed attribute -> xml+quotable
   (define/public (render-attribute-label seed attribute)
@@ -115,16 +120,24 @@
     (send editor render seed))
   
   ; seed attribute [(listof check-result)] -> xml
-  (define/public (render-attribute-results seed attribute [results (get-attribute-results attribute)])
+  (define/public (render-attribute-results
+                  seed
+                  attribute
+                  [results (get-attribute-results attribute)]
+                  #:id [id (attribute->id attribute "-results")])
     (unless results
       (error (format "entity-editor.render-attribute-results: No results specified for attribute: ~a" attribute)))
-    (render-check-label seed results))
+    (render-check-label seed results #:id id))
   
   ; seed (listof attribute) [(listof check-result)] -> xml
-  (define/public (render-attributes-results seed attributes [results (get-attributes-results attributes)])
+  (define/public (render-attributes-results
+                  seed
+                  attributes
+                  [results (get-attributes-results attributes)]
+                  #:id [id (attribute->id (car attributes) "-results")])
     (unless results
       (error (format "entity-editor.render-attributes-results: No results specified for attributes: ~a" attributes)))
-    (render-check-label seed results))
+    (render-check-label seed results #:id id))
   
   ; attribute -> (U editor% #f)
   (define/public (get-attribute-editor attribute)
@@ -144,12 +157,20 @@
     (filter-results/editor (get-check-results) editor))
   
   ; seed xml+quotable html-component<%> -> xml
-  (define/public (render-label+editor seed label-xml editor)
-    (render-label+editor+results seed label-xml editor (get-editor-results editor)))
+  (define/public (render-label+editor seed label-xml editor #:check-label-id [check-label-id #f])
+    (render-label+editor+results
+     seed
+     label-xml
+     editor
+     (get-editor-results editor)
+     #:check-label-id check-label-id))
   
   ; seed xml+quotable html-component<%> (listof check-result) -> xml
-  (define/public (render-label+editor+results seed label-xml editor results)
-    (render-label+value seed label-xml (xml ,(send editor render seed) " " ,(render-check-label seed results))))
+  (define/public (render-label+editor+results seed label-xml editor results #:check-label-id [check-label-id #f])
+    (render-label+value
+     seed
+     label-xml
+     (xml ,(send editor render seed) " " ,(render-check-label seed results #:id check-label-id))))
   
   ; seed xml+quotable xml -> xml
   (define/public (render-label+value seed label-xml value-xml)
@@ -157,18 +178,18 @@
              (td (@ [class "attribute-value"]) ,value-xml))))
   
   ; seed [boolean] -> xml
-  (define/public (render-check-label seed reportable-results [tooltip? #t])
+  (define/public (render-check-label seed reportable-results [tooltip? #t] #:id [id #f])
     ; xml
     (let (; (U 'check-success 'check-warning 'check-failure 'check-exn)
           [class (check-results->class reportable-results)])
-      (xml (span (@ [class ,(string-append "check-label" (if tooltip? " tooltip-anchor" ""))])
+      (xml (span (@ ,(opt-xml-attr id) [class ,(string-append "check-label" (if tooltip? " tooltip-anchor" ""))])
                  ,(opt-xml (not (eq? class 'check-success))
                     ,(check-result-icon class)
-                    ,(render-check-results seed reportable-results tooltip?))))))
+                    ,(render-check-results seed reportable-results tooltip? #:id (and id (symbol-append id '-list))))))))
   
   ; seed (listof check-result) [boolean] -> xml
-  (define/private (render-check-results seed results [tooltip? #t])
-    (xml (ul (@ [class ,(string-append "check-results" (if tooltip? " tooltip" ""))])
+  (define/private (render-check-results seed results [tooltip? #t] #:id [id #f])
+    (xml (ul (@ ,(opt-xml-attr id) [class ,(string-append "check-results" (if tooltip? " tooltip" ""))])
              ,@(for/list ([result results])
                  (xml (li (@ [class ,(check-result->class result)])
                           ,(check-result-message result)))))))

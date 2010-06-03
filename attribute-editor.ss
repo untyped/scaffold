@@ -3,6 +3,7 @@
 (require "base.ss")
 
 (require (unlib-in symbol)
+         (only-in srfi/13 string-filter)
          "editor-internal.ss"
          "foreign-key-editor.ss"
          "relationship-editor.ss")
@@ -105,11 +106,16 @@
 ; Helpers ----------------------------------------
 
 ; attribute -> symbol
-(define (attribute->id attr)
-  (symbol-append (entity-name (attribute-entity attr))
-                 '-
-                 (attribute-name attr)
-                 '-field))
+(define (attribute->id attr [suffix "-field"])
+  (string->symbol
+   (string-filter (lambda (chr)
+                    (or (memq chr '(#\_ #\-))
+                        (char-alphabetic? chr)
+                        (char-numeric? chr)))
+                  (format "~a-~a~a"
+                          (entity-name (attribute-entity attr))
+                          (attribute-name attr)
+                          suffix))))
 
 ; natural -> natural
 (define (default-text-field-size max-length)
@@ -133,6 +139,7 @@
                        "relationship-editor.ss"))
 
 (provide/contract
+ [attribute->id             (->* (attribute?) ((or/c string? symbol?)) symbol?)]
  [attribute-editor-defaults (parameter/c procedure?)]
  [default-attribute-editor  (-> attribute? (is-a?/c form-element<%>))]
  [default-required-label    (parameter/c string?)])
