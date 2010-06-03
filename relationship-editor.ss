@@ -2,7 +2,8 @@
 
 (require "base.ss")
 
-(require "foreign-key-editor.ss"
+(require (unlib-in symbol)
+         "foreign-key-editor.ss"
          "editor-internal.ss"
          "util.ss")
 
@@ -31,7 +32,8 @@
   ; SQL details --------------------------------
   
   ; (U sql-expr #f)
-  (init [where #f])
+  (init [id    (gensym/interned 'relationship-editor)]
+        [where #f])
   
   ; (cell (listof sql-order))
   (init-cell order
@@ -54,7 +56,9 @@
   ; Fields -------------------------------------        
   
   ; combo-box%
-  (super-new [editor (new relationship-combo-box-editor% 
+  (super-new [id     id]
+             [editor (new relationship-combo-box-editor% 
+                          [id        (symbol-append id '-combo-box)]
                           [entity    related-entity]
                           [classes   (list "editor")]
                           [on-change (callback activate-item)]
