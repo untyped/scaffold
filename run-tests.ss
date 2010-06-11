@@ -3,10 +3,12 @@
 (require "base.ss")
 
 (require (delirium-in)
+         (schemeunit-in text-ui)
          (smoke-in)
-         "testapp/content-base.ss"
-         "testapp/content/content.ss"
-         "testapp/all-tests.ss")
+         "all-tests.ss"
+         "testapp/base.ss"
+         "testapp/site.ss"
+         "testapp/content/content.ss")
 
 ; Main program body ----------------------------
 
@@ -16,5 +18,5 @@
 
 (serve/smoke/delirium
  (cut site-dispatch test-site (current-request))
- all-testapp-tests
+ all-tests
  #:htdocs-paths (list testapp-htdocs-path))

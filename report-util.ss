@@ -3,82 +3,90 @@
 (require "base.ss")
 
 (require srfi/13
-         srfi/19
-         (unlib-in time))
+         (unlib-in date for)
+         (only-in (unlib-in time) date-day-of-the-week))
 
 ; Search patterns --------------------------------
 
 ; string [boolean] -> string
 (define (pattern->regexp pattern [anywhere? #f])
-  (apply string-append (cons (if anywhere? "^.*" "^")
-                             (string-fold-right (lambda (chr accum)
-                                                  (cond [(eq? chr #\*) (cons ".*" accum)]
-                                                        [(eq? chr #\?) (cons "." accum)]
-                                                        [else          (cons (regexp-quote (string chr)) accum)]))
-                                                null
-                                                pattern))))
+  (for/fold1 ([accum      (if anywhere? "" "^")]
+              [in-escape? #f])
+             ([chr        (in-list (string->list pattern))])
+             (case chr
+               [(#\\)  (if in-escape?
+                           (values (string-append accum (regexp-quote "\\")) #f)
+                           (values accum #t))]
+               [(#\*) (if in-escape?
+                          (values (string-append accum (regexp-quote "*")) #f)
+                          (values (string-append accum ".*") #f))]
+               [(#\?)  (if in-escape?
+                           (values (string-append accum (regexp-quote "?")) #f)
+                           (values (string-append accum ".") #f))]
+               [else  (values (string-append accum (regexp-quote (string chr))) #f)])))
 
-; string -> (U time-utc #f)
-(define (pattern->time pattern)
+; string [#:tz string] [#:now time-utc] -> (U time-utc #f)
+(define (pattern->time pattern #:tz [tz (current-tz)] #:now [now (current-time time-utc)])
   
-  ; -> time-utc
+  ; -> date
   (define (today)
-    (let ([now (current-date)])
-      (date->time-utc
-       (copy-date now 
-                  #:nanosecond  0
-                  #:second      0
-                  #:minute      0
-                  #:hour        0
-                  #:zone-offset 0))))
+    (let ([now (time-utc->date now #:tz tz)])
+      (make-date 0 00 00 00 (date-day now) (date-month now) (date-year now) #:tz tz)))
   
-  ; time -> time-utc
-  (define (day-before time)
-    (subtract-duration time (make-time time-duration 0 (* 60 60 24))))
-  
-  ; symbol -> time-utc
+  ; symbol -> date
   (define (last day-of-the-week)
-    (let loop ([now (day-before (today))])
-      (if (equal? (date-day-of-the-week (time->date now)) day-of-the-week)
+    (let loop ([now (date+days (today) -1)])
+      (if (equal? (date-day-of-the-week now) day-of-the-week)
           now
-          (loop (day-before now)))))
+          (loop (date+days now -1)))))
   
-  ; (U time-utc #f)
-  (let ([pattern (string-downcase pattern)])
+  (let* ([pattern (string-downcase pattern)])
     (with-handlers ([exn? (lambda (exn) #f)])
-      (cond [(equal? pattern "today")              (today)]
-            [(equal? pattern "yesterday")          (day-before (today))]
-            [(member pattern '("mon" "monday"))    (last 'mon)]
-            [(member pattern '("tue" "tuesday"))   (last 'tue)]
-            [(member pattern '("wed" "wednesday")) (last 'wed)]
-            [(member pattern '("thu" "thursday"))  (last 'thu)]
-            [(member pattern '("fri" "friday"))    (last 'fri)]
-            [(member pattern '("sat" "saturday"))  (last 'sat)]
-            [(member pattern '("sun" "sunday"))    (last 'sun)]
+      (cond [(equal? pattern "today")              (date->time-utc (today))]
+            [(equal? pattern "yesterday")          (date->time-utc (date+days (today) -1))]
+            [(member pattern '("mon" "monday"))    (date->time-utc (last 'mon))]
+            [(member pattern '("tue" "tuesday"))   (date->time-utc (last 'tue))]
+            [(member pattern '("wed" "wednesday")) (date->time-utc (last 'wed))]
+            [(member pattern '("thu" "thursday"))  (date->time-utc (last 'thu))]
+            [(member pattern '("fri" "friday"))    (date->time-utc (last 'fri))]
+            [(member pattern '("sat" "saturday"))  (date->time-utc (last 'sat))]
+            [(member pattern '("sun" "sunday"))    (date->time-utc (last 'sun))]
             [(regexp-match #rx"([0-9][0-9]?)/([0-9][0-9]?)" pattern)
              => (match-lambda 
                   [(list _ day month)
-                   (let* ([now  (time->date (today))]
-                          [then (copy-date now
-                                           #:day    (string->number day) 
-                                           #:month  (string->number month))]
-                          [ans  (if (time>? (date->time-utc then)
-                                            (date->time-utc now))
-                                    (copy-date then #:year (sub1 (date-year then)))
-                                    then)])
-                     (and (date-valid? ans) (date->time-utc ans)))])]
+                   (let* ([now (today)]
+                          [ans (make-date (date-nanosecond now)
+                                          (date-second     now)
+                                          (date-minute     now)
+                                          (date-hour       now)
+                                          (string->number  day)
+                                          (string->number  month)
+                                          (date-year       now)
+                                          #:tz tz)])
+                     (date->time-utc
+                      (if (time>? (date->time-utc ans) (date->time-utc now))
+                          (date+years ans -1)
+                          ans)))])]
             [(regexp-match #rx"([0-9][0-9]?):([0-9][0-9]?)" pattern)
              => (match-lambda 
                   [(list _ hour min)
-                   (let* ([now (time->date (today))]
-                          [ans (copy-date now
-                                          #:hour   (string->number hour)
-                                          #:minute (string->number min))])
-                     (and (date-valid? ans) (date->time-utc ans)))])]
+                   (let* ([now (today)]
+                          [ans (make-date (date-nanosecond now)
+                                          (date-second     now)
+                                          (string->number  min)
+                                          (string->number  hour)
+                                          (date-day        now)
+                                          (date-month      now)
+                                          (date-year       now)
+                                          #:tz tz)])
+                     (date->time-utc
+                      (if (time>? (date->time-utc ans) (date->time-utc now))
+                          (date+days ans -1)
+                          ans)))])]
             [else #f]))))
 
-; Provide statements -----------------------------
+; Provides ---------------------------------------
 
 (provide/contract
  [pattern->regexp (->* (string?) (boolean?) string?)]
- [pattern->time   (-> string? (or/c time-utc? #f))])
+ [pattern->time   (->* (string?) (#:tz zone-exists? #:now time-utc?) (or/c time-utc? #f))])

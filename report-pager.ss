@@ -4,7 +4,6 @@
 
 (require (only-in srfi/1 filter)
          srfi/13
-         srfi/19
          (unlib-in list symbol)
          "report-column.ss"
          "report-view.ss"
