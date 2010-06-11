@@ -1,10 +1,9 @@
 #lang scheme/base
 
-(require (planet untyped/unlib:3/require))
+(require "content-base.ss")
 
 (require scheme/cmdline
-         "content-base.ss"
-         (directory-in "content"))
+         "content/content.ss")
 
 ; -> void
 (define (run-application)

@@ -1,7 +1,8 @@
 #lang scheme/base
 
-(require (planet untyped/snooze:3)
-         (planet untyped/snooze:3/postgresql8/postgresql8))
+(require "../base.ss")
+
+(require (snooze-in main postgresql8/postgresql8))
 
 ; Configuration ----------------------------------
 
@@ -9,4 +10,4 @@
 
 ; Provides ---------------------------------------
 
-(provide (all-from-out (planet untyped/snooze:3)))
+(provide (snooze-out main postgresql8/postgresql8))

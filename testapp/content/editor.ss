@@ -2,14 +2,13 @@
 
 (require "../content-base.ss")
 
-(require (planet untyped/snooze:3)
-         (planet untyped/unlib:3/list)
-         (planet untyped/unlib:3/symbol))
+(require (snooze-in)
+         (unlib-in list symbol))
 
 ; Pages ------------------------------------------
 
 (define editor-page
-  (singleton/cells (entity-editor-page-mixin (render-augride-mixin html-page%)) ()
+  (singleton/cells (entity-editor-page-mixin html-page%) ()
     (super-new [entity kitchen-sink])))
 
 ; Controllers ------------------------------------

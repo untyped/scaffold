@@ -1,8 +1,9 @@
 #lang scheme/base
 
+(require "../../test-base.ss")
+
 (require srfi/13
-         (planet untyped/unlib:3/symbol)
-         "../../test-base.ss")
+         (unlib-in symbol))
 
 ; Helpers ----------------------------------------
 
