@@ -39,6 +39,6 @@
       (check-equal? (ts (pattern->time "friday"    #:now (st "2010-03-23 00:00"))) "2010-03-19 00:00")
       (check-equal? (ts (pattern->time "2/3"       #:now (st "2010-03-28 00:00"))) "2010-03-02 00:00")
       (check-equal? (ts (pattern->time "2/4"       #:now (st "2010-03-28 00:00"))) "2009-04-02 00:00")
-      (check-equal? (ts (pattern->time "2:3"       #:now (st "2010-03-28 00:00"))) "2010-03-02 02:03")
-      (check-equal? (ts (pattern->time "10:4"      #:now (st "2010-03-27 00:00"))) "2009-04-02 10:04")
+      (check-equal? (ts (pattern->time "2:3"       #:now (st "2010-03-28 09:00"))) "2010-03-28 02:03")
+      (check-equal? (ts (pattern->time "10:4"      #:now (st "2010-03-28 09:00"))) "2010-03-27 10:04")
       (check-false (pattern->time "omg" #:now (st "2010-03-27 00:00"))))))

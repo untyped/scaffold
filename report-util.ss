@@ -51,7 +51,7 @@
             [(member pattern '("fri" "friday"))    (date->time-utc (last 'fri))]
             [(member pattern '("sat" "saturday"))  (date->time-utc (last 'sat))]
             [(member pattern '("sun" "sunday"))    (date->time-utc (last 'sun))]
-            [(regexp-match #rx"([0-9][0-9]?)/([0-9][0-9]?)" pattern)
+            [(regexp-match #rx"^([0-9][0-9]?)/([0-9][0-9]?)$" pattern)
              => (match-lambda 
                   [(list _ day month)
                    (let* ([now (today)]
@@ -67,10 +67,10 @@
                       (if (time>? (date->time-utc ans) (date->time-utc now))
                           (date+years ans -1)
                           ans)))])]
-            [(regexp-match #rx"([0-9][0-9]?):([0-9][0-9]?)" pattern)
+            [(regexp-match #rx"^([0-9][0-9]?):([0-9][0-9]?)$" pattern)
              => (match-lambda 
                   [(list _ hour min)
-                   (let* ([now (today)]
+                   (let* ([now (time-utc->date now)]
                           [ans (make-date (date-nanosecond now)
                                           (date-second     now)
                                           (string->number  min)
