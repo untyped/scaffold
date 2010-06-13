@@ -81,7 +81,6 @@
 (define set-selector-autocomplete-editor% (complete-attribute-editor-mixin set-selector-autocomplete%))
 (define text-field-editor%                (text-field-editor-mixin (complete-attribute-editor-mixin text-field%)))
 (define text-area-editor%                 (complete-attribute-editor-mixin text-area%))
-(define time-editor%                      (complete-attribute-editor-mixin time-field%))
 (define tiny-mce-editor%                  (complete-attribute-editor-mixin tiny-mce%))
 
 ; Procedures -------------------------------------
@@ -172,7 +171,6 @@
          set-selector-autocomplete-editor%
          text-field-editor%
          text-area-editor%
-         time-editor%
          tiny-mce-editor%)
 
 (provide/contract

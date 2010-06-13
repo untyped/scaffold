@@ -1,14 +1,8 @@
 #lang scheme/base
 
-(require "base.ss")
+(require "test-base.ss")
 
-(require (delirium-in)
-         (schemeunit-in text-ui)
-         (smoke-in)
-         "all-tests.ss"
-         "testapp/base.ss"
-         "testapp/site.ss"
-         "testapp/content/content.ss")
+(require "all-scaffold-tests.ss")
 
 ; Main program body ----------------------------
 
@@ -16,7 +10,4 @@
 (print-struct #t)
 (dev? #t)
 
-(serve/smoke/delirium
- (cut site-dispatch test-site (current-request))
- all-tests
- #:htdocs-paths (list testapp-htdocs-path))
+(run-tests all-scaffold-tests)
