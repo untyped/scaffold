@@ -3,7 +3,7 @@ Scaffold
 
 Developed by Untyped.
 
-Scaffolded pages for web applications written using Smoke and Snooze.
+Degradable scaffolding for web applications written using Smoke and Snooze.
 
 Copyright 2006 to 2010 Untyped.
 
