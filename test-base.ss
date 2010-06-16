@@ -2,10 +2,9 @@
 
 (require "base.ss")
 
-(require srfi/19
-         (delirium-in)
+(require (delirium-in)
          (schemeunit-in main text-ui util)
-         (unlib-in time)
+         (unlib-in date)
          "testapp/site.ss")
 
 ; Procedures -------------------------------------

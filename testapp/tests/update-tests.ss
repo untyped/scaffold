@@ -1,7 +1,7 @@
 #lang scheme/base
 
 (require srfi/13
-         srfi/19
+         (planet untyped/unlib:3/date)
          (planet untyped/unlib:3/symbol)
          "../../test-base.ss"
          "../content-base.ss"
@@ -37,8 +37,8 @@
    #:a-symbol                  'onesym
    #:a-10-char-string          "onestrone1"
    #:a-10-char-symbol          'onesymone1
-   #:a-time-utc                (date->time-utc (make-date 0 0 1 1 1 1 2001 0))
-   #:a-time-tai                (date->time-tai (make-date 0 0 11 11 11 11 2011 0))
+   #:a-time-utc                (date->time-utc (make-date 0 0 1 1 1 1 2001))
+   #:a-time-tai                (date->time-tai (make-date 0 0 11 11 11 11 2011))
    #:a-short-enum              (short-enum a)
    #:a-long-enum               (long-enum b)
    #:a-post                    #f
@@ -48,8 +48,8 @@
    #:a-required-symbol         'twosym
    #:a-required-10-char-string "twostrtwo2"
    #:a-required-10-char-symbol 'twosymtwo2
-   #:a-required-time-utc       (date->time-utc (make-date 0 0 2 2 2 2 2002 0))
-   #:a-required-time-tai       (date->time-tai (make-date 0 0 22 22 22 2 2022 0))
+   #:a-required-time-utc       (date->time-utc (make-date 0 0 2 2 2 2 2002))
+   #:a-required-time-tai       (date->time-tai (make-date 0 0 22 22 22 2 2022))
    #:a-required-short-enum     (short-enum c)
    #:a-required-long-enum      (long-enum d)
    #:a-required-post           post))
@@ -64,8 +64,8 @@
    #:a-symbol                  'thrsym
    #:a-10-char-string          "thrstrthr3"
    #:a-10-char-symbol          'thrsymthr3
-   #:a-time-utc                (date->time-utc (make-date 0 0 3 3 3 3 2003 0))
-   #:a-time-tai                (date->time-tai (make-date 0 0 33 3 3 3 2033 0))
+   #:a-time-utc                (date->time-utc (make-date 0 0 3 3 3 3 2003))
+   #:a-time-tai                (date->time-tai (make-date 0 0 33 3 3 3 2033))
    #:a-short-enum              (short-enum c)
    #:a-long-enum               (long-enum d)
    #:a-post                    post
@@ -75,8 +75,8 @@
    #:a-required-symbol         'frsym
    #:a-required-10-char-string "foustrfou4"
    #:a-required-10-char-symbol 'fousymfou4
-   #:a-required-time-utc       (date->time-utc (make-date 0 0 4 4 4 4 2004 0))
-   #:a-required-time-tai       (date->time-tai (make-date 0 0 44 4 4 4 2044 0))
+   #:a-required-time-utc       (date->time-utc (make-date 0 0 4 4 4 4 2004))
+   #:a-required-time-tai       (date->time-tai (make-date 0 0 44 4 4 4 2044))
    #:a-required-short-enum     (short-enum a)
    #:a-required-long-enum      (long-enum b)
    #:a-required-post           post))
