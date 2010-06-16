@@ -3,30 +3,30 @@ scm = svn
 
 [planetdev/unlib]
 path = planetdev/unlib
-repository = http://svn.untyped.com/unlib/trunk/src
-scm = svn
+repository = git://github.com/untyped/unlib.git
+scm = git
 
 [planetdev/mirrors]
 path = planetdev/mirrors
-repository = http://svn.untyped.com/mirrors/trunk/src
-scm = svn
+repository = git://github.com/untyped/mirrors.git
+scm = git
 
 [planetdev/delirium]
 path = planetdev/delirium
-repository = http://svn.untyped.com/delirium/trunk/src
-scm = svn
+repository = git://github.com/untyped/delirium.git
+scm = git
 
 [planetdev/dispatch]
 path = planetdev/dispatch
-repository = http://svn.untyped.com/dispatch/branches/bridge/src
-scm = svn
+repository = git://github.com/untyped/dispatch.git
+scm = git
 
 [planetdev/smoke]
 path = planetdev/smoke
-repository = http://svn.untyped.com/smoke/branches/bridge/src
-scm = svn
+repository = git://github.com/untyped/smoke.git
+scm = git
 
 [planetdev/snooze]
 path = planetdev/snooze
-repository = http://svn.untyped.com/snooze/branches/guid2/src
-scm = svn
+repository = git://github.com/untyped/snooze.git
+scm = git
