@@ -3,8 +3,7 @@
 (require "../../test-base.ss")
 
 (require srfi/13
-         srfi/19
-         (unlib-in string symbol time)
+         (unlib-in string symbol)
          "../content-base.ss")
 
 ; Helpers ----------------------------------------

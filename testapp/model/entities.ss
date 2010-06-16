@@ -2,7 +2,7 @@
 
 (require "../base.ss")
 
-(require srfi/19
+(require (unlib-in date)
          "db.ss")
 
 ; Enumerations -----------------------------------
