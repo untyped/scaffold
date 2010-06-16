@@ -26,8 +26,8 @@
     
     ; entity field represents the independent entity (only 1 struct of this type)
     ; entity ...
-    (init-field entity              #f #:accessor)
-    (init-field related-entity      #f #:accessor) ; the dependent entity (n structs of this type)
+    (init-field entity          #f #:accessor)
+    (init-field related-entity  #f #:accessor) ; the dependent entity (n structs of this type)
     (init-field relationship-entity #f #:accessor) ; the entity that encapsulates the relationship (may be same as related)
     
     ; SQL details --------------------------------
@@ -37,9 +37,9 @@
     
     ; (cell (listof sql-order))
     (init-cell order
-               (let-sql ([entity (get-related-entity)])
-                        (sql-list (asc entity.guid)))
-               #:accessor #:mutator)
+      (let-sql ([entity (get-related-entity)])
+        (sql-list (asc entity.guid)))
+      #:accessor #:mutator)
     
     ; Cells --------------------------------------
     
@@ -76,10 +76,15 @@
     
     ; any -> (U boolean integer symbol)
     (define/override (item->raw item)
-      (and (guid? item)
-           (number->string (snooze-struct-id item))))
+      (and item
+           (if (and (snooze-struct?       item)
+                    (snooze-struct-saved? item))
+               (number->string (snooze-struct-id item))
+               (raise-type-error 'foreign-key-editor.item->raw
+                                 "(U snooze-struct #f)"
+                                 item))))
     
-    ; (U string guid) -> any
+    ; (U string snooze-struct) -> any
     (define/override (raw->item raw)
       (and raw
            ; for some reason, select-item passes in an integer, while deselect-item prefers a string.
@@ -98,8 +103,8 @@
     ; -> void
     (define/override (refresh-selectable-items)
       (let-sql ([entity (get-related-entity)])
-               (send (get-editor) set-where! (sql (and (in entity.guid ,(find-relateables))
-                                                       (not (in entity.guid ,(get-value))))))))
+        (send (get-editor) set-where! (sql (and (in entity.guid ,(find-relateables))
+                                                (not (in entity.guid ,(get-value))))))))
     
     ; -> sql-where
     (define/public (get-where)
@@ -115,8 +120,7 @@
     (define/override (destructure! struct)
       (set-struct! struct)
       (set-available-items! (find-relateables))
-      (when (snooze-struct-saved? struct)
-        (set-value! (map (cut relationship->related <>) (find-relationships/struct struct)))))
+      (set-value! (map (cut relationship->related <>) (find-relationships/struct struct))))
     
     ; snooze-struct -> snooze-struct
     (define/override (restructure struct)
@@ -153,9 +157,7 @@
              ; related-structs currently selected in the set-selector
              [chosen-related-structs (get-value)]
              ; relationship-structs that are currently saved
-             [saved-relationship-structs (if (snooze-struct-saved? struct)
-                                             (find-relationships/relateds struct chosen-related-structs)
-                                             null)]
+             [saved-relationship-structs (find-relationships/relateds struct chosen-related-structs)]
              ; a list of relationship-structs that are either saved (from above) or newly created
              [saved+new-relationships    
               (reverse 
@@ -167,13 +169,10 @@
                                           saved-relationship-structs)
                                    (make-relationship struct chosen-related))
                                relationships)))]
-             [deleted-relationships
-              (if (snooze-struct-saved? struct)
-                  (filter (lambda (rel) 
-                            (not (member (snooze-struct-id rel)
-                                         (map snooze-struct-id saved+new-relationships))))
-                          (find-relationships/struct struct))
-                  null)])
+             [deleted-relationships      (filter (lambda (rel) 
+                                                   (not (member (snooze-struct-id rel)
+                                                                (map snooze-struct-id saved+new-relationships))))
+                                                 (find-relationships/struct struct))])
         (set-updated-relationships! saved+new-relationships)
         (for ([rel (in-list saved+new-relationships)])
           (for ([attr (in-list (entity-data-attributes (get-relationship-entity)))])

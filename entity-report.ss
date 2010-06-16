@@ -3,6 +3,7 @@
 (require "base.ss")
 
 (require (only-in srfi/13 string-fold-right string-trim-both)
+         (only-in (unlib-in list) list-ref?) 
          (unlib-in string symbol)
          "controller-internal.ss"
          "report-column.ss"
@@ -15,6 +16,8 @@
     
     ; (listof attribute)
     (init-field attribute #:accessor)
+    
+    (init-field review-controller #f #:accessor)
     
     (init [id          (string->symbol
                         (format "~a-~a"
@@ -33,10 +36,14 @@
     ; val is the raw attribute value - the report has to do all the destructuring.
     (define/public (render-body seed val)
       (xml (td ,(cond [(snooze-struct? val)
-                       (if (review-controller-set? val)
-                           (xml (a (@ [href ,(review-controller-url val)])
-                                   ,(format-snooze-struct val)))
-                           (format-snooze-struct val))]
+                       (cond [(get-review-controller)
+                              => (lambda (controller)
+                                   (xml (a (@ [href ,(controller-url controller val)])
+                                           ,(format-snooze-struct val))))]
+                             [(review-controller-set? val)
+                              (xml (a (@ [href ,(review-controller-url val)])
+                                      ,(format-snooze-struct val)))]
+                             [else (format-snooze-struct val)])]
                       [(and (enum-type? (attribute-type attribute))
                             (enum-type-enum (attribute-type attribute)))
                        => (lambda (enum)
@@ -83,8 +90,8 @@
     
     ; (cell boolean)
     (init-cell controller-cell? #t
-      #:accessor show-controller-cell?
-      #:mutator  set-show-controller-cell?!)
+               #:accessor show-controller-cell?
+               #:mutator  set-show-controller-cell?!)
     
     ; (listof editor<%>)
     (init-field columns
@@ -116,19 +123,19 @@
     ; string -> natural
     (define/override (query-num-items pattern)
       (let-sql ([entity (get-entity)])
-        (find-one (sql (select #:what  (count entity.guid)
-                               #:from  ,(query-from)
-                               #:where ,(make-where pattern))))))
+               (find-one (sql (select #:what  (count entity.guid)
+                                      #:from  ,(query-from)
+                                      #:where ,(make-where pattern))))))
     
     ; string column (U 'asc 'desc) natural natural -> (gen-> result)
     (define/override (query-items pattern col dir start count)
       (let-sql ([entity (get-entity)])
-        (g:find (sql (select #:what   entity
-                             #:from   ,(query-from)
-                             #:where  ,(make-where pattern) 
-                             #:order  ,(get-sort-order col dir)
-                             #:offset ,start
-                             #:limit  ,count)))))
+               (g:find (sql (select #:what   entity
+                                    #:from   ,(query-from)
+                                    #:where  ,(make-where pattern) 
+                                    #:order  ,(get-sort-order col dir)
+                                    #:offset ,start
+                                    #:limit  ,count)))))
     
     ; pattern
     (define/public (make-where pattern)
@@ -171,10 +178,14 @@
     
     ; seed (listof column) snooze-struct -> xml
     (define/override (render-item seed cols struct)
-      (xml (tr ,(opt-xml (show-controller-cell?)
-                  ,(render-controller-cell seed struct))
-               ,@(for/list ([col (in-list cols)])
-                   (render-column seed col struct)))))
+      (xml (tr ,(render-item-columns seed cols struct))))
+    
+    ; seed (listof column) snooze-struct -> xml
+    (define/public (render-item-columns seed cols struct)
+      (xml ,(opt-xml (show-controller-cell?)
+              ,(render-controller-cell seed struct))
+           ,@(for/list ([col (in-list cols)])
+               (render-column seed col struct))))
     
     ; seed column snooze-struct -> xml
     (define/public (render-column seed col struct)

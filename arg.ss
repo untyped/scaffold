@@ -2,27 +2,35 @@
 
 (require "base.ss")
 
-(require (planet untyped/dispatch:3)
-         (planet untyped/dispatch:3/core)
-         (planet untyped/unlib:3/symbol))
+(require (dispatch-in main core)
+         (unlib-in symbol)
+         (snooze-in))
 
 (define (entity-arg entity)
   (let ([name    (symbol-append (entity-name entity) '-arg)]
-        [struct? (entity-cached-predicate entity)])
+        [struct? (entity-predicate entity)])
     (make-arg
      "[0-9]+"
      (lambda (raw)
        (let* ([num  (string->number raw)]
-              [guid (and num (entity-make-vanilla-guid entity num))])
-         (and guid (let-sql ([e entity])
-                            (select-one #:from e #:where (= e.guid ,guid))))))
+              [guid (and num (entity-make-guid entity num))])
+         (and guid (find-by-guid guid))))
      (lambda (val)
-       (cond [(struct? val) (format "~a" (snooze-struct-id val))]
-             [(string? val) val]
-             [else          (raise-type-error
-                             name
-                             (format "(U ~a string)" (entity-name entity))
-                             val)])))))
+       (cond [(and (snooze-struct? val) (eq? (snooze-struct-entity val) entity))
+              (if (snooze-struct-saved? val)
+                  (number->string (snooze-struct-id val))
+                  (error "cannot refer to unsaved struct in URL" val))]
+             [(and (guid? val) (eq? (guid-entity val) entity))
+              (if (database-guid? val)
+                  (number->string (guid-id val))
+                  (error "cannot refer to temporary guid in URL" val))]
+             [(number? val) (number->string val)]
+             [else (raise-type-error
+                    name
+                    (format "(U ~a ~a-guid number)"
+                            (entity-name entity)
+                            (entity-name entity))
+                    val)])))))
 
 ; Provides ---------------------------------------
 

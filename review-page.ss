@@ -4,6 +4,7 @@
 
 (require (unlib-in symbol)
          "attribute-view.ss"
+         "controller-internal.ss"
          "entity-view.ss"
          "page-internal.ss"
          "view-internal.ss")
@@ -25,7 +26,9 @@
     
     ; Fields ----------------------------
     
-    (super-new)
+    (init [classes null])
+    
+    (super-new [classes (cons "smoke-entity-view-page" classes)])
     
     ; entity
     (init [entity #f])
@@ -72,7 +75,11 @@
     
     ; seed -> xml
     (define/augment (render seed)
-      (send view render seed))))
+      (xml ,(opt-xml (update-controller-set? (get-value))
+              (a (@ [href  ,(update-controller-url (get-value))]
+                    [class "update-link"])
+                 "edit"))
+           ,(send view render seed)))))
 
 ; Procedures -------------------------------------
 

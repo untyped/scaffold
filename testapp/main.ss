@@ -1,9 +1,8 @@
 #lang scheme/base
 
-(require (planet untyped/unlib:3/require))
+(require "content-base.ss")
 
 (require scheme/cmdline
-         "content-base.ss"
          "content/content.ss")
 
 ; -> void
@@ -11,11 +10,6 @@
   (serve/smoke (lambda ()
                  (site-dispatch test-site (current-request)))
                #:htdocs-paths (list testapp-htdocs-path)))
-
-; -> void
-(define (recreate-database)
-  (for-each drop-table   (list post kitchen-sink))
-  (for-each create-table (list post kitchen-sink)))
 
 ; Main program body ------------------------------
 
@@ -29,5 +23,4 @@
 
 ; void
 (case mode
-  [(runapp) (run-application)]
-  [(initdb) (with-connection (recreate-database))])
+  [(runapp) (run-application)])

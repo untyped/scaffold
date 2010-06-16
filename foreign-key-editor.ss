@@ -12,20 +12,45 @@
 (define foreign-key-editor%
   (class/cells (complete-attribute-editor-mixin vanilla-combo-box%) ()
     
+    ; Constructor --------------------------------
+    
+    ; (listof attribute)
+    (init [attributes null])
+    
+    (super-new [attributes attributes])
+    
     ; Fields -------------------------------------
     
     ; (U entity #f)
-    (init-field entity #:accessor)
+    (init-field entity
+      (and (pair? attributes)
+           (guid-type? (attribute-type (car attributes)))
+           (guid-type-entity (attribute-type (car attributes))))
+      #:accessor)
     
-    ; (cell (U sql-expr #f))
-    (init-cell where #f #:accessor #:mutator)
+    ; (cell (U sql-expr (-> sql-expr) #f))
+    (init-cell where #f #:mutator)
     
     ; (cell (listof sql-order))
     (init-cell order
       (entity-default-order (get-entity))
-      #:accessor #:mutator)
+      #:mutator)
     
     ; Methods ------------------------------------
+    
+    ; -> (U sql-expr #f)
+    (define/public (get-where)
+      (let ([val (web-cell-ref where-cell)])
+        (if (procedure? val)
+            (val)
+            val)))
+    
+    ; -> (listof sql-order)
+    (define/public (get-order)
+      (let ([val (web-cell-ref order-cell)])
+        (if (procedure? val)
+            (val)
+            val)))
     
     ; -> (listof (cons integer string))
     (define/override (get-options)
@@ -34,12 +59,17 @@
                               #:where ,(get-where)
                               #:order ,(get-order)))))
     
-    ; (U guid #f) -> (U string #f)
+    ; (U snooze-struct #f) -> (U string #f)
     (define/override (option->raw option)
-      (and (guid? option)
-           (number->string (snooze-struct-id option))))
+      (and option
+           (if (and (snooze-struct?       option)
+                    (snooze-struct-saved? option))
+               (number->string (snooze-struct-id option))
+               (raise-type-error 'foreign-key-editor.option->raw
+                                 "(U snooze-struct #f)"
+                                 option))))
     
-    ; (U string #f) -> guid
+    ; (U string #f) -> snooze-struct
     (define/override (raw->option raw)
       (and raw (let ([id (string->number raw)])
                  (and id (find-by-id entity id)))))

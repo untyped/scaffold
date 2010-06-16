@@ -76,16 +76,44 @@
     
     ; seed -> xml
     (define/augment (render seed)
-      (xml ,(render-confirmation-message seed)
-           ,(send view render seed)
-           ,(send submit-button render seed)))
+      (let* ([value   (get-value)]
+             [results (check-old-snooze-struct value)])
+        (cond [(check-fatals?   results) (render/fatals   seed value results)]
+              [(check-failures? results) (render/failures seed value results)]
+              [(check-warnings? results) (render/warnings seed value results)]
+              [else                      (render/success  seed value results)])))
     
-    ; seed -> xml
-    (define/public (render-confirmation-message seed)
-      (xml "You are about to delete the " ,(entity-name (get-entity)) " shown below. "
-           "There is no way of undoing this operation. "
-           "Click " ,(format "~s" (send submit-button get-label))" at the bottom of the page "
-           "if you wish to proceed."))
+    ; seed snooze-struct (listof check-result) -> xml
+    (define/public (render/fatals seed value results)
+      (raise (or (for/or ([result (in-list results)])
+                   (and (check-fatal? result)
+                        (check-result-exn result)))
+                 (error "no exception found"))))
+    
+    ; seed snooze-struct (listof check-result) -> xml
+    (define/public (render/failures seed value results)
+      (xml (p "This " ,(entity-name (get-entity)) " cannot be deleted for the following reasons:")
+           (ul ,@(for/filter ([result (in-list results)])
+                   (and (check-failure? result)
+                        (xml (li ,(check-result-message result))))))))
+    
+    ; seed snooze-struct (listof check-result) -> xml
+    (define/public (render/warnings seed value results)
+      (xml (p "You are about to delete the " ,(entity-name (get-entity)) " below:")
+           ,(send view render seed)
+           (p "If you continue, be aware of the following:")
+           (ul ,@(for/filter ([result (in-list results)])
+                   (and (check-warning? result)
+                        (xml (li ,(check-result-message result))))))
+           (p "Only click \"" ,(send submit-button get-label) "\" if you are sure you wish to continue. " (strong "There is no undo! "))
+           (p ,(send submit-button render seed))))
+    
+    ; seed snooze-struct (listof check-result) -> xml
+    (define/public (render/success seed value results)
+      (xml (p "You are about to delete the " ,(entity-name (get-entity)) " below:")
+           ,(send view render seed)
+           (p "Only click \"" ,(send submit-button get-label) "\" if you are sure you wish to continue. " (strong "There is no undo! "))
+           (p ,(send submit-button render seed))))
     
     ; snooze-struct -> xml
     (define/public (get-delete-notification struct)

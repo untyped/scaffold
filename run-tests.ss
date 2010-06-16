@@ -1,12 +1,8 @@
 #lang scheme/base
 
-(require "base.ss")
+(require "test-base.ss")
 
-(require (delirium-in)
-         (smoke-in)
-         "testapp/content-base.ss"
-         "testapp/content/content.ss"
-         "testapp/all-tests.ss")
+(require "all-scaffold-tests.ss")
 
 ; Main program body ----------------------------
 
@@ -14,12 +10,4 @@
 (print-struct #t)
 (dev? #t)
 
-;(call-with-connection
-; (lambda ()
-;   (for-each drop-table   (list owner person stuff))
-;   (for-each create-table (list person stuff owner))))
-
-(serve/smoke/delirium
- (cut site-dispatch test-site (current-request))
- all-testapp-tests
- #:htdocs-paths (list testapp-htdocs-path))
+(run-tests all-scaffold-tests)

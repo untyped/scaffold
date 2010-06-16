@@ -81,7 +81,6 @@
 (define set-selector-autocomplete-editor% (complete-attribute-editor-mixin set-selector-autocomplete%))
 (define text-field-editor%                (text-field-editor-mixin (complete-attribute-editor-mixin text-field%)))
 (define text-area-editor%                 (complete-attribute-editor-mixin text-area%))
-(define time-editor%                      (complete-attribute-editor-mixin time-field%))
 (define tiny-mce-editor%                  (complete-attribute-editor-mixin tiny-mce%))
 
 ; Procedures -------------------------------------
@@ -93,15 +92,15 @@
      (let* ([entity (attribute-entity attr)]
             [type   (attribute-type   attr)])
        (match type
-         [(struct guid-type (_ entity)) (new foreign-key-editor% [attributes (list attr)] [entity entity])]
-         [(? boolean-type?)             (new check-box-editor%   [attributes (list attr)] [show-label? #f])]
-         [(? integer-type?)             (new integer-editor%     [attributes (list attr)])]
-         [(? enum-type?)                (if (< (length (enum-type-values type)) 5)
+         [(? guid-type?)     (new foreign-key-editor% [attributes (list attr)] [entity (guid-type-entity type)])]
+         [(? boolean-type?)  (new check-box-editor%   [attributes (list attr)] [show-label? #f])]
+         [(? integer-type?)  (new integer-editor%     [attributes (list attr)])]
+         [(? enum-type?)     (if (< (length (enum-type-values type)) 5)
                                             (new radio-combo-editor% [attributes (list attr)] [vertical? #f])
                                             (new combo-box-editor%   [attributes (list attr)]))]
-         [(? real-type?)                (new number-editor%      [attributes (list attr)])]
-         [(? time-utc-type?)            (new (time-utc-editor-mixin date-editor%) [attributes (list attr)])]
-         [(? time-tai-type?)            (new (time-tai-editor-mixin date-editor%) [attributes (list attr)])]
+         [(? real-type?)     (new number-editor%      [attributes (list attr)])]
+         [(? time-utc-type?) (new (time-utc-editor-mixin date-editor%) [attributes (list attr)])]
+         [(? time-tai-type?) (new (time-tai-editor-mixin date-editor%) [attributes (list attr)])]
          [(struct string-type (_ max-length))
           (if max-length
               (new text-field-editor%
@@ -164,6 +163,7 @@
          date-editor%
          file-editor%
          integer-editor%
+         number-editor%
          password-editor%
          radio-combo-editor%
          regexp-editor%
@@ -171,7 +171,6 @@
          set-selector-autocomplete-editor%
          text-field-editor%
          text-area-editor%
-         time-editor%
          tiny-mce-editor%)
 
 (provide/contract

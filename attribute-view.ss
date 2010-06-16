@@ -33,7 +33,8 @@
     ; (cell (listof attribute))
     (init-field attributes null
       #:accessor)
-
+    
+    ; (cell (snooze-struct -> any))
     (init-field review-controller 
       (and (pair? attributes)
            (guid-type? (attribute-type (car attributes)))
@@ -65,12 +66,12 @@
                  ,(let ([type       (attribute-type (car (get-attributes)))]
                         [val        (get-value)])
                     (cond [(snooze-struct? val) (render-snooze-struct seed val)]
+                          [(guid? val)          (render-snooze-struct seed (find-by-guid val))]
                           [(and (enum-type? type) (enum-type-enum type))
-                           => (lambda (enum)
-                                (enum-prettify enum val))]
+                           => (cut enum-prettify <> val)]
                           [else val])))))
     
-    ; seed guid -> xml
+    ; seed snooze-struct -> xml
     (define/public (render-snooze-struct seed val)
       (if review-controller
           (xml (a (@ [href ,(controller-url review-controller val)])
