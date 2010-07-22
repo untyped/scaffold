@@ -39,6 +39,10 @@
     ; (listof attribute-view<%>)
     (init [views (and attributes (map default-attribute-view attributes))])
     
+    ; boolean
+    (init-cell [show-update-link? #t] #:accessor #:mutator)
+    (init-cell [show-delete-link? #t] #:accessor #:mutator)
+    
     ; entity-view%
     (init-field view
       (or (and entity
@@ -75,10 +79,11 @@
     
     ; seed -> xml
     (define/augment (render seed)
-      (xml ,(opt-xml (update-controller-set? (get-value))
-              (a (@ [href  ,(update-controller-url (get-value))]
-                    [class "update-link"])
-                 "edit"))
+      (xml ,(opt-xml (and (get-show-update-link?) (update-controller-set? (get-value)))
+              ,(update-controller-link (get-value) #:class "update-link"))
+           " "
+           ,(opt-xml (and (get-show-delete-link?) (delete-controller-set? (get-value)))
+              ,(delete-controller-link (get-value) #:class "delete-link"))
            ,(send view render seed)))))
 
 ; Procedures -------------------------------------
