@@ -102,7 +102,7 @@
 
 (define-syntax-rule (define/provide-controller-link/entity id type pretty-name-ref controller-ref)
   (begin (define (id entity
-                     #:body    [body        #f]
+                     #:body    [body        (format "~a ~a" (string-titlecase type) (pretty-name-ref entity))]
                      #:id      [id          #f]
                      #:class   [class       #f]
                      #:classes [classes     (if class (list class) null)]
@@ -110,13 +110,13 @@
                      #:format  [link-format (default-link-format)]
                      #:else    [substitute  (default-link-substitute)])
            (controller-link (controller-ref entity)
-                            #:body    [body        (format "~a ~a" type (pretty-name-ref entity))]
-                            #:id      [id          #f]
-                            #:class   [class       #f]
-                            #:classes [classes     (if class (list class) null)]
-                            #:title   [title       #f]
-                            #:format  [link-format (default-link-format)]
-                            #:else    [substitute  (default-link-substitute)]))
+                            #:body    body
+                            #:id      id
+                            #:class   class
+                            #:classes classes
+                            #:title   title
+                            #:format  link-format
+                            #:else    substitute))
          (provide/contract [id (->* (entity?)
                                     (#:body (or/c xml+quotable? pair? null? #f)
                                             #:id      (or/c symbol? string? #f)
@@ -129,7 +129,7 @@
 
 (define-syntax-rule (define/provide-controller-link/struct id type controller-ref)
   (begin (define (id struct
-                     #:body    [body        #f]
+                     #:body    [body        (format "~a ~a" (string-titlecase type) (format-snooze-struct struct))]
                      #:id      [id          #f]
                      #:class   [class       #f]
                      #:classes [classes     (if class (list class) null)]
@@ -137,13 +137,13 @@
                      #:format  [link-format (default-link-format)]
                      #:else    [substitute  (default-link-substitute)])
            (controller-link (controller-ref struct) struct
-                            #:body    [body        (format "~a ~a" type (format-snooze-struct struct))]
-                            #:id      [id          #f]
-                            #:class   [class       #f]
-                            #:classes [classes     (if class (list class) null)]
-                            #:title   [title       #f]
-                            #:format  [link-format (default-link-format)]
-                            #:else    [substitute  (default-link-substitute)]))
+                            #:body    body
+                            #:id      id
+                            #:class   class
+                            #:classes classes
+                            #:title   title
+                            #:format  link-format
+                            #:else    substitute))
          (provide/contract [id (->* (snooze-struct?)
                                     (#:body (or/c xml+quotable? pair? null? #f)
                                             #:id      (or/c symbol? string? #f)
