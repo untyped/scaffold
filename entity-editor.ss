@@ -119,12 +119,20 @@
       (error (format "entity-editor.render-attribute-editor: No editor specified for attribute: ~a" attribute)))
     (send editor render seed))
   
+  ; seed editor (listof attribute) [#:id symbol] -> xml
+  (define/public (render-editor-results seed editor attributes #:id [id (string->symbol (format "~a-results" (send editor get-id)))])
+    (let ([results  (get-attributes-results attributes editor)])
+      (unless results
+        (error (format "entity-editor.render-editor-results: No results specified for editor ~a or attributes: ~a" editor attributes)))
+      (render-check-label seed results #:id id)))
+  
   ; seed attribute [(listof check-result)] -> xml
   (define/public (render-attribute-results
                   seed
                   attribute
-                  [results (get-attribute-results attribute)]
-                  #:id [id (attribute->id attribute "-results")])
+                  #:editor [editor (get-attribute-editor attribute)]
+                  [results (get-attribute-results attribute editor)]
+                  #:id     [id     (attribute->id attribute "-results")])
     (unless results
       (error (format "entity-editor.render-attribute-results: No results specified for attribute: ~a" attribute)))
     (render-check-label seed results #:id id))
@@ -133,8 +141,9 @@
   (define/public (render-attributes-results
                   seed
                   attributes
-                  [results (get-attributes-results attributes)]
-                  #:id [id (attribute->id (car attributes) "-results")])
+                  #:editor [editor (get-attribute-editor attributes)]
+                  [results (get-attributes-results attributes editor)]
+                  #:id     [id     (attribute->id (car attributes) "-results")])
     (unless results
       (error (format "entity-editor.render-attributes-results: No results specified for attributes: ~a" attributes)))
     (render-check-label seed results #:id id))
