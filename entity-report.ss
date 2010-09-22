@@ -47,7 +47,7 @@
                       [(and (enum-type? (attribute-type attribute))
                             (enum-type-enum (attribute-type attribute)))
                        => (lambda (enum)
-                            (enum-prettify enum val))]
+                            (and val (enum-prettify enum val)))]
                       [else val]))))
     
     ; any -> csv-cell
@@ -57,7 +57,7 @@
                       [(and (enum-type? (attribute-type attribute))
                             (enum-type-enum (attribute-type attribute)))
                        => (lambda (enum)
-                            (enum-prettify enum val))]
+                            (and val (enum-prettify enum val)))]
                       [else val])))))
 
 ; attribute -> column
