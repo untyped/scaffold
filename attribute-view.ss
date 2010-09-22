@@ -68,7 +68,8 @@
                     (cond [(snooze-struct? val) (render-snooze-struct seed val)]
                           [(guid? val)          (render-snooze-struct seed (find-by-guid val))]
                           [(and (enum-type? type) (enum-type-enum type))
-                           => (cut enum-prettify <> val)]
+                           => (lambda (enum)
+                                (and val (enum-prettify enum val)))]
                           [else val])))))
     
     ; seed snooze-struct -> xml
