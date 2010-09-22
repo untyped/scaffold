@@ -63,7 +63,11 @@
       ; (U 'check-success 'check-warning 'check-failure 'check-exn)
       (define class (check-results->class reportable-results))
       ; xml
-      (xml (span (@ [class ,(if tooltip? "check-label tooltip-anchor" "check-label")])
+      (xml (span (@ [id    ,(format "~a-check-label" (get-id))]
+                    [class ,(format (if tooltip?
+                                        "check-label tooltip-anchor ~a"
+                                        "check-label ~a")
+                                    (check-results->class reportable-results))])
                  ,(opt-xml (not (eq? class 'check-success))
                     ,(check-result-icon class)
                     ,(render-check-results seed reportable-results tooltip?)))))))
