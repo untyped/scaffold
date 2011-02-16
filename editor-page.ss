@@ -30,8 +30,9 @@
   ; submit-button%
   (field submit-button
     (new submit-button%
-         [id     (symbol-append (get-id) '-submit)]
-         [action (callback on-update)])
+         [id      (symbol-append (get-id) '-submit)]
+         [classes (list 'smoke-editor-page-submit)]
+         [action  (callback on-update)])
     #:child #:accessor)
   
   ; Methods ---------------------------
