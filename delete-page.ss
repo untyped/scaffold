@@ -29,10 +29,13 @@
          [label  "Delete"])
     #:child)
   
-  (super-new)
-  
   ; entity
   (init entity)
+  
+  ; (listof symbol)
+  (init [classes null])
+  
+  (super-new [classes (cons 'scaffolded-delete-page classes)])
   
   ; (listof attribute)
   (init [auto-attributes (and entity (entity-data-attributes entity))])

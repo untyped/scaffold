@@ -26,7 +26,10 @@
   ; (U controller #f)
   (init-field update-controller #f #:accessor)
   
-  (super-new)
+  ; (listof symbol)
+  (init [classes null])
+  
+  (super-new [classes (cons 'scaffolded-review-page classes)])
   
   ; entity
   (init [entity #f])

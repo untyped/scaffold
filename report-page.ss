@@ -20,13 +20,16 @@
   
   ; Fields ----------------------------
   
-  (super-new)
-  
   ; entity
   (init [entity #f])
   
   ; (listof attribute)
   (init [auto-attributes (and entity (entity-data-attributes entity))])
+  
+  ; (listof symbol)
+  (init [classes null])
+  
+  (super-new [classes (cons 'scaffolded-report-page classes)])
   
   ; snooze-report%
   (init-field report

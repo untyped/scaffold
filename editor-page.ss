@@ -23,7 +23,11 @@
   ; editor%
   (init [editor (error "editor-page constructor: insufficient arguments")])
   
-  (super-new [editor editor])
+  ; (listof symbol)
+  (init [classes null])
+  
+  (super-new [editor editor]
+             [classes (cons 'scaffolded-editor-page classes)])
   
   (send editor set-id! (symbol-append (get-id) '-editor))
   
