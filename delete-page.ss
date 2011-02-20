@@ -73,12 +73,13 @@
   
   ; seed -> xml
   (define/augment (render seed)
-    (let* ([value   (get-value)]
-           [results (check-old-snooze-struct value)])
-      (cond [(check-fatals?   results) (render/fatals   seed value results)]
-            [(check-failures? results) (render/failures seed value results)]
-            [(check-warnings? results) (render/warnings seed value results)]
-            [else                      (render/success  seed value results)])))
+    (xml (div (@ [class "delete-page-content"])
+              ,(let* ([value   (get-value)]
+                      [results (check-old-snooze-struct value)])
+                 (cond [(check-fatals?   results) (render/fatals   seed value results)]
+                       [(check-failures? results) (render/failures seed value results)]
+                       [(check-warnings? results) (render/warnings seed value results)]
+                       [else                      (render/success  seed value results)])))))
   
   ; seed snooze-struct (listof check-result) -> xml
   (define/public (render/fatals seed value results)
